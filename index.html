@@ -4452,6 +4452,7 @@ var $elm$core$Basics$LT = {$: 'LT'};
 var $author$project$Railroad$Connector = function (position) {
 	return {position: position};
 };
+var $author$project$Railroad$Forward = {$: 'Forward'};
 var $author$project$Railroad$Position = F2(
 	function (x, y) {
 		return {x: x, y: y};
@@ -4460,22 +4461,33 @@ var $author$project$Railroad$Track = F2(
 	function (from, to) {
 		return {from: from, to: to};
 	});
+var $author$project$Railroad$Train = F4(
+	function (track, pos, orient, length) {
+		return {length: length, orient: orient, pos: pos, track: track};
+	});
 var $author$project$Railroad$sample = function () {
 	var c1 = $author$project$Railroad$Connector(
 		A2($author$project$Railroad$Position, 100, 100));
+	var t1 = A2(
+		$author$project$Railroad$Track,
+		c1,
+		$author$project$Railroad$Connector(
+			A2($author$project$Railroad$Position, 200, 120)));
 	return {
-		tracks: _List_fromArray(
+		layout: {
+			tracks: _List_fromArray(
+				[
+					t1,
+					A2(
+					$author$project$Railroad$Track,
+					c1,
+					$author$project$Railroad$Connector(
+						A2($author$project$Railroad$Position, 80, 50)))
+				])
+		},
+		trains: _List_fromArray(
 			[
-				A2(
-				$author$project$Railroad$Track,
-				c1,
-				$author$project$Railroad$Connector(
-					A2($author$project$Railroad$Position, 200, 120))),
-				A2(
-				$author$project$Railroad$Track,
-				c1,
-				$author$project$Railroad$Connector(
-					A2($author$project$Railroad$Position, 80, 50)))
+				A4($author$project$Railroad$Train, t1, 50, $author$project$Railroad$Forward, 30)
 			])
 	};
 }();
@@ -5218,19 +5230,108 @@ var $author$project$Main$update = F2(
 			return model;
 		}
 	});
+var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
+var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
+var $elm$svg$Svg$Attributes$cx = _VirtualDom_attribute('cx');
+var $elm$svg$Svg$Attributes$cy = _VirtualDom_attribute('cy');
+var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var $elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
+var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
+var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
+var $author$project$Main$connectorToSvg = function (conn) {
+	return A2(
+		$elm$svg$Svg$circle,
+		_List_fromArray(
+			[
+				$elm$svg$Svg$Attributes$cx(
+				$elm$core$String$fromInt(conn.position.x)),
+				$elm$svg$Svg$Attributes$cy(
+				$elm$core$String$fromInt(conn.position.y)),
+				$elm$svg$Svg$Attributes$r('5'),
+				$elm$svg$Svg$Attributes$fill('none'),
+				$elm$svg$Svg$Attributes$stroke('grey'),
+				$elm$svg$Svg$Attributes$strokeWidth('1')
+			]),
+		_List_Nil);
+};
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $Chadtech$unique_list$List$Unique$UniqueList = function (a) {
+	return {$: 'UniqueList', a: a};
+};
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
+var $Chadtech$unique_list$List$Unique$consIfNotMember = F2(
+	function (el, list) {
+		return A2($elm$core$List$member, el, list) ? list : A2($elm$core$List$cons, el, list);
+	});
+var $Chadtech$unique_list$List$Unique$fromList = function (list) {
+	return $Chadtech$unique_list$List$Unique$UniqueList(
+		A3($elm$core$List$foldr, $Chadtech$unique_list$List$Unique$consIfNotMember, _List_Nil, list));
+};
+var $Chadtech$unique_list$List$Unique$toList = function (_v0) {
+	var list = _v0.a;
+	return list;
+};
+var $Chadtech$unique_list$List$Unique$filterDuplicates = A2($elm$core$Basics$composeR, $Chadtech$unique_list$List$Unique$fromList, $Chadtech$unique_list$List$Unique$toList);
+var $author$project$Railroad$connectors = function (layout) {
+	return $Chadtech$unique_list$List$Unique$filterDuplicates(
+		A3(
+			$elm$core$List$foldl,
+			$elm$core$Basics$append,
+			_List_Nil,
+			A2(
+				$elm$core$List$map,
+				function (t) {
+					return _List_fromArray(
+						[t.from, t.to]);
+				},
+				layout.tracks)));
+};
 var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
+var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
 var $elm$svg$Svg$line = $elm$svg$Svg$trustedNode('line');
-var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
 var $elm$svg$Svg$Attributes$strokeLinecap = _VirtualDom_attribute('stroke-linecap');
 var $elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
 var $elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
 var $elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
 var $elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
-var $author$project$Main$trackToLine = function (track) {
+var $author$project$Main$trackToSvg = function (track) {
 	return A2(
 		$elm$svg$Svg$line,
 		_List_fromArray(
@@ -5248,6 +5349,38 @@ var $author$project$Main$trackToLine = function (track) {
 			]),
 		_List_Nil);
 };
+var $author$project$Railroad$tracksForTrain = function (train) {
+	return _List_fromArray(
+		[train.track]);
+};
+var $author$project$Main$trainSegmentToSvg = function (track) {
+	return A2(
+		$elm$svg$Svg$line,
+		_List_fromArray(
+			[
+				$elm$svg$Svg$Attributes$x1(
+				$elm$core$String$fromInt(track.from.position.x)),
+				$elm$svg$Svg$Attributes$y1(
+				$elm$core$String$fromInt(track.from.position.y)),
+				$elm$svg$Svg$Attributes$x2(
+				$elm$core$String$fromInt(track.to.position.x)),
+				$elm$svg$Svg$Attributes$y2(
+				$elm$core$String$fromInt(track.to.position.y)),
+				$elm$svg$Svg$Attributes$stroke('red'),
+				$elm$svg$Svg$Attributes$strokeLinecap('round'),
+				$elm$svg$Svg$Attributes$strokeWidth('5')
+			]),
+		_List_Nil);
+};
+var $author$project$Main$trainToSvg = function (train) {
+	return A2(
+		$elm$svg$Svg$g,
+		_List_Nil,
+		A2(
+			$elm$core$List$map,
+			$author$project$Main$trainSegmentToSvg,
+			$author$project$Railroad$tracksForTrain(train)));
+};
 var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
 var $author$project$Main$view = function (model) {
 	return A2(
@@ -5259,10 +5392,28 @@ var $author$project$Main$view = function (model) {
 				$elm$svg$Svg$svg,
 				_List_fromArray(
 					[
+						$elm$svg$Svg$Attributes$height('600'),
 						$elm$svg$Svg$Attributes$viewBox('0 0 800 600'),
 						A2($elm$html$Html$Attributes$style, 'border', '1px solid black')
 					]),
-				A2($elm$core$List$map, $author$project$Main$trackToLine, model.tracks))
+				_List_fromArray(
+					[
+						A2(
+						$elm$svg$Svg$g,
+						_List_Nil,
+						A2($elm$core$List$map, $author$project$Main$trackToSvg, model.layout.tracks)),
+						A2(
+						$elm$svg$Svg$g,
+						_List_Nil,
+						A2(
+							$elm$core$List$map,
+							$author$project$Main$connectorToSvg,
+							$author$project$Railroad$connectors(model.layout))),
+						A2(
+						$elm$svg$Svg$g,
+						_List_Nil,
+						A2($elm$core$List$map, $author$project$Main$trainToSvg, model.trains))
+					]))
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(
