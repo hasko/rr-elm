@@ -3,12 +3,13 @@ module Main exposing (Msg(..), main, update, view)
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
 import Browser
-import Html exposing (Html, button, div, text)
+import Html exposing (Html, button, div, li, p, text, ul)
 import Html.Attributes as Att
 import Html.Events exposing (onClick)
 import Railroad as RR
-import Svg exposing (..)
+import Svg exposing (Svg, circle, g, line, svg)
 import Svg.Attributes exposing (..)
+import Time exposing (posixToMillis)
 
 
 main =
@@ -18,30 +19,47 @@ main =
 type alias Model =
     { state : RR.State
     , scale : Float
+    , millis : Maybe Int
+    , frame : Int
     }
 
 
 type Msg
-    = Increment
-    | Decrement
+    = Tick Time.Posix
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { state = RR.sample
       , scale = 1
+      , millis = Nothing
+      , frame = 0
       }
     , Cmd.none
     )
 
 
 subscriptions _ =
-    Sub.none
+    Time.every 100 Tick
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update _ model =
-    ( model, Cmd.none )
+update msg model =
+    case msg of
+        Tick newTime ->
+            let
+                newMillis =
+                    posixToMillis newTime
+
+                duration =
+                    case model.millis of
+                        Nothing ->
+                            0
+
+                        Just m ->
+                            newMillis - m
+            in
+            ( { model | millis = Just newMillis, state = RR.moved duration model.state, frame = duration }, Cmd.none )
 
 
 type alias Document msg =
@@ -65,6 +83,11 @@ view model =
                         , g [] (List.map connectorToSvg (RR.connectors model.state.layout))
                         , g [] (List.map trainToSvg model.state.trains)
                         ]
+                    ]
+                ]
+            , Grid.row []
+                [ Grid.col []
+                    [ trainList model.state.trains
                     ]
                 ]
             ]
@@ -134,3 +157,21 @@ trackOccupancyToSvg occ =
         , strokeWidth "5"
         ]
         []
+
+
+trainList : List RR.Train -> Html Msg
+trainList trains =
+    ul [] (List.map trainSpec trains)
+
+
+trainSpec : RR.Train -> Html Msg
+trainSpec train =
+    li []
+        [ "pos: "
+            ++ String.fromFloat train.pos
+            ++ ", speed: "
+            ++ String.fromFloat train.speed
+            ++ ", length: "
+            ++ String.fromFloat train.length
+            |> text
+        ]

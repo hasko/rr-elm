@@ -1,4 +1,4 @@
-module Railroad exposing (Connector, Layout, State, Track, TrackOccupancy, Train, connectors, sample, trackLength, tracksForTrain)
+module Railroad exposing (Connector, Layout, State, Track, TrackOccupancy, Train, connectors, moved, sample, trackLength, tracksForTrain)
 
 import List
 import List.Unique exposing (filterDuplicates)
@@ -59,6 +59,24 @@ trackLength track =
     sqrt ((track.to.pos.x - track.from.pos.x) ^ 2 + (track.to.pos.y - track.to.pos.x) ^ 2)
 
 
+moved : Int -> State -> State
+moved millis state =
+    { state | trains = List.map (movedTrain millis) state.trains }
+
+
+movedTrain : Int -> Train -> Train
+movedTrain millis train =
+    { train
+        | pos =
+            case train.orient of
+                Forward ->
+                    train.pos + train.speed * toFloat millis / 1000
+
+                Reverse ->
+                    train.pos - train.speed * toFloat millis / 1000
+    }
+
+
 sample : State
 sample =
     let
@@ -74,5 +92,5 @@ sample =
             , Track c1 (Connector { x = 80, y = 50 })
             ]
         }
-    , trains = [ { track = t1, pos = 50, orient = Forward, length = 30, speed = 0 } ]
+    , trains = [ { track = t1, pos = 50, orient = Reverse, length = 30, speed = 11.1 } ]
     }
