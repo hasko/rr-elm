@@ -4449,43 +4449,22 @@ var $elm$core$Set$toList = function (_v0) {
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
-var $author$project$Railroad$Connector = function (position) {
-	return {position: position};
+var $author$project$Railroad$Connector = function (pos) {
+	return {pos: pos};
 };
 var $author$project$Railroad$Forward = {$: 'Forward'};
 var $author$project$Railroad$Track = F2(
 	function (from, to) {
 		return {from: from, to: to};
 	});
-var $author$project$Railroad$Train = F4(
-	function (track, pos, orient, length) {
-		return {length: length, orient: orient, pos: pos, track: track};
-	});
-var $elm$core$Basics$identity = function (x) {
-	return x;
-};
-var $ianmackenzie$elm_units$Quantity$Quantity = function (a) {
-	return {$: 'Quantity', a: a};
-};
-var $ianmackenzie$elm_units$Length$meters = function (numMeters) {
-	return $ianmackenzie$elm_units$Quantity$Quantity(numMeters);
-};
-var $ianmackenzie$elm_geometry$Geometry$Types$Point2d = function (a) {
-	return {$: 'Point2d', a: a};
-};
-var $ianmackenzie$elm_geometry$Point2d$meters = F2(
-	function (x, y) {
-		return $ianmackenzie$elm_geometry$Geometry$Types$Point2d(
-			{x: x, y: y});
-	});
 var $author$project$Railroad$sample = function () {
 	var c1 = $author$project$Railroad$Connector(
-		A2($ianmackenzie$elm_geometry$Point2d$meters, 100, 100));
+		{x: 100, y: 100});
 	var t1 = A2(
 		$author$project$Railroad$Track,
 		c1,
 		$author$project$Railroad$Connector(
-			A2($ianmackenzie$elm_geometry$Point2d$meters, 200, 120)));
+			{x: 200, y: 120}));
 	return {
 		layout: {
 			tracks: _List_fromArray(
@@ -4495,21 +4474,16 @@ var $author$project$Railroad$sample = function () {
 					$author$project$Railroad$Track,
 					c1,
 					$author$project$Railroad$Connector(
-						A2($ianmackenzie$elm_geometry$Point2d$meters, 80, 50)))
+						{x: 80, y: 50}))
 				])
 		},
 		trains: _List_fromArray(
 			[
-				A4(
-				$author$project$Railroad$Train,
-				t1,
-				$ianmackenzie$elm_units$Length$meters(50),
-				$author$project$Railroad$Forward,
-				$ianmackenzie$elm_units$Length$meters(30))
+				{length: 30, orient: $author$project$Railroad$Forward, pos: 50, speed: 0, track: t1}
 			])
 	};
 }();
-var $author$project$Main$init = $author$project$Railroad$sample;
+var $author$project$Main$init = {scale: 1, state: $author$project$Railroad$sample};
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
 };
@@ -4926,6 +4900,9 @@ var $elm$browser$Browser$External = function (a) {
 var $elm$browser$Browser$Internal = function (a) {
 	return {$: 'Internal', a: a};
 };
+var $elm$core$Basics$identity = function (x) {
+	return x;
+};
 var $elm$browser$Browser$Dom$NotFound = function (a) {
 	return {$: 'NotFound', a: a};
 };
@@ -5250,36 +5227,19 @@ var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
 var $elm$svg$Svg$Attributes$cx = _VirtualDom_attribute('cx');
 var $elm$svg$Svg$Attributes$cy = _VirtualDom_attribute('cy');
 var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
-var $ianmackenzie$elm_units$Length$inMeters = function (_v0) {
-	var numMeters = _v0.a;
-	return numMeters;
-};
+var $elm$core$String$fromFloat = _String_fromNumber;
 var $elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
 var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
 var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
-var $ianmackenzie$elm_geometry$Point2d$xCoordinate = function (_v0) {
-	var p = _v0.a;
-	return $ianmackenzie$elm_units$Quantity$Quantity(p.x);
-};
-var $ianmackenzie$elm_geometry$Point2d$yCoordinate = function (_v0) {
-	var p = _v0.a;
-	return $ianmackenzie$elm_units$Quantity$Quantity(p.y);
-};
 var $author$project$Main$connectorToSvg = function (conn) {
 	return A2(
 		$elm$svg$Svg$circle,
 		_List_fromArray(
 			[
 				$elm$svg$Svg$Attributes$cx(
-				$elm$core$String$fromInt(
-					$elm$core$Basics$floor(
-						$ianmackenzie$elm_units$Length$inMeters(
-							$ianmackenzie$elm_geometry$Point2d$xCoordinate(conn.position))))),
+				$elm$core$String$fromFloat(conn.pos.x)),
 				$elm$svg$Svg$Attributes$cy(
-				$elm$core$String$fromInt(
-					$elm$core$Basics$floor(
-						$ianmackenzie$elm_units$Length$inMeters(
-							$ianmackenzie$elm_geometry$Point2d$yCoordinate(conn.position))))),
+				$elm$core$String$fromFloat(conn.pos.y)),
 				$elm$svg$Svg$Attributes$r('5'),
 				$elm$svg$Svg$Attributes$fill('none'),
 				$elm$svg$Svg$Attributes$stroke('grey'),
@@ -5355,6 +5315,10 @@ var $author$project$Railroad$connectors = function (layout) {
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
+var $author$project$Main$scaleTransform = function (scale) {
+	var scaleStr = $elm$core$String$fromFloat(scale);
+	return 'scale(' + (scaleStr + (' ' + (scaleStr + ')')));
+};
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
@@ -5370,64 +5334,62 @@ var $author$project$Main$trackToSvg = function (track) {
 		_List_fromArray(
 			[
 				$elm$svg$Svg$Attributes$x1(
-				$elm$core$String$fromInt(
-					$elm$core$Basics$floor(
-						$ianmackenzie$elm_units$Length$inMeters(
-							$ianmackenzie$elm_geometry$Point2d$xCoordinate(track.from.position))))),
+				$elm$core$String$fromFloat(track.from.pos.x)),
 				$elm$svg$Svg$Attributes$y1(
-				$elm$core$String$fromInt(
-					$elm$core$Basics$floor(
-						$ianmackenzie$elm_units$Length$inMeters(
-							$ianmackenzie$elm_geometry$Point2d$yCoordinate(track.from.position))))),
+				$elm$core$String$fromFloat(track.from.pos.y)),
 				$elm$svg$Svg$Attributes$x2(
-				$elm$core$String$fromInt(
-					$elm$core$Basics$floor(
-						$ianmackenzie$elm_units$Length$inMeters(
-							$ianmackenzie$elm_geometry$Point2d$xCoordinate(track.to.position))))),
+				$elm$core$String$fromFloat(track.to.pos.x)),
 				$elm$svg$Svg$Attributes$y2(
-				$elm$core$String$fromInt(
-					$elm$core$Basics$floor(
-						$ianmackenzie$elm_units$Length$inMeters(
-							$ianmackenzie$elm_geometry$Point2d$yCoordinate(track.to.position))))),
+				$elm$core$String$fromFloat(track.to.pos.y)),
 				$elm$svg$Svg$Attributes$stroke('black'),
 				$elm$svg$Svg$Attributes$strokeLinecap('round')
 			]),
 		_List_Nil);
 };
-var $author$project$Railroad$tracksForTrain = function (train) {
-	return _List_fromArray(
-		[train.track]);
+var $elm$core$Basics$pow = _Basics_pow;
+var $elm$core$Basics$sqrt = _Basics_sqrt;
+var $author$project$Railroad$trackLength = function (track) {
+	return $elm$core$Basics$sqrt(
+		A2($elm$core$Basics$pow, track.to.pos.x - track.from.pos.x, 2) + A2($elm$core$Basics$pow, track.to.pos.y - track.to.pos.x, 2));
 };
-var $author$project$Main$trainSegmentToSvg = function (track) {
+var $author$project$Main$trackOccupancyToSvg = function (occ) {
+	var tl = $author$project$Railroad$trackLength(occ.track);
+	var dy = occ.track.to.pos.y - occ.track.from.pos.y;
+	var dx = occ.track.to.pos.x - occ.track.from.pos.x;
 	return A2(
 		$elm$svg$Svg$line,
 		_List_fromArray(
 			[
 				$elm$svg$Svg$Attributes$x1(
-				$elm$core$String$fromInt(
-					$elm$core$Basics$floor(
-						$ianmackenzie$elm_units$Length$inMeters(
-							$ianmackenzie$elm_geometry$Point2d$xCoordinate(track.from.position))))),
+				$elm$core$String$fromFloat(occ.track.from.pos.x + ((dx * occ.from) / tl))),
 				$elm$svg$Svg$Attributes$y1(
-				$elm$core$String$fromInt(
-					$elm$core$Basics$floor(
-						$ianmackenzie$elm_units$Length$inMeters(
-							$ianmackenzie$elm_geometry$Point2d$yCoordinate(track.from.position))))),
+				$elm$core$String$fromFloat(occ.track.from.pos.y + ((dy * occ.from) / tl))),
 				$elm$svg$Svg$Attributes$x2(
-				$elm$core$String$fromInt(
-					$elm$core$Basics$floor(
-						$ianmackenzie$elm_units$Length$inMeters(
-							$ianmackenzie$elm_geometry$Point2d$xCoordinate(track.to.position))))),
+				$elm$core$String$fromFloat(occ.track.from.pos.x + ((dx * occ.to) / tl))),
 				$elm$svg$Svg$Attributes$y2(
-				$elm$core$String$fromInt(
-					$elm$core$Basics$floor(
-						$ianmackenzie$elm_units$Length$inMeters(
-							$ianmackenzie$elm_geometry$Point2d$yCoordinate(track.to.position))))),
+				$elm$core$String$fromFloat(occ.track.from.pos.y + ((dy * occ.to) / tl))),
 				$elm$svg$Svg$Attributes$stroke('red'),
 				$elm$svg$Svg$Attributes$strokeLinecap('round'),
 				$elm$svg$Svg$Attributes$strokeWidth('5')
 			]),
 		_List_Nil);
+};
+var $author$project$Railroad$tracksForTrain = function (train) {
+	return _List_fromArray(
+		[
+			{
+			from: train.pos,
+			to: function () {
+				var _v0 = train.orient;
+				if (_v0.$ === 'Forward') {
+					return train.pos - train.length;
+				} else {
+					return train.pos + train.length;
+				}
+			}(),
+			track: train.track
+		}
+		]);
 };
 var $author$project$Main$trainToSvg = function (train) {
 	return A2(
@@ -5435,9 +5397,10 @@ var $author$project$Main$trainToSvg = function (train) {
 		_List_Nil,
 		A2(
 			$elm$core$List$map,
-			$author$project$Main$trainSegmentToSvg,
+			$author$project$Main$trackOccupancyToSvg,
 			$author$project$Railroad$tracksForTrain(train)));
 };
+var $elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
 var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
 var $author$project$Main$view = function (model) {
 	return A2(
@@ -5451,25 +5414,27 @@ var $author$project$Main$view = function (model) {
 					[
 						$elm$svg$Svg$Attributes$height('600'),
 						$elm$svg$Svg$Attributes$viewBox('0 0 800 600'),
-						A2($elm$html$Html$Attributes$style, 'border', '1px solid black')
+						A2($elm$html$Html$Attributes$style, 'border', '1px solid black'),
+						$elm$svg$Svg$Attributes$transform(
+						$author$project$Main$scaleTransform(model.scale))
 					]),
 				_List_fromArray(
 					[
 						A2(
 						$elm$svg$Svg$g,
 						_List_Nil,
-						A2($elm$core$List$map, $author$project$Main$trackToSvg, model.layout.tracks)),
+						A2($elm$core$List$map, $author$project$Main$trackToSvg, model.state.layout.tracks)),
 						A2(
 						$elm$svg$Svg$g,
 						_List_Nil,
 						A2(
 							$elm$core$List$map,
 							$author$project$Main$connectorToSvg,
-							$author$project$Railroad$connectors(model.layout))),
+							$author$project$Railroad$connectors(model.state.layout))),
 						A2(
 						$elm$svg$Svg$g,
 						_List_Nil,
-						A2($elm$core$List$map, $author$project$Main$trainToSvg, model.trains))
+						A2($elm$core$List$map, $author$project$Main$trainToSvg, model.state.trains))
 					]))
 			]));
 };

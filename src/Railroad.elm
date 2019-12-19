@@ -1,15 +1,7 @@
-module Railroad exposing (Connector, Layout, State, Track, Train, connectors, sample, tracksForTrain)
+module Railroad exposing (Connector, Layout, State, Track, TrackOccupancy, Train, connectors, sample, trackLength, tracksForTrain)
 
-import Length exposing (Length, Meters)
 import List
 import List.Unique exposing (filterDuplicates)
-import Point2d exposing (Point2d, distanceFrom, meters)
-
-
-{-| The world coordinate system
--}
-type World
-    = World
 
 
 type alias Track =
@@ -17,7 +9,7 @@ type alias Track =
 
 
 type alias Connector =
-    { position : Point2d Meters World }
+    { pos : { x : Float, y : Float } }
 
 
 type alias Layout =
@@ -34,7 +26,11 @@ type alias State =
 
 
 type alias Train =
-    { track : Track, pos : Length, orient : Orientation, length : Length }
+    { track : Track, pos : Float, orient : Orientation, length : Float, speed : Float }
+
+
+type alias TrackOccupancy =
+    { track : Track, from : Float, to : Float }
 
 
 connectors : Layout -> List Connector
@@ -42,31 +38,41 @@ connectors layout =
     List.map (\t -> [ t.from, t.to ]) layout.tracks |> List.foldl (++) [] |> filterDuplicates
 
 
-tracksForTrain : Train -> List Track
+tracksForTrain : Train -> List TrackOccupancy
 tracksForTrain train =
     --TODO A train can cover multiple tracks.
-    [ train.track ]
+    [ { track = train.track
+      , from = train.pos
+      , to =
+            case train.orient of
+                Forward ->
+                    train.pos - train.length
+
+                Reverse ->
+                    train.pos + train.length
+      }
+    ]
 
 
-trackLength : Track -> Length
+trackLength : Track -> Float
 trackLength track =
-    distanceFrom track.to.position track.from.position
+    sqrt ((track.to.pos.x - track.from.pos.x) ^ 2 + (track.to.pos.y - track.to.pos.x) ^ 2)
 
 
 sample : State
 sample =
     let
         c1 =
-            Connector (Point2d.meters 100 100)
+            Connector { x = 100, y = 100 }
 
         t1 =
-            Track c1 (Connector (Point2d.meters 200 120))
+            Track c1 (Connector { x = 200, y = 120 })
     in
     { layout =
         { tracks =
             [ t1
-            , Track c1 (Connector (Point2d.meters 80 50))
+            , Track c1 (Connector { x = 80, y = 50 })
             ]
         }
-    , trains = [ Train t1 (Length.meters 50) Forward (Length.meters 30) ]
+    , trains = [ { track = t1, pos = 50, orient = Forward, length = 30, speed = 0 } ]
     }
