@@ -1,5 +1,7 @@
 module Main exposing (Msg(..), main, update, view)
 
+import Bootstrap.CDN as CDN
+import Bootstrap.Grid as Grid
 import Browser
 import Html exposing (Html, button, div, text)
 import Html.Attributes as Att
@@ -10,7 +12,7 @@ import Svg.Attributes exposing (..)
 
 
 main =
-    Browser.sandbox { init = init, update = update, view = view }
+    Browser.document { init = init, update = update, subscriptions = subscriptions, view = view }
 
 
 type alias Model =
@@ -24,37 +26,50 @@ type Msg
     | Decrement
 
 
-init : Model
-init =
-    { state = RR.sample
-    , scale = 1
-    }
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { state = RR.sample
+      , scale = 1
+      }
+    , Cmd.none
+    )
 
 
-update : Msg -> Model -> Model
-update msg model =
-    case msg of
-        Increment ->
-            model
-
-        Decrement ->
-            model
+subscriptions _ =
+    Sub.none
 
 
-view : Model -> Html Msg
+update : Msg -> Model -> ( Model, Cmd Msg )
+update _ model =
+    ( model, Cmd.none )
+
+
+type alias Document msg =
+    { title : String, body : List (Html msg) }
+
+
+view : Model -> Document Msg
 view model =
-    div []
-        [ svg
-            [ height "600"
-            , viewBox "0 0 800 600"
-            , Att.style "border" "1px solid black"
-            , model.scale |> scaleTransform |> transform
-            ]
-            [ g [] (List.map trackToSvg model.state.layout.tracks)
-            , g [] (List.map connectorToSvg (RR.connectors model.state.layout))
-            , g [] (List.map trainToSvg model.state.trains)
+    { title = "Railroad"
+    , body =
+        [ Grid.container []
+            [ Grid.row []
+                [ Grid.col []
+                    [ svg
+                        [ height "600"
+                        , viewBox "0 0 800 600"
+                        , Att.style "border" "1px solid black"
+                        , model.scale |> scaleTransform |> transform
+                        ]
+                        [ g [] (List.map trackToSvg model.state.layout.tracks)
+                        , g [] (List.map connectorToSvg (RR.connectors model.state.layout))
+                        , g [] (List.map trainToSvg model.state.trains)
+                        ]
+                    ]
+                ]
             ]
         ]
+    }
 
 
 scaleTransform : Float -> String
