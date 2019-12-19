@@ -4,10 +4,11 @@ import Browser
 import Html exposing (Html, button, div, text)
 import Html.Attributes as Att
 import Html.Events exposing (onClick)
+import Length exposing (inMeters)
+import Point2d exposing (Point2d)
 import Railroad as RR
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Tuple exposing (first, second)
 
 
 main =
@@ -53,10 +54,10 @@ view model =
 trackToSvg : RR.Track -> Svg Msg
 trackToSvg track =
     line
-        [ x1 (String.fromInt track.from.position.x)
-        , y1 (String.fromInt track.from.position.y)
-        , x2 (String.fromInt track.to.position.x)
-        , y2 (String.fromInt track.to.position.y)
+        [ track.from.position |> Point2d.xCoordinate |> inMeters |> floor |> String.fromInt |> x1
+        , track.from.position |> Point2d.yCoordinate |> inMeters |> floor |> String.fromInt |> y1
+        , track.to.position |> Point2d.xCoordinate |> inMeters |> floor |> String.fromInt |> x2
+        , track.to.position |> Point2d.yCoordinate |> inMeters |> floor |> String.fromInt |> y2
         , stroke "black"
         , strokeLinecap "round"
         ]
@@ -66,8 +67,8 @@ trackToSvg track =
 connectorToSvg : RR.Connector -> Svg Msg
 connectorToSvg conn =
     circle
-        [ cx (String.fromInt conn.position.x)
-        , cy (String.fromInt conn.position.y)
+        [ conn.position |> Point2d.xCoordinate |> inMeters |> floor |> String.fromInt |> cx
+        , conn.position |> Point2d.yCoordinate |> inMeters |> floor |> String.fromInt |> cy
         , r "5"
         , fill "none"
         , stroke "grey"
@@ -84,10 +85,10 @@ trainToSvg train =
 trainSegmentToSvg : RR.Track -> Svg msg
 trainSegmentToSvg track =
     line
-        [ x1 (String.fromInt track.from.position.x)
-        , y1 (String.fromInt track.from.position.y)
-        , x2 (String.fromInt track.to.position.x)
-        , y2 (String.fromInt track.to.position.y)
+        [ track.from.position |> Point2d.xCoordinate |> inMeters |> floor |> String.fromInt |> x1
+        , track.from.position |> Point2d.yCoordinate |> inMeters |> floor |> String.fromInt |> y1
+        , track.to.position |> Point2d.xCoordinate |> inMeters |> floor |> String.fromInt |> x2
+        , track.to.position |> Point2d.yCoordinate |> inMeters |> floor |> String.fromInt |> y2
         , stroke "red"
         , strokeLinecap "round"
         , strokeWidth "5"

@@ -1,7 +1,15 @@
 module Railroad exposing (Connector, Layout, State, Track, Train, connectors, sample, tracksForTrain)
 
+import Length exposing (Length, Meters)
 import List
 import List.Unique exposing (filterDuplicates)
+import Point2d exposing (Point2d, distanceFrom, meters)
+
+
+{-| The world coordinate system
+-}
+type World
+    = World
 
 
 type alias Track =
@@ -9,15 +17,11 @@ type alias Track =
 
 
 type alias Connector =
-    { position : Position }
+    { position : Point2d Meters World }
 
 
 type alias Layout =
     { tracks : List Track }
-
-
-type alias Position =
-    { x : Int, y : Int }
 
 
 type Orientation
@@ -30,7 +34,7 @@ type alias State =
 
 
 type alias Train =
-    { track : Track, pos : Float, orient : Orientation, length : Int }
+    { track : Track, pos : Length, orient : Orientation, length : Length }
 
 
 connectors : Layout -> List Connector
@@ -44,25 +48,25 @@ tracksForTrain train =
     [ train.track ]
 
 
-trackLength : Track -> Float
+trackLength : Track -> Length
 trackLength track =
-    sqrt (toFloat ((track.from.position.x - track.to.position.x) ^ 2 + (track.from.position.y - track.to.position.y) ^ 2))
+    distanceFrom track.to.position track.from.position
 
 
 sample : State
 sample =
     let
         c1 =
-            Connector (Position 100 100)
+            Connector (Point2d.meters 100 100)
 
         t1 =
-            Track c1 (Connector (Position 200 120))
+            Track c1 (Connector (Point2d.meters 200 120))
     in
     { layout =
         { tracks =
             [ t1
-            , Track c1 (Connector (Position 80 50))
+            , Track c1 (Connector (Point2d.meters 80 50))
             ]
         }
-    , trains = [ Train t1 50 Forward 30 ]
+    , trains = [ Train t1 (Length.meters 50) Forward (Length.meters 30) ]
     }

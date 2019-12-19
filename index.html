@@ -4453,10 +4453,6 @@ var $author$project$Railroad$Connector = function (position) {
 	return {position: position};
 };
 var $author$project$Railroad$Forward = {$: 'Forward'};
-var $author$project$Railroad$Position = F2(
-	function (x, y) {
-		return {x: x, y: y};
-	});
 var $author$project$Railroad$Track = F2(
 	function (from, to) {
 		return {from: from, to: to};
@@ -4465,14 +4461,31 @@ var $author$project$Railroad$Train = F4(
 	function (track, pos, orient, length) {
 		return {length: length, orient: orient, pos: pos, track: track};
 	});
+var $elm$core$Basics$identity = function (x) {
+	return x;
+};
+var $ianmackenzie$elm_units$Quantity$Quantity = function (a) {
+	return {$: 'Quantity', a: a};
+};
+var $ianmackenzie$elm_units$Length$meters = function (numMeters) {
+	return $ianmackenzie$elm_units$Quantity$Quantity(numMeters);
+};
+var $ianmackenzie$elm_geometry$Geometry$Types$Point2d = function (a) {
+	return {$: 'Point2d', a: a};
+};
+var $ianmackenzie$elm_geometry$Point2d$meters = F2(
+	function (x, y) {
+		return $ianmackenzie$elm_geometry$Geometry$Types$Point2d(
+			{x: x, y: y});
+	});
 var $author$project$Railroad$sample = function () {
 	var c1 = $author$project$Railroad$Connector(
-		A2($author$project$Railroad$Position, 100, 100));
+		A2($ianmackenzie$elm_geometry$Point2d$meters, 100, 100));
 	var t1 = A2(
 		$author$project$Railroad$Track,
 		c1,
 		$author$project$Railroad$Connector(
-			A2($author$project$Railroad$Position, 200, 120)));
+			A2($ianmackenzie$elm_geometry$Point2d$meters, 200, 120)));
 	return {
 		layout: {
 			tracks: _List_fromArray(
@@ -4482,12 +4495,17 @@ var $author$project$Railroad$sample = function () {
 					$author$project$Railroad$Track,
 					c1,
 					$author$project$Railroad$Connector(
-						A2($author$project$Railroad$Position, 80, 50)))
+						A2($ianmackenzie$elm_geometry$Point2d$meters, 80, 50)))
 				])
 		},
 		trains: _List_fromArray(
 			[
-				A4($author$project$Railroad$Train, t1, 50, $author$project$Railroad$Forward, 30)
+				A4(
+				$author$project$Railroad$Train,
+				t1,
+				$ianmackenzie$elm_units$Length$meters(50),
+				$author$project$Railroad$Forward,
+				$ianmackenzie$elm_units$Length$meters(30))
 			])
 	};
 }();
@@ -4908,9 +4926,6 @@ var $elm$browser$Browser$External = function (a) {
 var $elm$browser$Browser$Internal = function (a) {
 	return {$: 'Internal', a: a};
 };
-var $elm$core$Basics$identity = function (x) {
-	return x;
-};
 var $elm$browser$Browser$Dom$NotFound = function (a) {
 	return {$: 'NotFound', a: a};
 };
@@ -5235,18 +5250,36 @@ var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
 var $elm$svg$Svg$Attributes$cx = _VirtualDom_attribute('cx');
 var $elm$svg$Svg$Attributes$cy = _VirtualDom_attribute('cy');
 var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var $ianmackenzie$elm_units$Length$inMeters = function (_v0) {
+	var numMeters = _v0.a;
+	return numMeters;
+};
 var $elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
 var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
 var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
+var $ianmackenzie$elm_geometry$Point2d$xCoordinate = function (_v0) {
+	var p = _v0.a;
+	return $ianmackenzie$elm_units$Quantity$Quantity(p.x);
+};
+var $ianmackenzie$elm_geometry$Point2d$yCoordinate = function (_v0) {
+	var p = _v0.a;
+	return $ianmackenzie$elm_units$Quantity$Quantity(p.y);
+};
 var $author$project$Main$connectorToSvg = function (conn) {
 	return A2(
 		$elm$svg$Svg$circle,
 		_List_fromArray(
 			[
 				$elm$svg$Svg$Attributes$cx(
-				$elm$core$String$fromInt(conn.position.x)),
+				$elm$core$String$fromInt(
+					$elm$core$Basics$floor(
+						$ianmackenzie$elm_units$Length$inMeters(
+							$ianmackenzie$elm_geometry$Point2d$xCoordinate(conn.position))))),
 				$elm$svg$Svg$Attributes$cy(
-				$elm$core$String$fromInt(conn.position.y)),
+				$elm$core$String$fromInt(
+					$elm$core$Basics$floor(
+						$ianmackenzie$elm_units$Length$inMeters(
+							$ianmackenzie$elm_geometry$Point2d$yCoordinate(conn.position))))),
 				$elm$svg$Svg$Attributes$r('5'),
 				$elm$svg$Svg$Attributes$fill('none'),
 				$elm$svg$Svg$Attributes$stroke('grey'),
@@ -5337,13 +5370,25 @@ var $author$project$Main$trackToSvg = function (track) {
 		_List_fromArray(
 			[
 				$elm$svg$Svg$Attributes$x1(
-				$elm$core$String$fromInt(track.from.position.x)),
+				$elm$core$String$fromInt(
+					$elm$core$Basics$floor(
+						$ianmackenzie$elm_units$Length$inMeters(
+							$ianmackenzie$elm_geometry$Point2d$xCoordinate(track.from.position))))),
 				$elm$svg$Svg$Attributes$y1(
-				$elm$core$String$fromInt(track.from.position.y)),
+				$elm$core$String$fromInt(
+					$elm$core$Basics$floor(
+						$ianmackenzie$elm_units$Length$inMeters(
+							$ianmackenzie$elm_geometry$Point2d$yCoordinate(track.from.position))))),
 				$elm$svg$Svg$Attributes$x2(
-				$elm$core$String$fromInt(track.to.position.x)),
+				$elm$core$String$fromInt(
+					$elm$core$Basics$floor(
+						$ianmackenzie$elm_units$Length$inMeters(
+							$ianmackenzie$elm_geometry$Point2d$xCoordinate(track.to.position))))),
 				$elm$svg$Svg$Attributes$y2(
-				$elm$core$String$fromInt(track.to.position.y)),
+				$elm$core$String$fromInt(
+					$elm$core$Basics$floor(
+						$ianmackenzie$elm_units$Length$inMeters(
+							$ianmackenzie$elm_geometry$Point2d$yCoordinate(track.to.position))))),
 				$elm$svg$Svg$Attributes$stroke('black'),
 				$elm$svg$Svg$Attributes$strokeLinecap('round')
 			]),
@@ -5359,13 +5404,25 @@ var $author$project$Main$trainSegmentToSvg = function (track) {
 		_List_fromArray(
 			[
 				$elm$svg$Svg$Attributes$x1(
-				$elm$core$String$fromInt(track.from.position.x)),
+				$elm$core$String$fromInt(
+					$elm$core$Basics$floor(
+						$ianmackenzie$elm_units$Length$inMeters(
+							$ianmackenzie$elm_geometry$Point2d$xCoordinate(track.from.position))))),
 				$elm$svg$Svg$Attributes$y1(
-				$elm$core$String$fromInt(track.from.position.y)),
+				$elm$core$String$fromInt(
+					$elm$core$Basics$floor(
+						$ianmackenzie$elm_units$Length$inMeters(
+							$ianmackenzie$elm_geometry$Point2d$yCoordinate(track.from.position))))),
 				$elm$svg$Svg$Attributes$x2(
-				$elm$core$String$fromInt(track.to.position.x)),
+				$elm$core$String$fromInt(
+					$elm$core$Basics$floor(
+						$ianmackenzie$elm_units$Length$inMeters(
+							$ianmackenzie$elm_geometry$Point2d$xCoordinate(track.to.position))))),
 				$elm$svg$Svg$Attributes$y2(
-				$elm$core$String$fromInt(track.to.position.y)),
+				$elm$core$String$fromInt(
+					$elm$core$Basics$floor(
+						$ianmackenzie$elm_units$Length$inMeters(
+							$ianmackenzie$elm_geometry$Point2d$yCoordinate(track.to.position))))),
 				$elm$svg$Svg$Attributes$stroke('red'),
 				$elm$svg$Svg$Attributes$strokeLinecap('round'),
 				$elm$svg$Svg$Attributes$strokeWidth('5')
