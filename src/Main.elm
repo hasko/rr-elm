@@ -1,12 +1,15 @@
 module Main exposing (Msg(..), main, update, view)
 
+import Bootstrap.Button as Button exposing (button)
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
+import Bootstrap.Utilities.Spacing as Spacing
 import Browser
-import Html exposing (Html, button, div, li, p, text, ul)
+import Html exposing (Html, div, li, p, text, ul)
 import Html.Attributes as Att
 import Html.Events exposing (onClick)
 import Railroad as RR
+import Round
 import Svg exposing (Svg, circle, g, line, svg)
 import Svg.Attributes exposing (..)
 import Time exposing (posixToMillis)
@@ -17,23 +20,34 @@ main =
 
 
 type alias Model =
-    { state : RR.State
+    { initialState : RR.State
+    , state : RR.State
     , scale : Float
     , millis : Maybe Int
     , frame : Int
+    , isRunning : Bool
     }
 
 
 type Msg
     = Tick Time.Posix
+    | Start
+    | Stop
+    | Reset
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { state = RR.sample
+    let
+        s =
+            RR.sample
+    in
+    ( { initialState = s
+      , state = s
       , scale = 1
       , millis = Nothing
       , frame = 0
+      , isRunning = False
       }
     , Cmd.none
     )
@@ -59,7 +73,27 @@ update msg model =
                         Just m ->
                             newMillis - m
             in
-            ( { model | millis = Just newMillis, state = RR.moved duration model.state, frame = duration }, Cmd.none )
+            ( { model
+                | millis = Just newMillis
+                , state =
+                    if model.isRunning then
+                        RR.moved duration model.state
+
+                    else
+                        model.state
+                , frame = duration
+              }
+            , Cmd.none
+            )
+
+        Start ->
+            ( { model | isRunning = True }, Cmd.none )
+
+        Stop ->
+            ( { model | isRunning = False }, Cmd.none )
+
+        Reset ->
+            ( { model | state = model.initialState }, Cmd.none )
 
 
 type alias Document msg =
@@ -88,6 +122,24 @@ view model =
             , Grid.row []
                 [ Grid.col []
                     [ trainList model.state.trains
+                    ]
+                , Grid.col
+                    []
+                    [ if model.isRunning then
+                        button [ Button.primary, Button.onClick Stop ] [ text "Stop" ]
+
+                      else
+                        button [ Button.primary, Button.onClick Start ] [ text "Start" ]
+                    , button
+                        [ Button.primary
+                        , Button.attrs [ Spacing.ml1 ]
+                        , if model.isRunning then
+                            Button.disabled True
+
+                          else
+                            Button.onClick Reset
+                        ]
+                        [ text "Reset" ]
                     ]
                 ]
             ]
@@ -168,10 +220,11 @@ trainSpec : RR.Train -> Html Msg
 trainSpec train =
     li []
         [ "pos: "
-            ++ String.fromFloat train.pos
-            ++ ", speed: "
-            ++ String.fromFloat train.speed
-            ++ ", length: "
-            ++ String.fromFloat train.length
+            ++ Round.round 3 train.pos
+            ++ " m, speed: "
+            ++ Round.round 3 train.speed
+            ++ " m/s, length: "
+            ++ Round.round 3 train.length
+            ++ " m"
             |> text
         ]
