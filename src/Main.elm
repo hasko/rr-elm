@@ -1,12 +1,8 @@
 module Main exposing (Msg(..), main, update, view)
 
-import Bootstrap.Button as Button exposing (button)
-import Bootstrap.CDN as CDN
-import Bootstrap.Grid as Grid
-import Bootstrap.Utilities.Spacing as Spacing
 import Browser
-import Html exposing (Html, div, li, p, text, ul)
-import Html.Attributes as Att
+import Html exposing (Html, br, button, div, li, p, text, ul)
+import Html.Attributes as Att exposing (disabled)
 import Html.Events exposing (onClick)
 import Railroad as RR
 import Round
@@ -104,12 +100,12 @@ view : Model -> Document Msg
 view model =
     { title = "Railroad"
     , body =
-        [ Grid.container []
-            [ Grid.row []
-                [ Grid.col []
+        [ div [ class "container" ]
+            [ div [ class "row" ]
+                [ div [ class "col" ]
                     [ svg
-                        [ height "600"
-                        , viewBox "0 0 800 600"
+                        [ width "100%"
+                        , height "100%"
                         , Att.style "border" "1px solid black"
                         , model.scale |> scaleTransform |> transform
                         ]
@@ -119,25 +115,21 @@ view model =
                         ]
                     ]
                 ]
-            , Grid.row []
-                [ Grid.col []
-                    [ trainList model.state.trains
-                    ]
-                , Grid.col
-                    []
+            , div [ class "row" ]
+                [ div
+                    [ class "col" ]
                     [ if model.isRunning then
-                        button [ Button.primary, Button.onClick Stop ] [ text "Stop" ]
+                        button [ class "btn btn-primary", onClick Stop ] [ text "Stop" ]
 
                       else
-                        button [ Button.primary, Button.onClick Start ] [ text "Start" ]
+                        button [ class "btn btn-primary", onClick Start ] [ text "Start" ]
                     , button
-                        [ Button.primary
-                        , Button.attrs [ Spacing.ml1 ]
+                        [ class "btn btn-secondary"
                         , if model.isRunning then
-                            Button.disabled True
+                            disabled True
 
                           else
-                            Button.onClick Reset
+                            onClick Reset
                         ]
                         [ text "Reset" ]
                     ]
@@ -209,22 +201,3 @@ trackOccupancyToSvg occ =
         , strokeWidth "5"
         ]
         []
-
-
-trainList : List RR.Train -> Html Msg
-trainList trains =
-    ul [] (List.map trainSpec trains)
-
-
-trainSpec : RR.Train -> Html Msg
-trainSpec train =
-    li []
-        [ "pos: "
-            ++ Round.round 3 train.pos
-            ++ " m, speed: "
-            ++ Round.round 3 train.speed
-            ++ " m/s, length: "
-            ++ Round.round 3 train.length
-            ++ " m"
-            |> text
-        ]
