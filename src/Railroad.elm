@@ -26,7 +26,7 @@ type alias State =
 
 
 type alias Train =
-    { track : Track, pos : Float, orient : Orientation, length : Float, speed : Float }
+    { loc : { track : Track, pos : Float, orient : Orientation }, length : Float, speed : Float }
 
 
 type alias TrackOccupancy =
@@ -41,15 +41,15 @@ connectors layout =
 tracksForTrain : Train -> List TrackOccupancy
 tracksForTrain train =
     --TODO A train can cover multiple tracks.
-    [ { track = train.track
-      , from = train.pos
+    [ { track = train.loc.track
+      , from = train.loc.pos
       , to =
-            case train.orient of
+            case train.loc.orient of
                 Forward ->
-                    train.pos - train.length
+                    train.loc.pos - train.length
 
                 Reverse ->
-                    train.pos + train.length
+                    train.loc.pos + train.length
       }
     ]
 
@@ -64,17 +64,26 @@ moved millis state =
     { state | trains = List.map (movedTrain millis) state.trains }
 
 
+{-| Takes a number of milliseconds and returns a modified Train that has moved by an amount determined by its speed.
+-}
 movedTrain : Int -> Train -> Train
 movedTrain millis train =
-    { train
-        | pos =
-            case train.orient of
-                Forward ->
-                    train.pos + train.speed * toFloat millis / 1000
+    let
+        loc =
+            train.loc
 
-                Reverse ->
-                    train.pos - train.speed * toFloat millis / 1000
-    }
+        newLoc =
+            { loc
+                | pos =
+                    case train.loc.orient of
+                        Forward ->
+                            train.loc.pos + train.speed * toFloat millis / 1000
+
+                        Reverse ->
+                            train.loc.pos - train.speed * toFloat millis / 1000
+            }
+    in
+    { train | loc = newLoc }
 
 
 sample : State
@@ -92,5 +101,5 @@ sample =
             , Track c1 (Connector { x = 80, y = 50 })
             ]
         }
-    , trains = [ { track = t1, pos = 50, orient = Reverse, length = 30, speed = 11.1 } ]
+    , trains = [ { loc = { track = t1, pos = 50, orient = Reverse }, length = 30, speed = 11.1 } ]
     }

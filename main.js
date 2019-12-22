@@ -4401,43 +4401,6 @@ function _Time_getZoneName()
 		callback(_Scheduler_succeed(name));
 	});
 }
-
-
-
-var _Bitwise_and = F2(function(a, b)
-{
-	return a & b;
-});
-
-var _Bitwise_or = F2(function(a, b)
-{
-	return a | b;
-});
-
-var _Bitwise_xor = F2(function(a, b)
-{
-	return a ^ b;
-});
-
-function _Bitwise_complement(a)
-{
-	return ~a;
-};
-
-var _Bitwise_shiftLeftBy = F2(function(offset, a)
-{
-	return a << offset;
-});
-
-var _Bitwise_shiftRightBy = F2(function(offset, a)
-{
-	return a >> offset;
-});
-
-var _Bitwise_shiftRightZfBy = F2(function(offset, a)
-{
-	return a >>> offset;
-});
 var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
@@ -5259,7 +5222,11 @@ var $author$project$Railroad$sample = function () {
 		},
 		trains: _List_fromArray(
 			[
-				{length: 30, orient: $author$project$Railroad$Reverse, pos: 50, speed: 11.1, track: t1}
+				{
+				length: 30,
+				loc: {orient: $author$project$Railroad$Reverse, pos: 50, track: t1},
+				speed: 11.1
+			}
 			])
 	};
 }();
@@ -5692,18 +5659,22 @@ var $author$project$Main$subscriptions = function (_v0) {
 };
 var $author$project$Railroad$movedTrain = F2(
 	function (millis, train) {
-		return _Utils_update(
-			train,
+		var loc = train.loc;
+		var newLoc = _Utils_update(
+			loc,
 			{
 				pos: function () {
-					var _v0 = train.orient;
+					var _v0 = train.loc.orient;
 					if (_v0.$ === 'Forward') {
-						return train.pos + ((train.speed * millis) / 1000);
+						return train.loc.pos + ((train.speed * millis) / 1000);
 					} else {
-						return train.pos - ((train.speed * millis) / 1000);
+						return train.loc.pos - ((train.speed * millis) / 1000);
 					}
 				}()
 			});
+		return _Utils_update(
+			train,
+			{loc: newLoc});
 	});
 var $author$project$Railroad$moved = F2(
 	function (millis, state) {
@@ -5921,293 +5892,6 @@ var $author$project$Main$trackToSvg = function (track) {
 			]),
 		_List_Nil);
 };
-var $elm$html$Html$br = _VirtualDom_node('br');
-var $elm$html$Html$li = _VirtualDom_node('li');
-var $elm$core$Basics$ge = _Utils_ge;
-var $elm$core$Basics$not = _Basics_not;
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $elm$core$Basics$abs = function (n) {
-	return (n < 0) ? (-n) : n;
-};
-var $elm$core$Basics$neq = _Utils_notEqual;
-var $elm$core$String$foldr = _String_foldr;
-var $elm$core$String$toList = function (string) {
-	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
-};
-var $myrho$elm_round$Round$addSign = F2(
-	function (signed, str) {
-		var isNotZero = A2(
-			$elm$core$List$any,
-			function (c) {
-				return (!_Utils_eq(
-					c,
-					_Utils_chr('0'))) && (!_Utils_eq(
-					c,
-					_Utils_chr('.')));
-			},
-			$elm$core$String$toList(str));
-		return _Utils_ap(
-			(signed && isNotZero) ? '-' : '',
-			str);
-	});
-var $elm$core$String$cons = _String_cons;
-var $elm$core$Char$fromCode = _Char_fromCode;
-var $myrho$elm_round$Round$increaseNum = function (_v0) {
-	var head = _v0.a;
-	var tail = _v0.b;
-	if (_Utils_eq(
-		head,
-		_Utils_chr('9'))) {
-		var _v1 = $elm$core$String$uncons(tail);
-		if (_v1.$ === 'Nothing') {
-			return '01';
-		} else {
-			var headtail = _v1.a;
-			return A2(
-				$elm$core$String$cons,
-				_Utils_chr('0'),
-				$myrho$elm_round$Round$increaseNum(headtail));
-		}
-	} else {
-		var c = $elm$core$Char$toCode(head);
-		return ((c >= 48) && (c < 57)) ? A2(
-			$elm$core$String$cons,
-			$elm$core$Char$fromCode(c + 1),
-			tail) : '0';
-	}
-};
-var $elm$core$Basics$isInfinite = _Basics_isInfinite;
-var $elm$core$Basics$isNaN = _Basics_isNaN;
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$core$String$fromChar = function (_char) {
-	return A2($elm$core$String$cons, _char, '');
-};
-var $elm$core$Bitwise$and = _Bitwise_and;
-var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
-var $elm$core$String$repeatHelp = F3(
-	function (n, chunk, result) {
-		return (n <= 0) ? result : A3(
-			$elm$core$String$repeatHelp,
-			n >> 1,
-			_Utils_ap(chunk, chunk),
-			(!(n & 1)) ? result : _Utils_ap(result, chunk));
-	});
-var $elm$core$String$repeat = F2(
-	function (n, chunk) {
-		return A3($elm$core$String$repeatHelp, n, chunk, '');
-	});
-var $elm$core$String$padRight = F3(
-	function (n, _char, string) {
-		return _Utils_ap(
-			string,
-			A2(
-				$elm$core$String$repeat,
-				n - $elm$core$String$length(string),
-				$elm$core$String$fromChar(_char)));
-	});
-var $elm$core$String$reverse = _String_reverse;
-var $myrho$elm_round$Round$splitComma = function (str) {
-	var _v0 = A2($elm$core$String$split, '.', str);
-	if (_v0.b) {
-		if (_v0.b.b) {
-			var before = _v0.a;
-			var _v1 = _v0.b;
-			var after = _v1.a;
-			return _Utils_Tuple2(before, after);
-		} else {
-			var before = _v0.a;
-			return _Utils_Tuple2(before, '0');
-		}
-	} else {
-		return _Utils_Tuple2('0', '0');
-	}
-};
-var $elm$core$Tuple$mapFirst = F2(
-	function (func, _v0) {
-		var x = _v0.a;
-		var y = _v0.b;
-		return _Utils_Tuple2(
-			func(x),
-			y);
-	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var $myrho$elm_round$Round$toDecimal = function (fl) {
-	var _v0 = A2(
-		$elm$core$String$split,
-		'e',
-		$elm$core$String$fromFloat(
-			$elm$core$Basics$abs(fl)));
-	if (_v0.b) {
-		if (_v0.b.b) {
-			var num = _v0.a;
-			var _v1 = _v0.b;
-			var exp = _v1.a;
-			var e = A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				$elm$core$String$toInt(
-					A2($elm$core$String$startsWith, '+', exp) ? A2($elm$core$String$dropLeft, 1, exp) : exp));
-			var _v2 = $myrho$elm_round$Round$splitComma(num);
-			var before = _v2.a;
-			var after = _v2.b;
-			var total = _Utils_ap(before, after);
-			var zeroed = (e < 0) ? A2(
-				$elm$core$Maybe$withDefault,
-				'0',
-				A2(
-					$elm$core$Maybe$map,
-					function (_v3) {
-						var a = _v3.a;
-						var b = _v3.b;
-						return a + ('.' + b);
-					},
-					A2(
-						$elm$core$Maybe$map,
-						$elm$core$Tuple$mapFirst($elm$core$String$fromChar),
-						$elm$core$String$uncons(
-							_Utils_ap(
-								A2(
-									$elm$core$String$repeat,
-									$elm$core$Basics$abs(e),
-									'0'),
-								total))))) : A3(
-				$elm$core$String$padRight,
-				e + 1,
-				_Utils_chr('0'),
-				total);
-			return _Utils_ap(
-				(fl < 0) ? '-' : '',
-				zeroed);
-		} else {
-			var num = _v0.a;
-			return _Utils_ap(
-				(fl < 0) ? '-' : '',
-				num);
-		}
-	} else {
-		return '';
-	}
-};
-var $myrho$elm_round$Round$roundFun = F3(
-	function (functor, s, fl) {
-		if ($elm$core$Basics$isInfinite(fl) || $elm$core$Basics$isNaN(fl)) {
-			return $elm$core$String$fromFloat(fl);
-		} else {
-			var signed = fl < 0;
-			var _v0 = $myrho$elm_round$Round$splitComma(
-				$myrho$elm_round$Round$toDecimal(
-					$elm$core$Basics$abs(fl)));
-			var before = _v0.a;
-			var after = _v0.b;
-			var r = $elm$core$String$length(before) + s;
-			var normalized = _Utils_ap(
-				A2($elm$core$String$repeat, (-r) + 1, '0'),
-				A3(
-					$elm$core$String$padRight,
-					r,
-					_Utils_chr('0'),
-					_Utils_ap(before, after)));
-			var totalLen = $elm$core$String$length(normalized);
-			var roundDigitIndex = A2($elm$core$Basics$max, 1, r);
-			var increase = A2(
-				functor,
-				signed,
-				A3($elm$core$String$slice, roundDigitIndex, totalLen, normalized));
-			var remains = A3($elm$core$String$slice, 0, roundDigitIndex, normalized);
-			var num = increase ? $elm$core$String$reverse(
-				A2(
-					$elm$core$Maybe$withDefault,
-					'1',
-					A2(
-						$elm$core$Maybe$map,
-						$myrho$elm_round$Round$increaseNum,
-						$elm$core$String$uncons(
-							$elm$core$String$reverse(remains))))) : remains;
-			var numLen = $elm$core$String$length(num);
-			var numZeroed = (num === '0') ? num : ((s <= 0) ? _Utils_ap(
-				num,
-				A2(
-					$elm$core$String$repeat,
-					$elm$core$Basics$abs(s),
-					'0')) : ((_Utils_cmp(
-				s,
-				$elm$core$String$length(after)) < 0) ? (A3($elm$core$String$slice, 0, numLen - s, num) + ('.' + A3($elm$core$String$slice, numLen - s, numLen, num))) : _Utils_ap(
-				before + '.',
-				A3(
-					$elm$core$String$padRight,
-					s,
-					_Utils_chr('0'),
-					after))));
-			return A2($myrho$elm_round$Round$addSign, signed, numZeroed);
-		}
-	});
-var $myrho$elm_round$Round$round = $myrho$elm_round$Round$roundFun(
-	F2(
-		function (signed, str) {
-			var _v0 = $elm$core$String$uncons(str);
-			if (_v0.$ === 'Nothing') {
-				return false;
-			} else {
-				if ('5' === _v0.a.a.valueOf()) {
-					if (_v0.a.b === '') {
-						var _v1 = _v0.a;
-						return !signed;
-					} else {
-						var _v2 = _v0.a;
-						return true;
-					}
-				} else {
-					var _v3 = _v0.a;
-					var _int = _v3.a;
-					return function (i) {
-						return ((i > 53) && signed) || ((i >= 53) && (!signed));
-					}(
-						$elm$core$Char$toCode(_int));
-				}
-			}
-		}));
-var $author$project$Main$trainSpec = function (train) {
-	return A2(
-		$elm$html$Html$li,
-		_List_Nil,
-		_List_fromArray(
-			[
-				$elm$html$Html$text(
-				A2($myrho$elm_round$Round$round, 3, train.pos)),
-				A2($elm$html$Html$br, _List_Nil, _List_Nil),
-				$elm$html$Html$text(
-				A2($myrho$elm_round$Round$round, 3, train.speed)),
-				A2($elm$html$Html$br, _List_Nil, _List_Nil),
-				$elm$html$Html$text(
-				A2($myrho$elm_round$Round$round, 3, train.length))
-			]));
-};
-var $elm$html$Html$ul = _VirtualDom_node('ul');
-var $author$project$Main$trainList = function (trains) {
-	return A2(
-		$elm$html$Html$ul,
-		_List_Nil,
-		A2($elm$core$List$map, $author$project$Main$trainSpec, trains));
-};
 var $elm$core$Basics$pow = _Basics_pow;
 var $elm$core$Basics$sqrt = _Basics_sqrt;
 var $author$project$Railroad$trackLength = function (track) {
@@ -6240,16 +5924,16 @@ var $author$project$Railroad$tracksForTrain = function (train) {
 	return _List_fromArray(
 		[
 			{
-			from: train.pos,
+			from: train.loc.pos,
 			to: function () {
-				var _v0 = train.orient;
+				var _v0 = train.loc.orient;
 				if (_v0.$ === 'Forward') {
-					return train.pos - train.length;
+					return train.loc.pos - train.length;
 				} else {
-					return train.pos + train.length;
+					return train.loc.pos + train.length;
 				}
 			}(),
-			track: train.track
+			track: train.loc.track
 		}
 		]);
 };
@@ -6320,16 +6004,6 @@ var $author$project$Main$view = function (model) {
 												_List_Nil,
 												A2($elm$core$List$map, $author$project$Main$trainToSvg, model.state.trains))
 											]))
-									])),
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$svg$Svg$Attributes$class('col col-2')
-									]),
-								_List_fromArray(
-									[
-										$author$project$Main$trainList(model.state.trains)
 									]))
 							])),
 						A2(
