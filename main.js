@@ -5659,21 +5659,24 @@ var $elm$time$Time$every = F2(
 var $author$project$Main$subscriptions = function (_v0) {
 	return A2($elm$time$Time$every, 100, $author$project$Main$Tick);
 };
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $author$project$Railroad$byOrientation = F2(
+	function (orient, n) {
+		if (orient.$ === 'Forward') {
+			return n;
+		} else {
+			return -n;
+		}
+	});
 var $author$project$Railroad$movedTrain = F2(
 	function (millis, train) {
 		var loc = train.loc;
+		var distanceMoved = A2($author$project$Railroad$byOrientation, train.loc.orient, (train.speed * millis) / 1000);
 		var newLoc = _Utils_update(
 			loc,
-			{
-				pos: function () {
-					var _v0 = train.loc.orient;
-					if (_v0.$ === 'Forward') {
-						return train.loc.pos + ((train.speed * millis) / 1000);
-					} else {
-						return train.loc.pos - ((train.speed * millis) / 1000);
-					}
-				}()
-			});
+			{pos: train.loc.pos + distanceMoved});
 		return _Utils_update(
 			train,
 			{loc: newLoc});

@@ -21,6 +21,26 @@ type Orientation
     | Reverse
 
 
+byOrientation : Orientation -> number -> number
+byOrientation orient n =
+    case orient of
+        Forward ->
+            n
+
+        Reverse ->
+            negate n
+
+
+reverse : Orientation -> Orientation
+reverse orient =
+    case orient of
+        Forward ->
+            Reverse
+
+        Reverse ->
+            Forward
+
+
 type alias State =
     { layout : Layout, trains : List Train }
 
@@ -71,13 +91,18 @@ tracksForTrain train =
     ]
 
 
+{-| Return the length of a track. Currently, this is assuming it is a straight track. Later, we will support splines.
+-}
 trackLength : Track -> Float
 trackLength track =
     sqrt ((track.to.pos.x - track.from.pos.x) ^ 2 + (track.to.pos.y - track.to.pos.x) ^ 2)
 
 
+{-| Take a number of milliseconds since the last frame and the old state, and return the new state.
+-}
 moved : Int -> State -> State
 moved millis state =
+    --TODO Add building tracks and other things.
     { state | trains = List.map (movedTrain millis) state.trains }
 
 
@@ -89,16 +114,11 @@ movedTrain millis train =
         loc =
             train.loc
 
-        newLoc =
-            { loc
-                | pos =
-                    case train.loc.orient of
-                        Forward ->
-                            train.loc.pos + train.speed * toFloat millis / 1000
+        distanceMoved =
+            byOrientation train.loc.orient (train.speed * toFloat millis / 1000)
 
-                        Reverse ->
-                            train.loc.pos - train.speed * toFloat millis / 1000
-            }
+        newLoc =
+            { loc | pos = train.loc.pos + distanceMoved }
     in
     { train | loc = newLoc }
 
