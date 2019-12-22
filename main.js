@@ -5737,10 +5737,6 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 		}
 	});
-var $author$project$Main$Reset = {$: 'Reset'};
-var $author$project$Main$Start = {$: 'Start'};
-var $author$project$Main$Stop = {$: 'Stop'};
-var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
@@ -5832,35 +5828,11 @@ var $author$project$Railroad$connectors = function (layout) {
 				},
 				layout.tracks)));
 };
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
-var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
-};
+var $elm$virtual_dom$VirtualDom$lazy = _VirtualDom_lazy;
+var $elm$html$Html$Lazy$lazy = $elm$virtual_dom$VirtualDom$lazy;
 var $author$project$Main$scaleTransform = function (scale) {
 	var scaleStr = $elm$core$String$fromFloat(scale);
 	return 'scale(' + (scaleStr + (' ' + (scaleStr + ')')));
@@ -5868,8 +5840,6 @@ var $author$project$Main$scaleTransform = function (scale) {
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$svg$Svg$line = $elm$svg$Svg$trustedNode('line');
 var $elm$svg$Svg$Attributes$strokeLinecap = _VirtualDom_attribute('stroke-linecap');
 var $elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
@@ -5949,6 +5919,78 @@ var $author$project$Main$trainToSvg = function (train) {
 			$author$project$Railroad$tracksForTrain(train)));
 };
 var $elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
+var $author$project$Main$Reset = {$: 'Reset'};
+var $author$project$Main$Start = {$: 'Start'};
+var $author$project$Main$Stop = {$: 'Stop'};
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$Main$viewSimulationControls = function (isRunning) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				isRunning ? A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$svg$Svg$Attributes$class('btn btn-primary'),
+						$elm$html$Html$Events$onClick($author$project$Main$Stop)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Stop simulation')
+					])) : A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$svg$Svg$Attributes$class('btn btn-primary'),
+						$elm$html$Html$Events$onClick($author$project$Main$Start)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Start simulation')
+					])),
+				A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$svg$Svg$Attributes$class('btn btn-secondary ml-2'),
+						isRunning ? $elm$html$Html$Attributes$disabled(true) : $elm$html$Html$Events$onClick($author$project$Main$Reset)
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Reset')
+					]))
+			]));
+};
 var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
 var $author$project$Main$view = function (model) {
 	return {
@@ -6024,38 +6066,7 @@ var $author$project$Main$view = function (model) {
 									]),
 								_List_fromArray(
 									[
-										model.isRunning ? A2(
-										$elm$html$Html$button,
-										_List_fromArray(
-											[
-												$elm$svg$Svg$Attributes$class('btn btn-primary'),
-												$elm$html$Html$Events$onClick($author$project$Main$Stop)
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Stop simulation')
-											])) : A2(
-										$elm$html$Html$button,
-										_List_fromArray(
-											[
-												$elm$svg$Svg$Attributes$class('btn btn-primary'),
-												$elm$html$Html$Events$onClick($author$project$Main$Start)
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Start simulation')
-											])),
-										A2(
-										$elm$html$Html$button,
-										_List_fromArray(
-											[
-												$elm$svg$Svg$Attributes$class('btn btn-secondary ml-2'),
-												model.isRunning ? $elm$html$Html$Attributes$disabled(true) : $elm$html$Html$Events$onClick($author$project$Main$Reset)
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Reset')
-											]))
+										A2($elm$html$Html$Lazy$lazy, $author$project$Main$viewSimulationControls, model.isRunning)
 									]))
 							]))
 					]))

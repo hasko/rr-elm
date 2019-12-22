@@ -4,6 +4,7 @@ import Browser
 import Html exposing (Html, br, button, div, li, p, text, ul)
 import Html.Attributes as Att exposing (attribute, disabled)
 import Html.Events exposing (onClick)
+import Html.Lazy exposing (lazy)
 import Railroad as RR
 import Round
 import Svg exposing (Svg, circle, g, line, svg)
@@ -117,25 +118,31 @@ view model =
                 ]
             , div [ class "row mt-3" ]
                 [ div [ class "col" ]
-                    [ if model.isRunning then
-                        button [ class "btn btn-primary", onClick Stop ] [ text "Stop simulation" ]
-
-                      else
-                        button [ class "btn btn-primary", onClick Start ] [ text "Start simulation" ]
-                    , button
-                        [ class "btn btn-secondary ml-2"
-                        , if model.isRunning then
-                            disabled True
-
-                          else
-                            onClick Reset
-                        ]
-                        [ text "Reset" ]
-                    ]
+                    [ lazy viewSimulationControls model.isRunning ]
                 ]
             ]
         ]
     }
+
+
+viewSimulationControls : Bool -> Html Msg
+viewSimulationControls isRunning =
+    div []
+        [ if isRunning then
+            button [ class "btn btn-primary", onClick Stop ] [ text "Stop simulation" ]
+
+          else
+            button [ class "btn btn-primary", onClick Start ] [ text "Start simulation" ]
+        , button
+            [ class "btn btn-secondary ml-2"
+            , if isRunning then
+                disabled True
+
+              else
+                onClick Reset
+            ]
+            [ text "Reset" ]
+        ]
 
 
 scaleTransform : Float -> String
