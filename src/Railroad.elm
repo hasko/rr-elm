@@ -26,7 +26,24 @@ type alias State =
 
 
 type alias Train =
-    { loc : { track : Track, pos : Float, orient : Orientation }, length : Float, speed : Float }
+    { loc : { track : Track, pos : Float, orient : Orientation }, length : Float, speed : Float, state : TrainState }
+
+
+{-| TrainState can be:
+
+  - Normal for normal operations
+  - EmergencyStop when the train hit a dead end during its last move
+  - Crashed if the train crashed into another one
+  - OffMap if the train has left via an off-map connector.
+
+In case of a crash or an emergency stop, the train will be located at the site.
+
+-}
+type TrainState
+    = Normal
+    | EmergencyStop
+    | Crashed
+    | OffMap
 
 
 type alias TrackOccupancy =
@@ -101,5 +118,5 @@ sample =
             , Track c1 (Connector { x = 80, y = 50 })
             ]
         }
-    , trains = [ { loc = { track = t1, pos = 50, orient = Reverse }, length = 30, speed = 11.1 } ]
+    , trains = [ { loc = { track = t1, pos = 50, orient = Reverse }, length = 30, speed = 11.1, state = Normal } ]
     }

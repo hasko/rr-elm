@@ -2,7 +2,7 @@ module Main exposing (Msg(..), main, update, view)
 
 import Browser
 import Html exposing (Html, br, button, div, li, p, text, ul)
-import Html.Attributes as Att exposing (disabled)
+import Html.Attributes as Att exposing (attribute, disabled)
 import Html.Events exposing (onClick)
 import Railroad as RR
 import Round
@@ -101,7 +101,7 @@ view model =
     { title = "Railroad"
     , body =
         [ div [ class "container" ]
-            [ div [ class "row" ]
+            [ div [ class "row mt-3" ]
                 [ div [ class "col" ]
                     [ svg
                         [ width "100%"
@@ -115,16 +115,15 @@ view model =
                         ]
                     ]
                 ]
-            , div [ class "row" ]
-                [ div
-                    [ class "col" ]
+            , div [ class "row mt-3" ]
+                [ div [ class "col" ]
                     [ if model.isRunning then
-                        button [ class "btn btn-primary", onClick Stop ] [ text "Stop" ]
+                        button [ class "btn btn-primary", onClick Stop ] [ text "Stop simulation" ]
 
                       else
-                        button [ class "btn btn-primary", onClick Start ] [ text "Start" ]
+                        button [ class "btn btn-primary", onClick Start ] [ text "Start simulation" ]
                     , button
-                        [ class "btn btn-secondary"
+                        [ class "btn btn-secondary ml-2"
                         , if model.isRunning then
                             disabled True
 
@@ -201,3 +200,7 @@ trackOccupancyToSvg occ =
         , strokeWidth "5"
         ]
         []
+
+
+buttonGroup content =
+    div [ class "btn-group", attribute "role" "group" ] content

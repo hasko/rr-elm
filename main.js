@@ -5195,6 +5195,7 @@ var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Railroad$Connector = function (pos) {
 	return {pos: pos};
 };
+var $author$project$Railroad$Normal = {$: 'Normal'};
 var $author$project$Railroad$Reverse = {$: 'Reverse'};
 var $author$project$Railroad$Track = F2(
 	function (from, to) {
@@ -5225,7 +5226,8 @@ var $author$project$Railroad$sample = function () {
 				{
 				length: 30,
 				loc: {orient: $author$project$Railroad$Reverse, pos: 50, track: t1},
-				speed: 11.1
+				speed: 11.1,
+				state: $author$project$Railroad$Normal
 			}
 			])
 	};
@@ -5964,7 +5966,7 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$svg$Svg$Attributes$class('row')
+								$elm$svg$Svg$Attributes$class('row mt-3')
 							]),
 						_List_fromArray(
 							[
@@ -6010,7 +6012,7 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$svg$Svg$Attributes$class('row')
+								$elm$svg$Svg$Attributes$class('row mt-3')
 							]),
 						_List_fromArray(
 							[
@@ -6031,7 +6033,7 @@ var $author$project$Main$view = function (model) {
 											]),
 										_List_fromArray(
 											[
-												$elm$html$Html$text('Stop')
+												$elm$html$Html$text('Stop simulation')
 											])) : A2(
 										$elm$html$Html$button,
 										_List_fromArray(
@@ -6041,13 +6043,13 @@ var $author$project$Main$view = function (model) {
 											]),
 										_List_fromArray(
 											[
-												$elm$html$Html$text('Start')
+												$elm$html$Html$text('Start simulation')
 											])),
 										A2(
 										$elm$html$Html$button,
 										_List_fromArray(
 											[
-												$elm$svg$Svg$Attributes$class('btn btn-secondary'),
+												$elm$svg$Svg$Attributes$class('btn btn-secondary ml-2'),
 												model.isRunning ? $elm$html$Html$Attributes$disabled(true) : $elm$html$Html$Events$onClick($author$project$Main$Reset)
 											]),
 										_List_fromArray(
