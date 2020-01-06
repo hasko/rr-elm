@@ -5192,22 +5192,22 @@ var $elm$core$Task$perform = F2(
 var $elm$browser$Browser$document = _Browser_document;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$Railroad$Connector = function (pos) {
+var $author$project$Railroad$Layout$Connector = function (pos) {
 	return {pos: pos};
 };
 var $author$project$Railroad$Normal = {$: 'Normal'};
 var $author$project$Railroad$Reverse = {$: 'Reverse'};
-var $author$project$Railroad$Track = F2(
+var $author$project$Railroad$Layout$Track = F2(
 	function (from, to) {
 		return {from: from, to: to};
 	});
 var $author$project$Railroad$sample = function () {
-	var c1 = $author$project$Railroad$Connector(
+	var c1 = $author$project$Railroad$Layout$Connector(
 		{x: 100, y: 100});
 	var t1 = A2(
-		$author$project$Railroad$Track,
+		$author$project$Railroad$Layout$Track,
 		c1,
-		$author$project$Railroad$Connector(
+		$author$project$Railroad$Layout$Connector(
 			{x: 200, y: 120}));
 	return {
 		layout: {
@@ -5215,9 +5215,9 @@ var $author$project$Railroad$sample = function () {
 				[
 					t1,
 					A2(
-					$author$project$Railroad$Track,
+					$author$project$Railroad$Layout$Track,
 					c1,
-					$author$project$Railroad$Connector(
+					$author$project$Railroad$Layout$Connector(
 						{x: 80, y: 50}))
 				])
 		},
@@ -5817,7 +5817,7 @@ var $Chadtech$unique_list$List$Unique$toList = function (_v0) {
 	return list;
 };
 var $Chadtech$unique_list$List$Unique$filterDuplicates = A2($elm$core$Basics$composeR, $Chadtech$unique_list$List$Unique$fromList, $Chadtech$unique_list$List$Unique$toList);
-var $author$project$Railroad$connectors = function (layout) {
+var $author$project$Railroad$Layout$connectors = function (layout) {
 	return $Chadtech$unique_list$List$Unique$filterDuplicates(
 		A3(
 			$elm$core$List$foldl,
@@ -5869,12 +5869,12 @@ var $author$project$Main$trackToSvg = function (track) {
 };
 var $elm$core$Basics$pow = _Basics_pow;
 var $elm$core$Basics$sqrt = _Basics_sqrt;
-var $author$project$Railroad$trackLength = function (track) {
+var $author$project$Railroad$Layout$trackLength = function (track) {
 	return $elm$core$Basics$sqrt(
 		A2($elm$core$Basics$pow, track.to.pos.x - track.from.pos.x, 2) + A2($elm$core$Basics$pow, track.to.pos.y - track.to.pos.x, 2));
 };
 var $author$project$Main$trackOccupancyToSvg = function (occ) {
-	var tl = $author$project$Railroad$trackLength(occ.track);
+	var tl = $author$project$Railroad$Layout$trackLength(occ.track);
 	var dy = occ.track.to.pos.y - occ.track.from.pos.y;
 	var dx = occ.track.to.pos.x - occ.track.from.pos.x;
 	return A2(
@@ -6045,7 +6045,7 @@ var $author$project$Main$view = function (model) {
 												A2(
 													$elm$core$List$map,
 													$author$project$Main$connectorToSvg,
-													$author$project$Railroad$connectors(model.state.layout))),
+													$author$project$Railroad$Layout$connectors(model.state.layout))),
 												A2(
 												$elm$svg$Svg$g,
 												_List_Nil,

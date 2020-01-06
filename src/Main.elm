@@ -6,6 +6,7 @@ import Html.Attributes as Att exposing (attribute, disabled)
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
 import Railroad as RR
+import Railroad.Layout as Layout
 import Round
 import Svg exposing (Svg, circle, g, line, svg)
 import Svg.Attributes exposing (..)
@@ -111,7 +112,7 @@ view model =
                         , model.scale |> scaleTransform |> transform
                         ]
                         [ g [] (List.map trackToSvg model.state.layout.tracks)
-                        , g [] (List.map connectorToSvg (RR.connectors model.state.layout))
+                        , g [] (List.map connectorToSvg (Layout.connectors model.state.layout))
                         , g [] (List.map trainToSvg model.state.trains)
                         ]
                     ]
@@ -154,7 +155,7 @@ scaleTransform scale =
     "scale(" ++ scaleStr ++ " " ++ scaleStr ++ ")"
 
 
-trackToSvg : RR.Track -> Svg Msg
+trackToSvg : Layout.Track -> Svg Msg
 trackToSvg track =
     line
         [ track.from.pos.x |> String.fromFloat |> x1
@@ -167,7 +168,7 @@ trackToSvg track =
         []
 
 
-connectorToSvg : RR.Connector -> Svg Msg
+connectorToSvg : Layout.Connector -> Svg Msg
 connectorToSvg conn =
     circle
         [ conn.pos.x |> String.fromFloat |> cx
@@ -189,7 +190,7 @@ trackOccupancyToSvg : RR.TrackOccupancy -> Svg msg
 trackOccupancyToSvg occ =
     let
         tl =
-            RR.trackLength occ.track
+            Layout.trackLength occ.track
 
         dx =
             occ.track.to.pos.x - occ.track.from.pos.x

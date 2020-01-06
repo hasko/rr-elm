@@ -1,19 +1,7 @@
-module Railroad exposing (Connector, Layout, State, Track, TrackOccupancy, Train, connectors, moved, sample, trackLength, tracksForTrain)
+module Railroad exposing (State, TrackOccupancy, Train, moved, sample, tracksForTrain)
 
 import List
-import List.Unique exposing (filterDuplicates)
-
-
-type alias Track =
-    { from : Connector, to : Connector }
-
-
-type alias Connector =
-    { pos : { x : Float, y : Float } }
-
-
-type alias Layout =
-    { tracks : List Track }
+import Railroad.Layout exposing (Connector, Layout, Track)
 
 
 type Orientation
@@ -70,11 +58,6 @@ type alias TrackOccupancy =
     { track : Track, from : Float, to : Float }
 
 
-connectors : Layout -> List Connector
-connectors layout =
-    List.map (\t -> [ t.from, t.to ]) layout.tracks |> List.foldl (++) [] |> filterDuplicates
-
-
 tracksForTrain : Train -> List TrackOccupancy
 tracksForTrain train =
     --TODO A train can cover multiple tracks.
@@ -89,13 +72,6 @@ tracksForTrain train =
                     train.loc.pos + train.length
       }
     ]
-
-
-{-| Return the length of a track. Currently, this is assuming it is a straight track. Later, we will support splines.
--}
-trackLength : Track -> Float
-trackLength track =
-    sqrt ((track.to.pos.x - track.from.pos.x) ^ 2 + (track.to.pos.y - track.to.pos.x) ^ 2)
 
 
 {-| Take a number of milliseconds since the last frame and the old state, and return the new state.
