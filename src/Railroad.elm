@@ -1,7 +1,7 @@
 module Railroad exposing (State, TrackOccupancy, Train, moved, sample, tracksForTrain)
 
 import List
-import Railroad.Layout exposing (Connector, Layout, Track)
+import Railroad.Layout as Layout exposing (Connector, Layout, Track)
 
 
 type Orientation
@@ -106,12 +106,12 @@ sample =
             Connector { x = 100, y = 100 }
 
         t1 =
-            Track c1 (Connector { x = 200, y = 120 })
+            Track c1 (Connector { x = 200, y = 120 }) Layout.StraightTrack
     in
     { layout =
         { tracks =
             [ t1
-            , Track c1 (Connector { x = 80, y = 50 })
+            , Track c1 (Connector { x = 80, y = 50 }) Layout.StraightTrack
             ]
         }
     , trains = [ { loc = { track = t1, pos = 50, orient = Reverse }, length = 30, speed = 11.1, state = Normal } ]

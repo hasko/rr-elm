@@ -1,10 +1,15 @@
-module Railroad.Layout exposing (Connector, Layout, Track, connectors, emptyLayout, trackLength)
+module Railroad.Layout exposing (Connector, Layout, Track, TrackGeometry(..), connectors, emptyLayout, trackLength)
 
 import List.Unique exposing (filterDuplicates)
 
 
 type alias Track =
-    { from : Connector, to : Connector }
+    { from : Connector, to : Connector, geometry : TrackGeometry }
+
+
+type TrackGeometry
+    = StraightTrack
+    | BezierTrack
 
 
 type alias Connector =

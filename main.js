@@ -5197,28 +5197,31 @@ var $author$project$Railroad$Layout$Connector = function (pos) {
 };
 var $author$project$Railroad$Normal = {$: 'Normal'};
 var $author$project$Railroad$Reverse = {$: 'Reverse'};
-var $author$project$Railroad$Layout$Track = F2(
-	function (from, to) {
-		return {from: from, to: to};
+var $author$project$Railroad$Layout$StraightTrack = {$: 'StraightTrack'};
+var $author$project$Railroad$Layout$Track = F3(
+	function (from, to, geometry) {
+		return {from: from, geometry: geometry, to: to};
 	});
 var $author$project$Railroad$sample = function () {
 	var c1 = $author$project$Railroad$Layout$Connector(
 		{x: 100, y: 100});
-	var t1 = A2(
+	var t1 = A3(
 		$author$project$Railroad$Layout$Track,
 		c1,
 		$author$project$Railroad$Layout$Connector(
-			{x: 200, y: 120}));
+			{x: 200, y: 120}),
+		$author$project$Railroad$Layout$StraightTrack);
 	return {
 		layout: {
 			tracks: _List_fromArray(
 				[
 					t1,
-					A2(
+					A3(
 					$author$project$Railroad$Layout$Track,
 					c1,
 					$author$project$Railroad$Layout$Connector(
-						{x: 80, y: 50}))
+						{x: 80, y: 50}),
+					$author$project$Railroad$Layout$StraightTrack)
 				])
 		},
 		trains: _List_fromArray(
