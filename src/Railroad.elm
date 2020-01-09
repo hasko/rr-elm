@@ -1,5 +1,6 @@
 module Railroad exposing (State, TrackOccupancy, Train, moved, sample, tracksForTrain)
 
+import Dict exposing (Dict)
 import List
 import Railroad.Layout as Layout exposing (Connector, Layout, Track)
 
@@ -99,20 +100,34 @@ movedTrain millis train =
     { train | loc = newLoc }
 
 
-sample : State
+sample : Maybe State
 sample =
     let
-        c1 =
-            Connector { x = 100, y = 100 }
+        cd =
+            Dict.empty
+                |> Dict.insert 1 { x = 100, y = 100 }
+                |> Dict.insert 2 { x = 200, y = 120 }
+                |> Dict.insert 3 { x = 80, y = 50 }
 
-        t1 =
-            Track c1 (Connector { x = 200, y = 120 }) Layout.StraightTrack
+        td =
+            Dict.empty
+                |> Dict.insert 1 { from = 1, to = 2, geometry = Layout.StraightTrack }
+                |> Dict.insert 2 { from = 1, to = 3, geometry = Layout.StraightTrack }
+
+        layoutResult =
+            Layout.build { connectors = cd, tracks = td }
     in
-    { layout =
-        { tracks =
-            [ t1
-            , Track c1 (Connector { x = 80, y = 50 }) Layout.StraightTrack
-            ]
-        }
-    , trains = [ { loc = { track = t1, pos = 50, orient = Reverse }, length = 30, speed = 11.1, state = Normal } ]
-    }
+    case layoutResult of
+        Err t ->
+            Nothing
+
+        Ok layout ->
+            case Layout.getTrack 1 layout of
+                Nothing ->
+                    Nothing
+
+                Just track ->
+                    Just
+                        { layout = layout
+                        , trains = [ { loc = { track = track, pos = 50, orient = Reverse }, length = 30, speed = 11.1, state = Normal } ]
+                        }

@@ -18,8 +18,8 @@ main =
 
 
 type alias Model =
-    { initialState : RR.State
-    , state : RR.State
+    { initialState : Maybe RR.State
+    , state : Maybe RR.State
     , scale : Float
     , millis : Maybe Int
     , frame : Int
@@ -74,11 +74,16 @@ update msg model =
             ( { model
                 | millis = Just newMillis
                 , state =
-                    if model.isRunning then
-                        RR.moved duration model.state
+                    case model.state of
+                        Just s ->
+                            if model.isRunning then
+                                Just (RR.moved duration s)
 
-                    else
-                        model.state
+                            else
+                                model.state
+
+                        Nothing ->
+                            Nothing
                 , frame = duration
               }
             , Cmd.none
@@ -111,10 +116,16 @@ view model =
                         , Att.style "border" "1px solid black"
                         , model.scale |> scaleTransform |> transform
                         ]
-                        [ g [] (List.map trackToSvg model.state.layout.tracks)
-                        , g [] (List.map connectorToSvg (Layout.connectors model.state.layout))
-                        , g [] (List.map trainToSvg model.state.trains)
-                        ]
+                        (case model.state of
+                            Just state ->
+                                [ g [] (List.map trackToSvg (Layout.tracks state.layout))
+                                , g [] (List.map connectorToSvg (Layout.connectors state.layout))
+                                , g [] (List.map trainToSvg state.trains)
+                                ]
+
+                            Nothing ->
+                                []
+                        )
                     ]
                 ]
             , div [ class "row mt-3" ]
@@ -157,11 +168,21 @@ scaleTransform scale =
 
 trackToSvg : Layout.Track -> Svg Msg
 trackToSvg track =
+    let
+        conns =
+            Layout.getConnectors track
+
+        from =
+            Layout.getPosition conns.from
+
+        to =
+            Layout.getPosition conns.to
+    in
     line
-        [ track.from.pos.x |> String.fromFloat |> x1
-        , track.from.pos.y |> String.fromFloat |> y1
-        , track.to.pos.x |> String.fromFloat |> x2
-        , track.to.pos.y |> String.fromFloat |> y2
+        [ from.x |> String.fromFloat |> x1
+        , from.y |> String.fromFloat |> y1
+        , to.x |> String.fromFloat |> x2
+        , to.y |> String.fromFloat |> y2
         , stroke "black"
         , strokeLinecap "round"
         ]
@@ -170,9 +191,13 @@ trackToSvg track =
 
 connectorToSvg : Layout.Connector -> Svg Msg
 connectorToSvg conn =
+    let
+        pos =
+            Layout.getPosition conn
+    in
     circle
-        [ conn.pos.x |> String.fromFloat |> cx
-        , conn.pos.y |> String.fromFloat |> cy
+        [ pos.x |> String.fromFloat |> cx
+        , pos.y |> String.fromFloat |> cy
         , r "5"
         , fill "none"
         , stroke "grey"
@@ -192,17 +217,26 @@ trackOccupancyToSvg occ =
         tl =
             Layout.trackLength occ.track
 
+        conns =
+            Layout.getConnectors occ.track
+
+        from =
+            Layout.getPosition conns.from
+
+        to =
+            Layout.getPosition conns.to
+
         dx =
-            occ.track.to.pos.x - occ.track.from.pos.x
+            to.x - from.x
 
         dy =
-            occ.track.to.pos.y - occ.track.from.pos.y
+            to.y - from.y
     in
     line
-        [ occ.track.from.pos.x + dx * occ.from / tl |> String.fromFloat |> x1
-        , occ.track.from.pos.y + dy * occ.from / tl |> String.fromFloat |> y1
-        , occ.track.from.pos.x + dx * occ.to / tl |> String.fromFloat |> x2
-        , occ.track.from.pos.y + dy * occ.to / tl |> String.fromFloat |> y2
+        [ from.x + dx * occ.from / tl |> String.fromFloat |> x1
+        , from.y + dy * occ.from / tl |> String.fromFloat |> y1
+        , from.x + dx * occ.to / tl |> String.fromFloat |> x2
+        , from.y + dy * occ.to / tl |> String.fromFloat |> y2
         , stroke "red"
         , strokeLinecap "round"
         , strokeWidth "5"
