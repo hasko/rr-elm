@@ -275,7 +275,30 @@ trainToSvgRecursive loc length svgList =
         in
         trackSegment loc.track loc.pos (clamp 0 (Layout.trackLength loc.track) newPos)
             --TODO Recurse!
-            :: svgList
+            :: (if newPos < 0 then
+                    case Layout.getPreviousTrack loc.track of
+                        Nothing ->
+                            svgList
+
+                        Just ( newTrack, newOrient ) ->
+                            let
+                                newStart =
+                                    case newOrient of
+                                        Forward ->
+                                            0
+
+                                        Reverse ->
+                                            Layout.trackLength newTrack
+
+                                newLength =
+                                    negate newPos
+                            in
+                            trainToSvgRecursive { track = newTrack, pos = newStart, orient = Orientation.reverse newOrient } newLength svgList
+
+                else
+                    --TODO Reverse
+                    svgList
+               )
 
 
 trackSegment : Layout.Track -> Float -> Float -> Svg msg
