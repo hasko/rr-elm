@@ -18,5 +18,6 @@ jobs:
     - uses: action/checkout
       with:
         ref: gh-pages
+        clean: false
     - run: elm make src/Main.elm --optimize --output=main.js
     - run: git add index.html main.js && git commit -m "Action build" && git push
