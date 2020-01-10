@@ -79,8 +79,20 @@ movedTrain millis train =
                 { train | loc = { newLoc | pos = 0 }, speed = 0, state = EmergencyStop }
 
             Just ( newTrack, newOrient ) ->
-                --TODO Fix position
-                { train | loc = { newLoc | track = newTrack, orient = newOrient } }
+                { train
+                    | loc =
+                        { newLoc
+                            | track = newTrack
+                            , orient = newOrient
+                            , pos =
+                                case newOrient of
+                                    Forward ->
+                                        negate newLoc.pos
+
+                                    Reverse ->
+                                        Layout.trackLength newTrack + newLoc.pos
+                        }
+                }
 
     else
         --TODO Add > trackLength

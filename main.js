@@ -5884,6 +5884,34 @@ var $author$project$Railroad$Layout$getPreviousTrack = function (track) {
 			$author$project$Railroad$Layout$getTracksFor(
 				$author$project$Railroad$Layout$getConnectors(track).from)));
 };
+var $author$project$Railroad$Layout$dummyConnectorData = {
+	pos: {x: 0 / 0, y: 0 / 0}
+};
+var $author$project$Railroad$Layout$getConnectorData = F2(
+	function (id, _v0) {
+		var connDict = _v0.a;
+		var _v1 = A2($elm$core$Dict$get, id, connDict);
+		if (_v1.$ === 'Nothing') {
+			return $author$project$Railroad$Layout$dummyConnectorData;
+		} else {
+			var cd = _v1.a;
+			return cd;
+		}
+	});
+var $author$project$Railroad$Layout$getPosition = function (_v0) {
+	var id = _v0.a;
+	var layout = _v0.b;
+	return A2($author$project$Railroad$Layout$getConnectorData, id, layout).pos;
+};
+var $elm$core$Basics$pow = _Basics_pow;
+var $elm$core$Basics$sqrt = _Basics_sqrt;
+var $author$project$Railroad$Layout$trackLength = function (track) {
+	var conns = $author$project$Railroad$Layout$getConnectors(track);
+	var fromPos = $author$project$Railroad$Layout$getPosition(conns.from);
+	var toPos = $author$project$Railroad$Layout$getPosition(conns.to);
+	return $elm$core$Basics$sqrt(
+		A2($elm$core$Basics$pow, toPos.x - fromPos.x, 2) + A2($elm$core$Basics$pow, toPos.y - fromPos.y, 2));
+};
 var $author$project$Railroad$movedTrain = F2(
 	function (millis, train) {
 		var loc = train.loc;
@@ -5912,7 +5940,17 @@ var $author$project$Railroad$movedTrain = F2(
 					{
 						loc: _Utils_update(
 							newLoc,
-							{orient: newOrient, track: newTrack})
+							{
+								orient: newOrient,
+								pos: function () {
+									if (newOrient.$ === 'Forward') {
+										return -newLoc.pos;
+									} else {
+										return $author$project$Railroad$Layout$trackLength(newTrack) + newLoc.pos;
+									}
+								}(),
+								track: newTrack
+							})
 					});
 			}
 		} else {
@@ -5996,25 +6034,6 @@ var $elm$svg$Svg$Attributes$cx = _VirtualDom_attribute('cx');
 var $elm$svg$Svg$Attributes$cy = _VirtualDom_attribute('cy');
 var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
 var $elm$core$String$fromFloat = _String_fromNumber;
-var $author$project$Railroad$Layout$dummyConnectorData = {
-	pos: {x: 0 / 0, y: 0 / 0}
-};
-var $author$project$Railroad$Layout$getConnectorData = F2(
-	function (id, _v0) {
-		var connDict = _v0.a;
-		var _v1 = A2($elm$core$Dict$get, id, connDict);
-		if (_v1.$ === 'Nothing') {
-			return $author$project$Railroad$Layout$dummyConnectorData;
-		} else {
-			var cd = _v1.a;
-			return cd;
-		}
-	});
-var $author$project$Railroad$Layout$getPosition = function (_v0) {
-	var id = _v0.a;
-	var layout = _v0.b;
-	return A2($author$project$Railroad$Layout$getConnectorData, id, layout).pos;
-};
 var $elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
 var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
 var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
@@ -6097,15 +6116,6 @@ var $author$project$Railroad$Layout$tracks = function (layout) {
 					return A2($author$project$Railroad$Layout$Track, index, layout);
 				}),
 			trackDict));
-};
-var $elm$core$Basics$pow = _Basics_pow;
-var $elm$core$Basics$sqrt = _Basics_sqrt;
-var $author$project$Railroad$Layout$trackLength = function (track) {
-	var conns = $author$project$Railroad$Layout$getConnectors(track);
-	var fromPos = $author$project$Railroad$Layout$getPosition(conns.from);
-	var toPos = $author$project$Railroad$Layout$getPosition(conns.to);
-	return $elm$core$Basics$sqrt(
-		A2($elm$core$Basics$pow, toPos.x - fromPos.x, 2) + A2($elm$core$Basics$pow, toPos.y - fromPos.y, 2));
 };
 var $author$project$Main$trackOccupancyToSvg = function (occ) {
 	var tl = $author$project$Railroad$Layout$trackLength(occ.track);
