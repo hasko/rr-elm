@@ -5873,6 +5873,17 @@ var $elm$core$List$head = function (list) {
 	}
 };
 var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Railroad$Layout$getNextTrack = function (track) {
+	return $elm$core$List$head(
+		A2(
+			$elm$core$List$filter,
+			function (_v0) {
+				var otherTrack = _v0.a;
+				return !_Utils_eq(track, otherTrack);
+			},
+			$author$project$Railroad$Layout$getTracksFor(
+				$author$project$Railroad$Layout$getConnectors(track).to)));
+};
 var $author$project$Railroad$Layout$getPreviousTrack = function (track) {
 	return $elm$core$List$head(
 		A2(
@@ -5919,6 +5930,7 @@ var $author$project$Railroad$movedTrain = F2(
 		var newLoc = _Utils_update(
 			loc,
 			{pos: train.loc.pos + distanceMoved});
+		var tl = $author$project$Railroad$Layout$trackLength(newLoc.track);
 		if (newLoc.pos < 0) {
 			var _v0 = $author$project$Railroad$Layout$getPreviousTrack(loc.track);
 			if (_v0.$ === 'Nothing') {
@@ -5954,9 +5966,45 @@ var $author$project$Railroad$movedTrain = F2(
 					});
 			}
 		} else {
-			return _Utils_update(
-				train,
-				{loc: newLoc});
+			if (_Utils_cmp(newLoc.pos, tl) > 0) {
+				var _v3 = $author$project$Railroad$Layout$getNextTrack(loc.track);
+				if (_v3.$ === 'Nothing') {
+					return _Utils_update(
+						train,
+						{
+							loc: _Utils_update(
+								newLoc,
+								{pos: tl}),
+							speed: 0,
+							state: $author$project$Railroad$EmergencyStop
+						});
+				} else {
+					var _v4 = _v3.a;
+					var newTrack = _v4.a;
+					var newOrient = _v4.b;
+					return _Utils_update(
+						train,
+						{
+							loc: _Utils_update(
+								newLoc,
+								{
+									orient: newOrient,
+									pos: function () {
+										if (newOrient.$ === 'Forward') {
+											return newLoc.pos - tl;
+										} else {
+											return $author$project$Railroad$Layout$trackLength(newTrack) - (newLoc.pos - tl);
+										}
+									}(),
+									track: newTrack
+								})
+						});
+				}
+			} else {
+				return _Utils_update(
+					train,
+					{loc: newLoc});
+			}
 		}
 	});
 var $author$project$Railroad$moved = F2(

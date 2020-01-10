@@ -72,7 +72,11 @@ movedTrain millis train =
 
         newLoc =
             { loc | pos = train.loc.pos + distanceMoved }
+
+        tl =
+            Layout.trackLength newLoc.track
     in
+    --TODO Make recursive so it works also for very short successor tracks. Also, refactor.
     if newLoc.pos < 0 then
         case Layout.getPreviousTrack loc.track of
             Nothing ->
@@ -91,6 +95,27 @@ movedTrain millis train =
 
                                     Reverse ->
                                         Layout.trackLength newTrack + newLoc.pos
+                        }
+                }
+
+    else if newLoc.pos > tl then
+        case Layout.getNextTrack loc.track of
+            Nothing ->
+                { train | loc = { newLoc | pos = tl }, speed = 0, state = EmergencyStop }
+
+            Just ( newTrack, newOrient ) ->
+                { train
+                    | loc =
+                        { newLoc
+                            | track = newTrack
+                            , orient = newOrient
+                            , pos =
+                                case newOrient of
+                                    Forward ->
+                                        newLoc.pos - tl
+
+                                    Reverse ->
+                                        Layout.trackLength newTrack - (newLoc.pos - tl)
                         }
                 }
 
