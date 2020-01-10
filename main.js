@@ -6165,56 +6165,61 @@ var $author$project$Railroad$Layout$tracks = function (layout) {
 				}),
 			trackDict));
 };
-var $author$project$Main$trackOccupancyToSvg = function (occ) {
-	var tl = $author$project$Railroad$Layout$trackLength(occ.track);
-	var conns = $author$project$Railroad$Layout$getConnectors(occ.track);
-	var from = $author$project$Railroad$Layout$getPosition(conns.from);
-	var to = $author$project$Railroad$Layout$getPosition(conns.to);
-	var dx = to.x - from.x;
-	var dy = to.y - from.y;
-	return A2(
-		$elm$svg$Svg$line,
-		_List_fromArray(
-			[
-				$elm$svg$Svg$Attributes$x1(
-				$elm$core$String$fromFloat(from.x + ((dx * occ.from) / tl))),
-				$elm$svg$Svg$Attributes$y1(
-				$elm$core$String$fromFloat(from.y + ((dy * occ.from) / tl))),
-				$elm$svg$Svg$Attributes$x2(
-				$elm$core$String$fromFloat(from.x + ((dx * occ.to) / tl))),
-				$elm$svg$Svg$Attributes$y2(
-				$elm$core$String$fromFloat(from.y + ((dy * occ.to) / tl))),
-				$elm$svg$Svg$Attributes$stroke('red'),
-				$elm$svg$Svg$Attributes$strokeLinecap('round'),
-				$elm$svg$Svg$Attributes$strokeWidth('5')
-			]),
-		_List_Nil);
-};
-var $author$project$Railroad$tracksForTrain = function (train) {
-	return _List_fromArray(
-		[
-			{
-			from: train.loc.pos,
-			to: function () {
-				var _v0 = train.loc.orient;
-				if (_v0.$ === 'Forward') {
-					return train.loc.pos - train.length;
-				} else {
-					return train.loc.pos + train.length;
-				}
-			}(),
-			track: train.loc.track
+var $elm$core$Basics$clamp = F3(
+	function (low, high, number) {
+		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
+	});
+var $author$project$Main$trackSegment = F3(
+	function (track, fromPos, toPos) {
+		var tl = $author$project$Railroad$Layout$trackLength(track);
+		var conns = $author$project$Railroad$Layout$getConnectors(track);
+		var from = $author$project$Railroad$Layout$getPosition(conns.from);
+		var to = $author$project$Railroad$Layout$getPosition(conns.to);
+		var dx = to.x - from.x;
+		var dy = to.y - from.y;
+		return A2(
+			$elm$svg$Svg$line,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$x1(
+					$elm$core$String$fromFloat(from.x + ((dx * fromPos) / tl))),
+					$elm$svg$Svg$Attributes$y1(
+					$elm$core$String$fromFloat(from.y + ((dy * fromPos) / tl))),
+					$elm$svg$Svg$Attributes$x2(
+					$elm$core$String$fromFloat(from.x + ((dx * toPos) / tl))),
+					$elm$svg$Svg$Attributes$y2(
+					$elm$core$String$fromFloat(from.y + ((dy * toPos) / tl))),
+					$elm$svg$Svg$Attributes$stroke('red'),
+					$elm$svg$Svg$Attributes$strokeLinecap('round'),
+					$elm$svg$Svg$Attributes$strokeWidth('5')
+				]),
+			_List_Nil);
+	});
+var $author$project$Main$trainToSvgRecursive = F3(
+	function (loc, length, svgList) {
+		if (length <= 0) {
+			return svgList;
+		} else {
+			var newPos = loc.pos - A2($author$project$Railroad$Orientation$byOrientation, loc.orient, length);
+			return A2(
+				$elm$core$List$cons,
+				A3(
+					$author$project$Main$trackSegment,
+					loc.track,
+					loc.pos,
+					A3(
+						$elm$core$Basics$clamp,
+						0,
+						$author$project$Railroad$Layout$trackLength(loc.track),
+						newPos)),
+				svgList);
 		}
-		]);
-};
+	});
 var $author$project$Main$trainToSvg = function (train) {
 	return A2(
 		$elm$svg$Svg$g,
 		_List_Nil,
-		A2(
-			$elm$core$List$map,
-			$author$project$Main$trackOccupancyToSvg,
-			$author$project$Railroad$tracksForTrain(train)));
+		A3($author$project$Main$trainToSvgRecursive, train.loc, train.length, _List_Nil));
 };
 var $elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
 var $author$project$Main$Reset = {$: 'Reset'};
@@ -6601,6 +6606,13 @@ var $elm$html$Html$Attributes$scope = $elm$html$Html$Attributes$stringProperty('
 var $elm$html$Html$table = _VirtualDom_node('table');
 var $elm$html$Html$td = _VirtualDom_node('td');
 var $elm$html$Html$th = _VirtualDom_node('th');
+var $author$project$Railroad$Orientation$toString = function (orient) {
+	if (orient.$ === 'Forward') {
+		return 'Forward';
+	} else {
+		return 'Reverse';
+	}
+};
 var $elm$html$Html$tr = _VirtualDom_node('tr');
 var $author$project$Main$viewTrains = function (trains) {
 	return A2(
@@ -6713,14 +6725,8 @@ var $author$project$Main$viewTrains = function (trains) {
 								_List_Nil,
 								_List_fromArray(
 									[
-										function () {
-										var _v0 = train.loc.orient;
-										if (_v0.$ === 'Forward') {
-											return $elm$html$Html$text('Forward');
-										} else {
-											return $elm$html$Html$text('Reverse');
-										}
-									}()
+										$elm$html$Html$text(
+										$author$project$Railroad$Orientation$toString(train.loc.orient))
 									])),
 								A2(
 								$elm$html$Html$td,
@@ -6750,8 +6756,8 @@ var $author$project$Main$viewTrains = function (trains) {
 								_List_fromArray(
 									[
 										function () {
-										var _v1 = train.state;
-										switch (_v1.$) {
+										var _v0 = train.state;
+										switch (_v0.$) {
 											case 'Normal':
 												return $elm$html$Html$text($joshforisha$elm_html_entities$Html$Entity$nbsp);
 											case 'EmergencyStop':

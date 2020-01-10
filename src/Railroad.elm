@@ -1,4 +1,4 @@
-module Railroad exposing (State, TrackOccupancy, Train, TrainState(..), moved, sample, tracksForTrain)
+module Railroad exposing (Location, State, Train, TrainState(..), moved, sample)
 
 import Dict exposing (Dict)
 import List
@@ -11,7 +11,11 @@ type alias State =
 
 
 type alias Train =
-    { loc : { track : Track, pos : Float, orient : Orientation }, length : Float, speed : Float, state : TrainState }
+    { loc : Location, length : Float, speed : Float, state : TrainState }
+
+
+type alias Location =
+    { track : Track, pos : Float, orient : Orientation }
 
 
 {-| TrainState can be:
@@ -29,26 +33,6 @@ type TrainState
     | EmergencyStop
     | Crashed
     | OffMap
-
-
-type alias TrackOccupancy =
-    { track : Track, from : Float, to : Float }
-
-
-tracksForTrain : Train -> List TrackOccupancy
-tracksForTrain train =
-    --TODO A train can cover multiple tracks.
-    [ { track = train.loc.track
-      , from = train.loc.pos
-      , to =
-            case train.loc.orient of
-                Forward ->
-                    train.loc.pos - train.length
-
-                Reverse ->
-                    train.loc.pos + train.length
-      }
-    ]
 
 
 {-| Take a number of milliseconds since the last frame and the old state, and return the new state.

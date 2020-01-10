@@ -8,7 +8,7 @@ import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
 import Railroad as RR
 import Railroad.Layout as Layout
-import Railroad.Orientation exposing (..)
+import Railroad.Orientation as Orientation exposing (Orientation(..), byOrientation)
 import Round
 import Svg exposing (Svg, circle, g, line, svg)
 import Svg.Attributes exposing (..)
@@ -186,14 +186,7 @@ viewTrains trains =
                         [ td []
                             [ text (String.fromInt (Layout.getTrackId train.loc.track)) ]
                         , td [ class "text-right" ] [ text (Round.round 1 train.loc.pos) ]
-                        , td []
-                            [ case train.loc.orient of
-                                Forward ->
-                                    text "Forward"
-
-                                Reverse ->
-                                    text "Reverse"
-                            ]
+                        , td [] [ text (Orientation.toString train.loc.orient) ]
                         , td [ class "text-right" ] [ text (Round.round 1 train.speed) ]
                         , td [ class "text-right" ] [ text (Round.round 1 train.length) ]
                         , td []
@@ -267,17 +260,32 @@ connectorToSvg conn =
 
 trainToSvg : RR.Train -> Svg Msg
 trainToSvg train =
-    g [] (List.map trackOccupancyToSvg (RR.tracksForTrain train))
+    g [] (trainToSvgRecursive train.loc train.length [])
 
 
-trackOccupancyToSvg : RR.TrackOccupancy -> Svg msg
-trackOccupancyToSvg occ =
+trainToSvgRecursive : RR.Location -> Float -> List (Svg Msg) -> List (Svg Msg)
+trainToSvgRecursive loc length svgList =
+    if length <= 0 then
+        svgList
+
+    else
+        let
+            newPos =
+                loc.pos - Orientation.byOrientation loc.orient length
+        in
+        trackSegment loc.track loc.pos (clamp 0 (Layout.trackLength loc.track) newPos)
+            --TODO Recurse!
+            :: svgList
+
+
+trackSegment : Layout.Track -> Float -> Float -> Svg msg
+trackSegment track fromPos toPos =
     let
         tl =
-            Layout.trackLength occ.track
+            Layout.trackLength track
 
         conns =
-            Layout.getConnectors occ.track
+            Layout.getConnectors track
 
         from =
             Layout.getPosition conns.from
@@ -291,11 +299,12 @@ trackOccupancyToSvg occ =
         dy =
             to.y - from.y
     in
+    --TODO Curves and such.
     line
-        [ from.x + dx * occ.from / tl |> String.fromFloat |> x1
-        , from.y + dy * occ.from / tl |> String.fromFloat |> y1
-        , from.x + dx * occ.to / tl |> String.fromFloat |> x2
-        , from.y + dy * occ.to / tl |> String.fromFloat |> y2
+        [ from.x + dx * fromPos / tl |> String.fromFloat |> x1
+        , from.y + dy * fromPos / tl |> String.fromFloat |> y1
+        , from.x + dx * toPos / tl |> String.fromFloat |> x2
+        , from.y + dy * toPos / tl |> String.fromFloat |> y2
         , stroke "red"
         , strokeLinecap "round"
         , strokeWidth "5"

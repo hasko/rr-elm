@@ -1,4 +1,4 @@
-module Railroad.Orientation exposing (..)
+module Railroad.Orientation exposing (Orientation(..), byOrientation, reverse, toString)
 
 
 type Orientation
@@ -24,3 +24,13 @@ reverse orient =
 
         Reverse ->
             Forward
+
+
+toString : Orientation -> String
+toString orient =
+    case orient of
+        Forward ->
+            "Forward"
+
+        Reverse ->
+            "Reverse"

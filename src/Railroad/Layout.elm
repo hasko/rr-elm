@@ -17,7 +17,7 @@ module Railroad.Layout exposing
     )
 
 import Dict exposing (Dict)
-import Railroad.Orientation exposing (..)
+import Railroad.Orientation as Orientation exposing (Orientation(..))
 
 
 type Layout
