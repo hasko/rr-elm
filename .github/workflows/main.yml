@@ -17,9 +17,11 @@ jobs:
         uses: jorelali/setup-elm@v1
         with:
           elm-version: 0.19.1
-      - name: Checkout gh-pages
-        run: git checkout gh-pages
       - name: Build Elm code
         run: elm make src/Main.elm --optimize --output=main.js
+      - name: Stash
+        run: git stash index.html main.js
+      - name: Checkout gh-pages
+        run: git checkout gh-pages && git stash pop
       - name: Push to gh-pages
         run: git add index.html main.js && git commit -m "Action build" && git push
