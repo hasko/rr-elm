@@ -28,5 +28,5 @@ jobs:
           git config user.name hasko
           git config user.email hasko@heinecke.com
           git add index.html main.js
-          git commit -m "Action build"
+          git commit -q -m "Action build"
           git push
