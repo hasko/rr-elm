@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: 
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v1
+      - name: Install Elm
+        uses: jorelali/setup-elm@v1
+        with:
+          elm-version: 0.19.1
+      - name: Build Elm code
+        run: elm make src/Main.elm --optimize --output=main.js
+      - name: Stash
+        run: git stash push index.html main.js
+      - name: Checkout gh-pages
+        run: git checkout gh-pages && git stash pop
+      - name: Push to gh-pages
+        run: |
+          git config user.name hasko
+          git config user.email hasko@heinecke.com
+          git add index.html main.js && git commit -m "Action build" && git push || :
