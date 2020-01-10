@@ -18,13 +18,10 @@ jobs:
         with:
           elm-version: 0.19.1
       - name: Build Elm code
-        run: elm make src/Main.elm --optimize --output=main.js
-      - name: Stash
-        run: git stash push index.html main.js
-      - name: Checkout gh-pages
-        run: git checkout gh-pages && git stash pop
-      - name: Push to gh-pages
-        run: |
-          git config user.name hasko
-          git config user.email hasko@heinecke.com
-          git add index.html main.js && git commit -m "Action build" && git push || :
+        run: mkdir build && cp index.html build && elm make src/Main.elm --optimize --output=build/main.js
+      - name: Deploy to GitHub pages
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: build # The folder the action should deploy.
