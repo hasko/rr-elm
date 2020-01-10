@@ -24,4 +24,9 @@ jobs:
       - name: Checkout gh-pages
         run: git checkout gh-pages && git stash pop
       - name: Push to gh-pages
-        run: git add index.html main.js && git commit -m "Action build" && git push
+        run: |
+          git config user.name hasko
+          git config user.email hasko@heinecke.com
+          git add index.html main.js
+          git commit -m "Action build"
+          git push
