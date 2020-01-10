@@ -1,12 +1,14 @@
 module Main exposing (Msg(..), main, update, view)
 
 import Browser
-import Html exposing (Html, br, button, div, li, p, text, ul)
-import Html.Attributes as Att exposing (attribute, disabled)
+import Html exposing (Html, br, button, div, li, p, table, td, text, th, tr, ul)
+import Html.Attributes as Att exposing (attribute, disabled, scope)
+import Html.Entity exposing (nbsp)
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
 import Railroad as RR
 import Railroad.Layout as Layout
+import Railroad.Orientation exposing (..)
 import Round
 import Svg exposing (Svg, circle, g, line, svg)
 import Svg.Attributes exposing (..)
@@ -132,6 +134,16 @@ view model =
                 [ div [ class "col" ]
                     [ lazy viewSimulationControls model.isRunning ]
                 ]
+            , div [ class "row mt-3" ]
+                [ div [ class "col" ]
+                    [ case model.state of
+                        Just stateRR ->
+                            lazy viewTrains stateRR.trains
+
+                        Nothing ->
+                            div [] []
+                    ]
+                ]
             ]
         ]
     }
@@ -155,6 +167,53 @@ viewSimulationControls isRunning =
             ]
             [ text "Reset" ]
         ]
+
+
+viewTrains : List RR.Train -> Html Msg
+viewTrains trains =
+    table [ class "table" ]
+        (tr []
+            [ th [ scope "col" ] [ text "Track" ]
+            , th [ class "text-right", scope "col" ] [ text "Pos" ]
+            , th [ scope "col" ] [ text "Orientation" ]
+            , th [ class "text-right", scope "col" ] [ text "Speed" ]
+            , th [ class "text-right", scope "col" ] [ text "Length" ]
+            , th [ scope "col" ] [ text "State" ]
+            ]
+            :: List.map
+                (\train ->
+                    tr []
+                        [ td []
+                            [ text (String.fromInt (Layout.getTrackId train.loc.track)) ]
+                        , td [ class "text-right" ] [ text (Round.round 1 train.loc.pos) ]
+                        , td []
+                            [ case train.loc.orient of
+                                Forward ->
+                                    text "Forward"
+
+                                Reverse ->
+                                    text "Reverse"
+                            ]
+                        , td [ class "text-right" ] [ text (Round.round 1 train.speed) ]
+                        , td [ class "text-right" ] [ text (Round.round 1 train.length) ]
+                        , td []
+                            [ case train.state of
+                                RR.Normal ->
+                                    text nbsp
+
+                                RR.EmergencyStop ->
+                                    text "Emergency stop"
+
+                                RR.Crashed ->
+                                    text "Crashed"
+
+                                RR.OffMap ->
+                                    text "Off map"
+                            ]
+                        ]
+                )
+                trains
+        )
 
 
 scaleTransform : Float -> String

@@ -1,6 +1,23 @@
-module Railroad.Layout exposing (Connector, Layout, Track, TrackGeometry(..), build, connectors, emptyLayout, getConnectors, getPosition, getTrack, trackLength, tracks)
+module Railroad.Layout exposing
+    ( Connector
+    , Layout
+    , Track
+    , TrackGeometry(..)
+    , build
+    , connectors
+    , emptyLayout
+    , getConnectors
+    , getNextTrack
+    , getPosition
+    , getPreviousTrack
+    , getTrack
+    , getTrackId
+    , trackLength
+    , tracks
+    )
 
 import Dict exposing (Dict)
+import Railroad.Orientation exposing (..)
 
 
 type Layout
@@ -85,6 +102,8 @@ tracks layout =
     Dict.map (\index _ -> Track index layout) trackDict |> Dict.values
 
 
+{-| Internal function to access the layout by ID.
+-}
 getTrack : Int -> Layout -> Maybe Track
 getTrack id layout =
     let
@@ -96,6 +115,50 @@ getTrack id layout =
 
     else
         Nothing
+
+
+getTrackId : Track -> Int
+getTrackId (Track id _) =
+    id
+
+
+getPreviousTrack : Track -> Maybe ( Track, Orientation )
+getPreviousTrack track =
+    getConnectors track
+        |> .from
+        |> getTracksFor
+        |> List.filter (\( otherTrack, _ ) -> track /= otherTrack)
+        |> List.head
+
+
+getNextTrack : Track -> Maybe ( Track, Orientation )
+getNextTrack track =
+    getConnectors track
+        |> .to
+        |> getTracksFor
+        |> List.filter (\( otherTrack, _ ) -> track /= otherTrack)
+        |> List.head
+
+
+getTracksFor : Connector -> List ( Track, Orientation )
+getTracksFor (Connector id layout) =
+    let
+        (Layout _ trackDict) =
+            layout
+    in
+    trackDict
+        |> Dict.filter (\_ trackData -> trackData.from == id || trackData.to == id)
+        |> Dict.map
+            (\trackId trackData ->
+                ( Track trackId layout
+                , if trackData.from == id then
+                    Forward
+
+                  else
+                    Reverse
+                )
+            )
+        |> Dict.values
 
 
 {-| Return the length of a track. TODO Currently, this is assuming it is a straight track. Later, we will support splines.

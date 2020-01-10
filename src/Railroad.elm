@@ -1,33 +1,9 @@
-module Railroad exposing (State, TrackOccupancy, Train, moved, sample, tracksForTrain)
+module Railroad exposing (State, TrackOccupancy, Train, TrainState(..), moved, sample, tracksForTrain)
 
 import Dict exposing (Dict)
 import List
 import Railroad.Layout as Layout exposing (Connector, Layout, Track)
-
-
-type Orientation
-    = Forward
-    | Reverse
-
-
-byOrientation : Orientation -> number -> number
-byOrientation orient n =
-    case orient of
-        Forward ->
-            n
-
-        Reverse ->
-            negate n
-
-
-reverse : Orientation -> Orientation
-reverse orient =
-    case orient of
-        Forward ->
-            Reverse
-
-        Reverse ->
-            Forward
+import Railroad.Orientation exposing (..)
 
 
 type alias State =
@@ -97,7 +73,18 @@ movedTrain millis train =
         newLoc =
             { loc | pos = train.loc.pos + distanceMoved }
     in
-    { train | loc = newLoc }
+    if newLoc.pos < 0 then
+        case Layout.getPreviousTrack loc.track of
+            Nothing ->
+                { train | loc = { newLoc | pos = 0 }, speed = 0, state = EmergencyStop }
+
+            Just ( newTrack, newOrient ) ->
+                --TODO Fix position
+                { train | loc = { newLoc | track = newTrack, orient = newOrient } }
+
+    else
+        --TODO Add > trackLength
+        { train | loc = newLoc }
 
 
 sample : Maybe State
