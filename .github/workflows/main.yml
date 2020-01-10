@@ -17,6 +17,7 @@ jobs:
         elm-version: 0.19.1
     - uses: action/checkout
       with:
+        repository: ${{ github.repository }}
         ref: gh-pages
         clean: false
     - run: elm make src/Main.elm --optimize --output=main.js
