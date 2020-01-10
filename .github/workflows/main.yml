@@ -12,14 +12,14 @@ jobs:
 
     steps:
       - name: Checkout master
-      - uses: actions/checkout@v1
+        uses: actions/checkout@v1
       - name: Install Elm
-      - uses: jorelali/setup-elm@v1
+        uses: jorelali/setup-elm@v1
         with:
           elm-version: 0.19.1
       - name: Checkout gh-pages
-      - run: git checkout gh-pages
+        run: git checkout gh-pages
       - name: Build Elm code
-      - run: elm make src/Main.elm --optimize --output=main.js
+        run: elm make src/Main.elm --optimize --output=main.js
       - name: Push to gh-pages
-      - run: git add index.html main.js && git commit -m "Action build" && git push
+        run: git add index.html main.js && git commit -m "Action build" && git push
