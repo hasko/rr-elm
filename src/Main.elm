@@ -1,8 +1,8 @@
 module Main exposing (Msg(..), main, update, view)
 
 import Browser
-import Html exposing (Html, br, button, div, li, p, table, td, text, th, tr, ul)
-import Html.Attributes as Att exposing (attribute, disabled, scope)
+import Html exposing (Html, br, button, div, input, label, li, p, table, td, text, th, tr, ul)
+import Html.Attributes as Att exposing (attribute, disabled, for, scope, value)
 import Html.Entity exposing (nbsp)
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
@@ -281,15 +281,33 @@ trainToSvg train =
 trainToSvgRecursive : RR.Location -> Float -> List (Svg Msg) -> List (Svg Msg)
 trainToSvgRecursive loc length svgList =
     if length <= 0 then
+        -- Whole train is covered, return what we accumulated so far.
         svgList
 
     else
+        -- Some train length remains.
         let
+            currentTrackLength =
+                Layout.trackLength loc.track
+
+            -- Calculate the end of the train ignoring track length.
             newPos =
                 loc.pos - Orientation.byOrientation loc.orient length
+
+            -- Now clamp to track length and calculate the remaining length of the train.
+            ( newClampedPos, newLength ) =
+                if newPos < 0 then
+                    -- Train spills over beginning of track.
+                    ( 0, length - loc.pos )
+
+                else if newPos > currentTrackLength then
+                    -- Train spills over end of track.
+                    ( currentTrackLength, length - currentTrackLength + loc.pos )
+
+                else
+                    ( newPos, 0 )
         in
-        trackSegment loc.track loc.pos (clamp 0 (Layout.trackLength loc.track) newPos)
-            --TODO Recurse!
+        trackSegment loc.track loc.pos newClampedPos
             :: (if newPos < 0 then
                     -- Train is spilling onto the previous track.
                     case Layout.getPreviousTrack loc.track of
@@ -305,9 +323,6 @@ trainToSvgRecursive loc length svgList =
 
                                         Reverse ->
                                             Layout.trackLength newTrack
-
-                                newLength =
-                                    negate newPos
                             in
                             trainToSvgRecursive { track = newTrack, pos = newStart, orient = Orientation.reverse newOrient } newLength svgList
 
@@ -326,9 +341,6 @@ trainToSvgRecursive loc length svgList =
 
                                         Reverse ->
                                             Layout.trackLength newTrack
-
-                                newLength =
-                                    length - Layout.trackLength newTrack + newPos
                             in
                             trainToSvgRecursive { track = newTrack, pos = newStart, orient = Orientation.reverse newOrient } newLength svgList
 
