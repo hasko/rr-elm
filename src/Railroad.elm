@@ -116,11 +116,14 @@ sample =
                 |> Dict.insert 1 { x = 100, y = 100 }
                 |> Dict.insert 2 { x = 200, y = 120 }
                 |> Dict.insert 3 { x = 80, y = 50 }
+                |> Dict.insert 4 { x = 200, y = 30 }
 
         td =
             Dict.empty
                 |> Dict.insert 1 { from = 1, to = 2, geometry = Layout.StraightTrack }
                 |> Dict.insert 2 { from = 1, to = 3, geometry = Layout.StraightTrack }
+                |> Dict.insert 3 { from = 3, to = 4, geometry = Layout.StraightTrack }
+                |> Dict.insert 4 { from = 2, to = 4, geometry = Layout.StraightTrack }
 
         layoutResult =
             Layout.build { connectors = cd, tracks = td }
