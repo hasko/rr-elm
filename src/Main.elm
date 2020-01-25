@@ -33,6 +33,7 @@ type Msg
     = Tick Time.Posix
     | Start
     | Stop
+    | SingleStep
     | Reset
 
 
@@ -97,6 +98,11 @@ update msg model =
         Stop ->
             ( { model | isRunning = False }, Cmd.none )
 
+        SingleStep ->
+            ( { model | state = model.state |> Maybe.andThen (\s -> Just (RR.moved 100 s)) }
+            , Cmd.none
+            )
+
         Reset ->
             ( { model | state = model.initialState }, Cmd.none )
 
@@ -157,6 +163,15 @@ viewSimulationControls isRunning =
 
           else
             button [ class "btn btn-primary", onClick Start ] [ text "Start simulation" ]
+        , button
+            [ class "btn btn-secondary ml-2"
+            , if isRunning then
+                disabled True
+
+              else
+                onClick SingleStep
+            ]
+            [ text "Step" ]
         , button
             [ class "btn btn-secondary ml-2"
             , if isRunning then
@@ -276,6 +291,7 @@ trainToSvgRecursive loc length svgList =
         trackSegment loc.track loc.pos (clamp 0 (Layout.trackLength loc.track) newPos)
             --TODO Recurse!
             :: (if newPos < 0 then
+                    -- Train is spilling onto the previous track.
                     case Layout.getPreviousTrack loc.track of
                         Nothing ->
                             svgList
@@ -295,8 +311,29 @@ trainToSvgRecursive loc length svgList =
                             in
                             trainToSvgRecursive { track = newTrack, pos = newStart, orient = Orientation.reverse newOrient } newLength svgList
 
+                else if newPos > Layout.trackLength loc.track then
+                    -- Train is spilling onto the next track.
+                    case Layout.getNextTrack loc.track of
+                        Nothing ->
+                            svgList
+
+                        Just ( newTrack, newOrient ) ->
+                            let
+                                newStart =
+                                    case newOrient of
+                                        Forward ->
+                                            0
+
+                                        Reverse ->
+                                            Layout.trackLength newTrack
+
+                                newLength =
+                                    length - Layout.trackLength newTrack + newPos
+                            in
+                            trainToSvgRecursive { track = newTrack, pos = newStart, orient = Orientation.reverse newOrient } newLength svgList
+
                 else
-                    --TODO Reverse
+                    -- Train fits onto the current track.
                     svgList
                )
 
