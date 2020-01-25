@@ -784,11 +784,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.ak.J === region.av.J)
+	if (region.al.J === region.aw.J)
 	{
-		return 'on line ' + region.ak.J;
+		return 'on line ' + region.al.J;
 	}
-	return 'on lines ' + region.ak.J + ' through ' + region.av.J;
+	return 'on lines ' + region.al.J + ' through ' + region.aw.J;
 }
 
 
@@ -2705,8 +2705,8 @@ var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
 		u: func(record.u),
-		al: record.al,
-		ag: record.ag
+		am: record.am,
+		ah: record.ah
 	}
 });
 
@@ -2975,10 +2975,10 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 
 		var value = result.a;
 		var message = !tag ? value : tag < 3 ? value.a : value.u;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.al;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.am;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.ag) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.ah) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3968,7 +3968,7 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 		impl.bN,
 		impl.bJ,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.aj && impl.aj(sendToApp)
+			var divertHrefToApp = impl.ak && impl.ak(sendToApp)
 			var view = impl.bO;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
@@ -3977,7 +3977,7 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.aq);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.ar);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
@@ -4043,7 +4043,7 @@ function _Browser_application(impl)
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		aj: function(sendToApp)
+		ak: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4942,7 +4942,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {ax: fragment, aD: host, aO: path, aQ: port_, aT: protocol, aU: query};
+		return {ay: fragment, aD: host, aO: path, aQ: port_, aT: protocol, aU: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5266,7 +5266,7 @@ var $author$project$Railroad$Layout$build = function (spec) {
 		$elm$core$Dict$map,
 		F2(
 			function (index, point) {
-				return {V: point};
+				return {W: point};
 			}),
 		spec.bf);
 	return $elm$core$Result$Ok(
@@ -5432,26 +5432,38 @@ var $elm$core$Dict$insert = F3(
 var $author$project$Railroad$sample = function () {
 	var td = A3(
 		$elm$core$Dict$insert,
-		2,
-		{ay: 1, az: 0, a5: 3},
+		4,
+		{az: 2, R: 0, a5: 4},
 		A3(
 			$elm$core$Dict$insert,
-			1,
-			{ay: 1, az: 0, a5: 2},
-			$elm$core$Dict$empty));
-	var cd = A3(
-		$elm$core$Dict$insert,
-		3,
-		{B: 80, C: 50},
-		A3(
-			$elm$core$Dict$insert,
-			2,
-			{B: 200, C: 120},
+			3,
+			{az: 3, R: 0, a5: 4},
 			A3(
 				$elm$core$Dict$insert,
-				1,
-				{B: 100, C: 100},
-				$elm$core$Dict$empty)));
+				2,
+				{az: 1, R: 0, a5: 3},
+				A3(
+					$elm$core$Dict$insert,
+					1,
+					{az: 1, R: 0, a5: 2},
+					$elm$core$Dict$empty))));
+	var cd = A3(
+		$elm$core$Dict$insert,
+		4,
+		{B: 200, C: 30},
+		A3(
+			$elm$core$Dict$insert,
+			3,
+			{B: 80, C: 50},
+			A3(
+				$elm$core$Dict$insert,
+				2,
+				{B: 200, C: 120},
+				A3(
+					$elm$core$Dict$insert,
+					1,
+					{B: 100, C: 100},
+					$elm$core$Dict$empty))));
 	var layoutResult = $author$project$Railroad$Layout$build(
 		{bf: cd, bM: td});
 	if (layoutResult.$ === 1) {
@@ -5471,7 +5483,7 @@ var $author$project$Railroad$sample = function () {
 						[
 							{
 							aJ: 30,
-							R: {af: 1, V: 50, O: track},
+							S: {ag: 1, W: 50, O: track},
 							bI: 11.1,
 							r: 0
 						}
@@ -5483,7 +5495,7 @@ var $author$project$Railroad$sample = function () {
 var $author$project$Main$init = function (_v0) {
 	var s = $author$project$Railroad$sample;
 	return _Utils_Tuple2(
-		{Z: 0, ab: s, F: false, T: $elm$core$Maybe$Nothing, ai: 1, r: s},
+		{_: 0, ac: s, F: false, U: $elm$core$Maybe$Nothing, aj: 1, r: s},
 		$elm$core$Platform$Cmd$none);
 };
 var $author$project$Main$Tick = function (a) {
@@ -5790,7 +5802,7 @@ var $author$project$Railroad$Layout$Connector = F2(
 	function (a, b) {
 		return {$: 0, a: a, b: b};
 	});
-var $author$project$Railroad$Layout$dummyTrackData = {ay: 0, az: 0, a5: 0};
+var $author$project$Railroad$Layout$dummyTrackData = {az: 0, R: 0, a5: 0};
 var $author$project$Railroad$Layout$getTrackData = F2(
 	function (id, _v0) {
 		var trackDict = _v0.b;
@@ -5807,7 +5819,7 @@ var $author$project$Railroad$Layout$getConnectors = function (_v0) {
 	var layout = _v0.b;
 	var trackData = A2($author$project$Railroad$Layout$getTrackData, id, layout);
 	return {
-		ay: A2($author$project$Railroad$Layout$Connector, trackData.ay, layout),
+		az: A2($author$project$Railroad$Layout$Connector, trackData.az, layout),
 		a5: A2($author$project$Railroad$Layout$Connector, trackData.a5, layout)
 	};
 };
@@ -5845,13 +5857,13 @@ var $author$project$Railroad$Layout$getTracksFor = function (_v0) {
 				function (trackId, trackData) {
 					return _Utils_Tuple2(
 						A2($author$project$Railroad$Layout$Track, trackId, layout),
-						_Utils_eq(trackData.ay, id) ? 0 : 1);
+						_Utils_eq(trackData.az, id) ? 0 : 1);
 				}),
 			A2(
 				$elm$core$Dict$filter,
 				F2(
 					function (_v2, trackData) {
-						return _Utils_eq(trackData.ay, id) || _Utils_eq(trackData.a5, id);
+						return _Utils_eq(trackData.az, id) || _Utils_eq(trackData.a5, id);
 					}),
 				trackDict)));
 };
@@ -5885,10 +5897,10 @@ var $author$project$Railroad$Layout$getPreviousTrack = function (track) {
 				return !_Utils_eq(track, otherTrack);
 			},
 			$author$project$Railroad$Layout$getTracksFor(
-				$author$project$Railroad$Layout$getConnectors(track).ay)));
+				$author$project$Railroad$Layout$getConnectors(track).az)));
 };
 var $author$project$Railroad$Layout$dummyConnectorData = {
-	V: {B: 0 / 0, C: 0 / 0}
+	W: {B: 0 / 0, C: 0 / 0}
 };
 var $author$project$Railroad$Layout$getConnectorData = F2(
 	function (id, _v0) {
@@ -5904,34 +5916,34 @@ var $author$project$Railroad$Layout$getConnectorData = F2(
 var $author$project$Railroad$Layout$getPosition = function (_v0) {
 	var id = _v0.a;
 	var layout = _v0.b;
-	return A2($author$project$Railroad$Layout$getConnectorData, id, layout).V;
+	return A2($author$project$Railroad$Layout$getConnectorData, id, layout).W;
 };
 var $elm$core$Basics$pow = _Basics_pow;
 var $elm$core$Basics$sqrt = _Basics_sqrt;
 var $author$project$Railroad$Layout$trackLength = function (track) {
 	var conns = $author$project$Railroad$Layout$getConnectors(track);
-	var fromPos = $author$project$Railroad$Layout$getPosition(conns.ay);
+	var fromPos = $author$project$Railroad$Layout$getPosition(conns.az);
 	var toPos = $author$project$Railroad$Layout$getPosition(conns.a5);
 	return $elm$core$Basics$sqrt(
 		A2($elm$core$Basics$pow, toPos.B - fromPos.B, 2) + A2($elm$core$Basics$pow, toPos.C - fromPos.C, 2));
 };
 var $author$project$Railroad$movedTrain = F2(
 	function (millis, train) {
-		var loc = train.R;
-		var distanceMoved = A2($author$project$Railroad$Orientation$byOrientation, train.R.af, (train.bI * millis) / 1000);
+		var loc = train.S;
+		var distanceMoved = A2($author$project$Railroad$Orientation$byOrientation, train.S.ag, (train.bI * millis) / 1000);
 		var newLoc = _Utils_update(
 			loc,
-			{V: train.R.V + distanceMoved});
+			{W: train.S.W + distanceMoved});
 		var tl = $author$project$Railroad$Layout$trackLength(newLoc.O);
-		if (newLoc.V < 0) {
+		if (newLoc.W < 0) {
 			var _v0 = $author$project$Railroad$Layout$getPreviousTrack(loc.O);
 			if (_v0.$ === 1) {
 				return _Utils_update(
 					train,
 					{
-						R: _Utils_update(
+						S: _Utils_update(
 							newLoc,
-							{V: 0}),
+							{W: 0}),
 						bI: 0,
 						r: 1
 					});
@@ -5942,15 +5954,15 @@ var $author$project$Railroad$movedTrain = F2(
 				return _Utils_update(
 					train,
 					{
-						R: _Utils_update(
+						S: _Utils_update(
 							newLoc,
 							{
-								af: newOrient,
-								V: function () {
+								ag: newOrient,
+								W: function () {
 									if (!newOrient) {
-										return -newLoc.V;
+										return -newLoc.W;
 									} else {
-										return $author$project$Railroad$Layout$trackLength(newTrack) + newLoc.V;
+										return $author$project$Railroad$Layout$trackLength(newTrack) + newLoc.W;
 									}
 								}(),
 								O: newTrack
@@ -5958,15 +5970,15 @@ var $author$project$Railroad$movedTrain = F2(
 					});
 			}
 		} else {
-			if (_Utils_cmp(newLoc.V, tl) > 0) {
+			if (_Utils_cmp(newLoc.W, tl) > 0) {
 				var _v3 = $author$project$Railroad$Layout$getNextTrack(loc.O);
 				if (_v3.$ === 1) {
 					return _Utils_update(
 						train,
 						{
-							R: _Utils_update(
+							S: _Utils_update(
 								newLoc,
-								{V: tl}),
+								{W: tl}),
 							bI: 0,
 							r: 1
 						});
@@ -5977,15 +5989,15 @@ var $author$project$Railroad$movedTrain = F2(
 					return _Utils_update(
 						train,
 						{
-							R: _Utils_update(
+							S: _Utils_update(
 								newLoc,
 								{
-									af: newOrient,
-									V: function () {
+									ag: newOrient,
+									W: function () {
 										if (!newOrient) {
-											return newLoc.V - tl;
+											return newLoc.W - tl;
 										} else {
-											return $author$project$Railroad$Layout$trackLength(newTrack) - (newLoc.V - tl);
+											return $author$project$Railroad$Layout$trackLength(newTrack) - (newLoc.W - tl);
 										}
 									}(),
 									O: newTrack
@@ -5995,7 +6007,7 @@ var $author$project$Railroad$movedTrain = F2(
 			} else {
 				return _Utils_update(
 					train,
-					{R: newLoc});
+					{S: newLoc});
 			}
 		}
 	});
@@ -6021,7 +6033,7 @@ var $author$project$Main$update = F2(
 				var newTime = msg.a;
 				var newMillis = $elm$time$Time$posixToMillis(newTime);
 				var duration = function () {
-					var _v2 = model.T;
+					var _v2 = model.U;
 					if (_v2.$ === 1) {
 						return 0;
 					} else {
@@ -6033,8 +6045,8 @@ var $author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{
-							Z: duration,
-							T: $elm$core$Maybe$Just(newMillis),
+							_: duration,
+							U: $elm$core$Maybe$Just(newMillis),
 							r: function () {
 								var _v1 = model.r;
 								if (!_v1.$) {
@@ -6063,7 +6075,7 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{r: model.ab}),
+						{r: model.ac}),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -6126,7 +6138,7 @@ var $elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
 var $elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
 var $author$project$Main$trackToSvg = function (track) {
 	var conns = $author$project$Railroad$Layout$getConnectors(track);
-	var from = $author$project$Railroad$Layout$getPosition(conns.ay);
+	var from = $author$project$Railroad$Layout$getPosition(conns.az);
 	var to = $author$project$Railroad$Layout$getPosition(conns.a5);
 	return A2(
 		$elm$svg$Svg$line,
@@ -6172,7 +6184,7 @@ var $author$project$Main$trackSegment = F3(
 	function (track, fromPos, toPos) {
 		var tl = $author$project$Railroad$Layout$trackLength(track);
 		var conns = $author$project$Railroad$Layout$getConnectors(track);
-		var from = $author$project$Railroad$Layout$getPosition(conns.ay);
+		var from = $author$project$Railroad$Layout$getPosition(conns.az);
 		var to = $author$project$Railroad$Layout$getPosition(conns.a5);
 		var dx = to.B - from.B;
 		var dy = to.C - from.C;
@@ -6199,13 +6211,13 @@ var $author$project$Main$trainToSvgRecursive = F3(
 		if (length <= 0) {
 			return svgList;
 		} else {
-			var newPos = loc.V - A2($author$project$Railroad$Orientation$byOrientation, loc.af, length);
+			var newPos = loc.W - A2($author$project$Railroad$Orientation$byOrientation, loc.ag, length);
 			return A2(
 				$elm$core$List$cons,
 				A3(
 					$author$project$Main$trackSegment,
 					loc.O,
-					loc.V,
+					loc.W,
 					A3(
 						$elm$core$Basics$clamp,
 						0,
@@ -6231,8 +6243,8 @@ var $author$project$Main$trainToSvgRecursive = F3(
 							return A3(
 								$author$project$Main$trainToSvgRecursive,
 								{
-									af: $author$project$Railroad$Orientation$reverse(newOrient),
-									V: newStart,
+									ag: $author$project$Railroad$Orientation$reverse(newOrient),
+									W: newStart,
 									O: newTrack
 								},
 								newLength,
@@ -6248,7 +6260,7 @@ var $author$project$Main$trainToSvg = function (train) {
 	return A2(
 		$elm$svg$Svg$g,
 		_List_Nil,
-		A3($author$project$Main$trainToSvgRecursive, train.R, train.aJ, _List_Nil));
+		A3($author$project$Main$trainToSvgRecursive, train.S, train.aJ, _List_Nil));
 };
 var $elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
 var $author$project$Main$Reset = {$: 3};
@@ -6722,7 +6734,7 @@ var $author$project$Main$viewTrains = function (trains) {
 									[
 										$elm$html$Html$text(
 										$elm$core$String$fromInt(
-											$author$project$Railroad$Layout$getTrackId(train.R.O)))
+											$author$project$Railroad$Layout$getTrackId(train.S.O)))
 									])),
 								A2(
 								$elm$html$Html$td,
@@ -6733,7 +6745,7 @@ var $author$project$Main$viewTrains = function (trains) {
 								_List_fromArray(
 									[
 										$elm$html$Html$text(
-										A2($myrho$elm_round$Round$round, 1, train.R.V))
+										A2($myrho$elm_round$Round$round, 1, train.S.W))
 									])),
 								A2(
 								$elm$html$Html$td,
@@ -6741,7 +6753,7 @@ var $author$project$Main$viewTrains = function (trains) {
 								_List_fromArray(
 									[
 										$elm$html$Html$text(
-										$author$project$Railroad$Orientation$toString(train.R.af))
+										$author$project$Railroad$Orientation$toString(train.S.ag))
 									])),
 								A2(
 								$elm$html$Html$td,
@@ -6791,7 +6803,7 @@ var $author$project$Main$viewTrains = function (trains) {
 var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
 var $author$project$Main$view = function (model) {
 	return {
-		aq: _List_fromArray(
+		ar: _List_fromArray(
 			[
 				A2(
 				$elm$html$Html$div,
@@ -6825,7 +6837,7 @@ var $author$project$Main$view = function (model) {
 												$elm$svg$Svg$Attributes$height('100%'),
 												A2($elm$html$Html$Attributes$style, 'border', '1px solid black'),
 												$elm$svg$Svg$Attributes$transform(
-												$author$project$Main$scaleTransform(model.ai))
+												$author$project$Main$scaleTransform(model.aj))
 											]),
 										function () {
 											var _v0 = model.r;
