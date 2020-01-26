@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.br,
-		impl.bN,
-		impl.bJ,
+		impl.bp,
+		impl.bK,
+		impl.bH,
 		function() { return function() {} }
 	);
 });
@@ -3928,11 +3928,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.br,
-		impl.bN,
-		impl.bJ,
+		impl.bp,
+		impl.bK,
+		impl.bH,
 		function(sendToApp, initialModel) {
-			var view = impl.bO;
+			var view = impl.bL;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3964,12 +3964,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.br,
-		impl.bN,
-		impl.bJ,
+		impl.bp,
+		impl.bK,
+		impl.bH,
 		function(sendToApp, initialModel) {
 			var divertHrefToApp = impl.ak && impl.ak(sendToApp)
-			var view = impl.bO;
+			var view = impl.bL;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3982,7 +3982,7 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.a4) && (_VirtualDom_doc.title = title = doc.a4);
+				(title !== doc.a3) && (_VirtualDom_doc.title = title = doc.a3);
 			});
 		}
 	);
@@ -4038,8 +4038,8 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.bC;
-	var onUrlRequest = impl.bD;
+	var onUrlChange = impl.bA;
+	var onUrlRequest = impl.bB;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
@@ -4059,9 +4059,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.aT === next.aT
+							&& curr.aS === next.aS
 							&& curr.aD === next.aD
-							&& curr.aQ.a === next.aQ.a
+							&& curr.aP.a === next.aP.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4069,13 +4069,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		br: function(flags)
+		bp: function(flags)
 		{
-			return A3(impl.br, flags, _Browser_getUrl(), key);
+			return A3(impl.bp, flags, _Browser_getUrl(), key);
 		},
-		bO: impl.bO,
-		bN: impl.bN,
-		bJ: impl.bJ
+		bL: impl.bL,
+		bK: impl.bK,
+		bH: impl.bH
 	});
 }
 
@@ -4141,17 +4141,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { bp: 'hidden', bd: 'visibilitychange' }
+		? { bn: 'hidden', bc: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { bp: 'mozHidden', bd: 'mozvisibilitychange' }
+		? { bn: 'mozHidden', bc: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { bp: 'msHidden', bd: 'msvisibilitychange' }
+		? { bn: 'msHidden', bc: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { bp: 'webkitHidden', bd: 'webkitvisibilitychange' }
-		: { bp: 'hidden', bd: 'visibilitychange' };
+		? { bn: 'webkitHidden', bc: 'webkitvisibilitychange' }
+		: { bn: 'hidden', bc: 'visibilitychange' };
 }
 
 
@@ -4232,11 +4232,11 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		a_: _Browser_getScene(),
-		a7: {
+		aZ: _Browser_getScene(),
+		a6: {
 			D: _Browser_window.pageXOffset,
 			E: _Browser_window.pageYOffset,
-			a8: _Browser_doc.documentElement.clientWidth,
+			a7: _Browser_doc.documentElement.clientWidth,
 			aC: _Browser_doc.documentElement.clientHeight
 		}
 	};
@@ -4247,7 +4247,7 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		a8: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		a7: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
 		aC: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
@@ -4271,14 +4271,14 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			a_: {
-				a8: node.scrollWidth,
+			aZ: {
+				a7: node.scrollWidth,
 				aC: node.scrollHeight
 			},
-			a7: {
+			a6: {
 				D: node.scrollLeft,
 				E: node.scrollTop,
-				a8: node.clientWidth,
+				a7: node.clientWidth,
 				aC: node.clientHeight
 			}
 		};
@@ -4309,17 +4309,17 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			a_: _Browser_getScene(),
-			a7: {
+			aZ: _Browser_getScene(),
+			a6: {
 				D: x,
 				E: y,
-				a8: _Browser_doc.documentElement.clientWidth,
+				a7: _Browser_doc.documentElement.clientWidth,
 				aC: _Browser_doc.documentElement.clientHeight
 			},
-			bi: {
+			bg: {
 				D: x + rect.left,
 				E: y + rect.top,
-				a8: rect.width,
+				a7: rect.width,
 				aC: rect.height
 			}
 		};
@@ -4942,7 +4942,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {ay: fragment, aD: host, aO: path, aQ: port_, aT: protocol, aU: query};
+		return {ay: fragment, aD: host, aN: path, aP: port_, aS: protocol, aT: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5223,60 +5223,80 @@ var $elm$core$Task$perform = F2(
 var $elm$browser$Browser$document = _Browser_document;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$Railroad$Normal = 0;
-var $author$project$Railroad$Orientation$Reverse = 1;
-var $author$project$Railroad$Layout$StraightTrack = 0;
-var $author$project$Railroad$Layout$Layout = F2(
+var $author$project$Railroad$Layout$Connector = F2(
 	function (a, b) {
 		return {$: 0, a: a, b: b};
 	});
-var $elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
-var $elm$core$Dict$RBNode_elm_builtin = F5(
-	function (a, b, c, d, e) {
-		return {$: -1, a: a, b: b, c: c, d: d, e: e};
-	});
-var $elm$core$Dict$map = F2(
-	function (func, dict) {
-		if (dict.$ === -2) {
-			return $elm$core$Dict$RBEmpty_elm_builtin;
-		} else {
-			var color = dict.a;
-			var key = dict.b;
-			var value = dict.c;
-			var left = dict.d;
-			var right = dict.e;
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				color,
-				key,
-				A2(func, key, value),
-				A2($elm$core$Dict$map, func, left),
-				A2($elm$core$Dict$map, func, right));
-		}
-	});
-var $author$project$Railroad$Layout$build = function (spec) {
-	var trackDataDict = A2(
-		$elm$core$Dict$map,
-		F2(
-			function (index, trackSpec) {
-				return trackSpec;
-			}),
-		spec.bM);
-	var connDataDict = A2(
-		$elm$core$Dict$map,
-		F2(
-			function (index, point) {
-				return {A: point};
-			}),
-		spec.bf);
-	return $elm$core$Result$Ok(
-		A2($author$project$Railroad$Layout$Layout, connDataDict, trackDataDict));
-};
-var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
+var $author$project$Railroad$Normal = 0;
+var $author$project$Railroad$Orientation$Reverse = 1;
 var $author$project$Railroad$Layout$Track = F2(
 	function (a, b) {
 		return {$: 0, a: a, b: b};
 	});
+var $author$project$Railroad$Layout$Layout = $elm$core$Basics$identity;
+var $author$project$Railroad$Layout$addTrack = F2(
+	function (track, _v0) {
+		var t = _v0;
+		return A2($elm$core$List$cons, track, t);
+	});
+var $author$project$Railroad$Layout$empty = _List_Nil;
+var $author$project$Sample$sampleLayout = function () {
+	var c4 = A2($author$project$Railroad$Layout$Connector, 200, 30);
+	var c3 = A2($author$project$Railroad$Layout$Connector, 80, 50);
+	var t3 = A2($author$project$Railroad$Layout$Track, c3, c4);
+	var c2 = A2($author$project$Railroad$Layout$Connector, 200, 120);
+	var t4 = A2($author$project$Railroad$Layout$Track, c2, c4);
+	var c1 = A2($author$project$Railroad$Layout$Connector, 100, 100);
+	var t1 = A2($author$project$Railroad$Layout$Track, c1, c2);
+	var t2 = A2($author$project$Railroad$Layout$Track, c1, c3);
+	return A3(
+		$elm$core$List$foldl,
+		$author$project$Railroad$Layout$addTrack,
+		$author$project$Railroad$Layout$empty,
+		_List_fromArray(
+			[t1, t2, t3, t4]));
+}();
+var $author$project$Railroad$sample = function () {
+	var t1 = A2(
+		$author$project$Railroad$Layout$Track,
+		A2($author$project$Railroad$Layout$Connector, 100, 100),
+		A2($author$project$Railroad$Layout$Connector, 200, 120));
+	var layout = $author$project$Sample$sampleLayout;
+	return $elm$core$Maybe$Just(
+		{
+			S: layout,
+			a5: _List_fromArray(
+				[
+					{
+					aI: 30,
+					T: {W: 1, A: 50, w: t1},
+					bG: 11.1,
+					o: 0
+				}
+				])
+		});
+}();
+var $author$project$Main$init = function (_v0) {
+	var s = $author$project$Railroad$sample;
+	return _Utils_Tuple2(
+		{aa: 0, ad: s, H: false, V: $elm$core$Maybe$Nothing, aj: 1, o: s},
+		$elm$core$Platform$Cmd$none);
+};
+var $author$project$Main$Tick = function (a) {
+	return {$: 0, a: a};
+};
+var $elm$time$Time$Every = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
+var $elm$time$Time$State = F2(
+	function (taggers, processes) {
+		return {aR: processes, a2: taggers};
+	});
+var $elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
+var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
+var $elm$time$Time$init = $elm$core$Task$succeed(
+	A2($elm$time$Time$State, $elm$core$Dict$empty, $elm$core$Dict$empty));
 var $elm$core$Basics$compare = _Utils_compare;
 var $elm$core$Dict$get = F2(
 	function (targetKey, dict) {
@@ -5309,23 +5329,11 @@ var $elm$core$Dict$get = F2(
 			}
 		}
 	});
-var $elm$core$Dict$member = F2(
-	function (key, dict) {
-		var _v0 = A2($elm$core$Dict$get, key, dict);
-		if (!_v0.$) {
-			return true;
-		} else {
-			return false;
-		}
-	});
-var $author$project$Railroad$Layout$getTrack = F2(
-	function (id, layout) {
-		var _v0 = layout;
-		var trackDict = _v0.b;
-		return A2($elm$core$Dict$member, id, trackDict) ? $elm$core$Maybe$Just(
-			A2($author$project$Railroad$Layout$Track, id, layout)) : $elm$core$Maybe$Nothing;
-	});
 var $elm$core$Dict$Black = 1;
+var $elm$core$Dict$RBNode_elm_builtin = F5(
+	function (a, b, c, d, e) {
+		return {$: -1, a: a, b: b, c: c, d: d, e: e};
+	});
 var $elm$core$Dict$Red = 0;
 var $elm$core$Dict$balance = F5(
 	function (color, key, value, left, right) {
@@ -5429,88 +5437,6 @@ var $elm$core$Dict$insert = F3(
 			return x;
 		}
 	});
-var $author$project$Railroad$sample = function () {
-	var td = A3(
-		$elm$core$Dict$insert,
-		4,
-		{az: 2, S: 0, a5: 4},
-		A3(
-			$elm$core$Dict$insert,
-			3,
-			{az: 3, S: 0, a5: 4},
-			A3(
-				$elm$core$Dict$insert,
-				2,
-				{az: 1, S: 0, a5: 3},
-				A3(
-					$elm$core$Dict$insert,
-					1,
-					{az: 1, S: 0, a5: 2},
-					$elm$core$Dict$empty))));
-	var cd = A3(
-		$elm$core$Dict$insert,
-		4,
-		{D: 200, E: 30},
-		A3(
-			$elm$core$Dict$insert,
-			3,
-			{D: 80, E: 50},
-			A3(
-				$elm$core$Dict$insert,
-				2,
-				{D: 200, E: 120},
-				A3(
-					$elm$core$Dict$insert,
-					1,
-					{D: 100, E: 100},
-					$elm$core$Dict$empty))));
-	var layoutResult = $author$project$Railroad$Layout$build(
-		{bf: cd, bM: td});
-	if (layoutResult.$ === 1) {
-		var t = layoutResult.a;
-		return $elm$core$Maybe$Nothing;
-	} else {
-		var layout = layoutResult.a;
-		var _v1 = A2($author$project$Railroad$Layout$getTrack, 1, layout);
-		if (_v1.$ === 1) {
-			return $elm$core$Maybe$Nothing;
-		} else {
-			var track = _v1.a;
-			return $elm$core$Maybe$Just(
-				{
-					aI: layout,
-					a6: _List_fromArray(
-						[
-							{
-							aJ: 30,
-							T: {W: 1, A: 50, w: track},
-							bI: 11.1,
-							o: 0
-						}
-						])
-				});
-		}
-	}
-}();
-var $author$project$Main$init = function (_v0) {
-	var s = $author$project$Railroad$sample;
-	return _Utils_Tuple2(
-		{aa: 0, ad: s, H: false, V: $elm$core$Maybe$Nothing, aj: 1, o: s},
-		$elm$core$Platform$Cmd$none);
-};
-var $author$project$Main$Tick = function (a) {
-	return {$: 0, a: a};
-};
-var $elm$time$Time$Every = F2(
-	function (a, b) {
-		return {$: 0, a: a, b: b};
-	});
-var $elm$time$Time$State = F2(
-	function (taggers, processes) {
-		return {aS: processes, a3: taggers};
-	});
-var $elm$time$Time$init = $elm$core$Task$succeed(
-	A2($elm$time$Time$State, $elm$core$Dict$empty, $elm$core$Dict$empty));
 var $elm$time$Time$addMySub = F2(
 	function (_v0, state) {
 		var interval = _v0.a;
@@ -5657,7 +5583,7 @@ var $elm$time$Time$spawnHelp = F3(
 	});
 var $elm$time$Time$onEffects = F3(
 	function (router, subs, _v0) {
-		var processes = _v0.aS;
+		var processes = _v0.aR;
 		var rightStep = F3(
 			function (_v6, id, _v7) {
 				var spawns = _v7.a;
@@ -5726,7 +5652,7 @@ var $elm$time$Time$millisToPosix = $elm$core$Basics$identity;
 var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
 var $elm$time$Time$onSelfMsg = F3(
 	function (router, interval, state) {
-		var _v0 = A2($elm$core$Dict$get, interval, state.a3);
+		var _v0 = A2($elm$core$Dict$get, interval, state.a2);
 		if (_v0.$ === 1) {
 			return $elm$core$Task$succeed(state);
 		} else {
@@ -5796,6 +5722,7 @@ var $author$project$Railroad$Orientation$byOrientation = F2(
 			return -n;
 		}
 	});
+var $author$project$Railroad$Orientation$Forward = 0;
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -5807,75 +5734,6 @@ var $elm$core$List$filter = F2(
 			_List_Nil,
 			list);
 	});
-var $author$project$Railroad$Layout$Connector = F2(
-	function (a, b) {
-		return {$: 0, a: a, b: b};
-	});
-var $author$project$Railroad$Layout$dummyTrackData = {az: 0, S: 0, a5: 0};
-var $author$project$Railroad$Layout$getTrackData = F2(
-	function (id, _v0) {
-		var trackDict = _v0.b;
-		var _v1 = A2($elm$core$Dict$get, id, trackDict);
-		if (_v1.$ === 1) {
-			return $author$project$Railroad$Layout$dummyTrackData;
-		} else {
-			var td = _v1.a;
-			return td;
-		}
-	});
-var $author$project$Railroad$Layout$getConnectors = function (_v0) {
-	var id = _v0.a;
-	var layout = _v0.b;
-	var trackData = A2($author$project$Railroad$Layout$getTrackData, id, layout);
-	return {
-		az: A2($author$project$Railroad$Layout$Connector, trackData.az, layout),
-		a5: A2($author$project$Railroad$Layout$Connector, trackData.a5, layout)
-	};
-};
-var $author$project$Railroad$Orientation$Forward = 0;
-var $elm$core$Dict$filter = F2(
-	function (isGood, dict) {
-		return A3(
-			$elm$core$Dict$foldl,
-			F3(
-				function (k, v, d) {
-					return A2(isGood, k, v) ? A3($elm$core$Dict$insert, k, v, d) : d;
-				}),
-			$elm$core$Dict$empty,
-			dict);
-	});
-var $elm$core$Dict$values = function (dict) {
-	return A3(
-		$elm$core$Dict$foldr,
-		F3(
-			function (key, value, valueList) {
-				return A2($elm$core$List$cons, value, valueList);
-			}),
-		_List_Nil,
-		dict);
-};
-var $author$project$Railroad$Layout$getTracksFor = function (_v0) {
-	var id = _v0.a;
-	var layout = _v0.b;
-	var _v1 = layout;
-	var trackDict = _v1.b;
-	return $elm$core$Dict$values(
-		A2(
-			$elm$core$Dict$map,
-			F2(
-				function (trackId, trackData) {
-					return _Utils_Tuple2(
-						A2($author$project$Railroad$Layout$Track, trackId, layout),
-						_Utils_eq(trackData.az, id) ? 0 : 1);
-				}),
-			A2(
-				$elm$core$Dict$filter,
-				F2(
-					function (_v2, trackData) {
-						return _Utils_eq(trackData.az, id) || _Utils_eq(trackData.a5, id);
-					}),
-				trackDict)));
-};
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -5885,67 +5743,103 @@ var $elm$core$List$head = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$Basics$neq = _Utils_notEqual;
-var $author$project$Railroad$Layout$getNextTrack = function (track) {
-	return $elm$core$List$head(
-		A2(
-			$elm$core$List$filter,
-			function (_v0) {
-				var otherTrack = _v0.a;
-				return !_Utils_eq(track, otherTrack);
-			},
-			$author$project$Railroad$Layout$getTracksFor(
-				$author$project$Railroad$Layout$getConnectors(track).a5)));
-};
-var $author$project$Railroad$Layout$getPreviousTrack = function (track) {
-	return $elm$core$List$head(
-		A2(
-			$elm$core$List$filter,
-			function (_v0) {
-				var otherTrack = _v0.a;
-				return !_Utils_eq(track, otherTrack);
-			},
-			$author$project$Railroad$Layout$getTracksFor(
-				$author$project$Railroad$Layout$getConnectors(track).az)));
-};
-var $author$project$Railroad$Layout$dummyConnectorData = {
-	A: {D: 0 / 0, E: 0 / 0}
-};
-var $author$project$Railroad$Layout$getConnectorData = F2(
-	function (id, _v0) {
-		var connDict = _v0.a;
-		var _v1 = A2($elm$core$Dict$get, id, connDict);
-		if (_v1.$ === 1) {
-			return $author$project$Railroad$Layout$dummyConnectorData;
-		} else {
-			var cd = _v1.a;
-			return cd;
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
 		}
 	});
-var $author$project$Railroad$Layout$getPosition = function (_v0) {
-	var id = _v0.a;
-	var layout = _v0.b;
-	return A2($author$project$Railroad$Layout$getConnectorData, id, layout).A;
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Railroad$Layout$trackConnectors = function (_v0) {
+	var from = _v0.a;
+	var to = _v0.b;
+	return _List_fromArray(
+		[from, to]);
 };
+var $author$project$Railroad$Layout$getSubsequentTrack = F3(
+	function (t, c, _v0) {
+		var tl = _v0;
+		var _v1 = $elm$core$List$head(
+			A2(
+				$elm$core$List$filter,
+				function (eachTrack) {
+					return (!_Utils_eq(eachTrack, t)) && A2(
+						$elm$core$List$member,
+						c,
+						$author$project$Railroad$Layout$trackConnectors(eachTrack));
+				},
+				tl));
+		if (_v1.$ === 1) {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var ot = _v1.a;
+			var _v2 = ot;
+			var otherFrom = _v2.a;
+			var orient = _Utils_eq(c, otherFrom) ? 0 : 1;
+			return $elm$core$Maybe$Just(
+				_Utils_Tuple2(ot, orient));
+		}
+	});
+var $author$project$Railroad$Layout$getNextTrack = F2(
+	function (t, l) {
+		var _v0 = t;
+		var to = _v0.b;
+		return A3($author$project$Railroad$Layout$getSubsequentTrack, t, to, l);
+	});
+var $author$project$Railroad$Layout$getPreviousTrack = F2(
+	function (t, l) {
+		var _v0 = t;
+		var from = _v0.a;
+		return A3($author$project$Railroad$Layout$getSubsequentTrack, t, from, l);
+	});
 var $elm$core$Basics$pow = _Basics_pow;
 var $elm$core$Basics$sqrt = _Basics_sqrt;
-var $author$project$Railroad$Layout$trackLength = function (track) {
-	var conns = $author$project$Railroad$Layout$getConnectors(track);
-	var fromPos = $author$project$Railroad$Layout$getPosition(conns.az);
-	var toPos = $author$project$Railroad$Layout$getPosition(conns.a5);
+var $author$project$Railroad$Layout$trackLength = function (_v0) {
+	var from = _v0.a;
+	var to = _v0.b;
+	var _v1 = to;
+	var x2 = _v1.a;
+	var y2 = _v1.b;
+	var _v2 = from;
+	var x1 = _v2.a;
+	var y1 = _v2.b;
 	return $elm$core$Basics$sqrt(
-		A2($elm$core$Basics$pow, toPos.D - fromPos.D, 2) + A2($elm$core$Basics$pow, toPos.E - fromPos.E, 2));
+		A2($elm$core$Basics$pow, x2 - x1, 2) + A2($elm$core$Basics$pow, y2 - y1, 2));
 };
-var $author$project$Railroad$movedTrain = F2(
-	function (millis, train) {
+var $author$project$Railroad$movedTrain = F3(
+	function (millis, train, layout) {
 		var loc = train.T;
-		var distanceMoved = A2($author$project$Railroad$Orientation$byOrientation, train.T.W, (train.bI * millis) / 1000);
+		var distanceMoved = A2($author$project$Railroad$Orientation$byOrientation, train.T.W, (train.bG * millis) / 1000);
 		var newLoc = _Utils_update(
 			loc,
 			{A: train.T.A + distanceMoved});
 		var tl = $author$project$Railroad$Layout$trackLength(newLoc.w);
 		if (newLoc.A < 0) {
-			var _v0 = $author$project$Railroad$Layout$getPreviousTrack(loc.w);
+			var _v0 = A2($author$project$Railroad$Layout$getPreviousTrack, loc.w, layout);
 			if (_v0.$ === 1) {
 				return _Utils_update(
 					train,
@@ -5953,7 +5847,7 @@ var $author$project$Railroad$movedTrain = F2(
 						T: _Utils_update(
 							newLoc,
 							{A: 0}),
-						bI: 0,
+						bG: 0,
 						o: 1
 					});
 			} else {
@@ -5980,7 +5874,7 @@ var $author$project$Railroad$movedTrain = F2(
 			}
 		} else {
 			if (_Utils_cmp(newLoc.A, tl) > 0) {
-				var _v3 = $author$project$Railroad$Layout$getNextTrack(loc.w);
+				var _v3 = A2($author$project$Railroad$Layout$getNextTrack, loc.w, layout);
 				if (_v3.$ === 1) {
 					return _Utils_update(
 						train,
@@ -5988,7 +5882,7 @@ var $author$project$Railroad$movedTrain = F2(
 							T: _Utils_update(
 								newLoc,
 								{A: tl}),
-							bI: 0,
+							bG: 0,
 							o: 1
 						});
 				} else {
@@ -6025,10 +5919,12 @@ var $author$project$Railroad$moved = F2(
 		return _Utils_update(
 			state,
 			{
-				a6: A2(
+				a5: A2(
 					$elm$core$List$map,
-					$author$project$Railroad$movedTrain(millis),
-					state.a6)
+					function (t) {
+						return A3($author$project$Railroad$movedTrain, millis, t, state.S);
+					},
+					state.a5)
 			});
 	});
 var $elm$time$Time$posixToMillis = function (_v0) {
@@ -6109,6 +6005,15 @@ var $elm$svg$Svg$Attributes$cx = _VirtualDom_attribute('cx');
 var $elm$svg$Svg$Attributes$cy = _VirtualDom_attribute('cy');
 var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
 var $elm$core$String$fromFloat = _String_fromNumber;
+var $author$project$Railroad$Layout$Point = F2(
+	function (x, y) {
+		return {D: x, E: y};
+	});
+var $author$project$Railroad$Layout$getPosition = function (_v0) {
+	var x = _v0.a;
+	var y = _v0.b;
+	return A2($author$project$Railroad$Layout$Point, x, y);
+};
 var $elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
 var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
 var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
@@ -6129,23 +6034,87 @@ var $author$project$Main$connectorToSvg = function (conn) {
 			]),
 		_List_Nil);
 };
-var $author$project$Railroad$Layout$connectors = function (layout) {
-	var _v0 = layout;
-	var connDict = _v0.a;
-	return $elm$core$Dict$values(
-		A2(
-			$elm$core$Dict$map,
-			F2(
-				function (index, _v1) {
-					return A2($author$project$Railroad$Layout$Connector, index, layout);
-				}),
-			connDict));
+var $elm$core$Set$Set_elm_builtin = $elm$core$Basics$identity;
+var $elm$core$Set$empty = $elm$core$Dict$empty;
+var $elm$core$Set$insert = F2(
+	function (key, _v0) {
+		var dict = _v0;
+		return A3($elm$core$Dict$insert, key, 0, dict);
+	});
+var $elm$core$Dict$member = F2(
+	function (key, dict) {
+		var _v0 = A2($elm$core$Dict$get, key, dict);
+		if (!_v0.$) {
+			return true;
+		} else {
+			return false;
+		}
+	});
+var $elm$core$Set$member = F2(
+	function (key, _v0) {
+		var dict = _v0;
+		return A2($elm$core$Dict$member, key, dict);
+	});
+var $elm_community$list_extra$List$Extra$uniqueHelp = F4(
+	function (f, existing, remaining, accumulator) {
+		uniqueHelp:
+		while (true) {
+			if (!remaining.b) {
+				return $elm$core$List$reverse(accumulator);
+			} else {
+				var first = remaining.a;
+				var rest = remaining.b;
+				var computedFirst = f(first);
+				if (A2($elm$core$Set$member, computedFirst, existing)) {
+					var $temp$f = f,
+						$temp$existing = existing,
+						$temp$remaining = rest,
+						$temp$accumulator = accumulator;
+					f = $temp$f;
+					existing = $temp$existing;
+					remaining = $temp$remaining;
+					accumulator = $temp$accumulator;
+					continue uniqueHelp;
+				} else {
+					var $temp$f = f,
+						$temp$existing = A2($elm$core$Set$insert, computedFirst, existing),
+						$temp$remaining = rest,
+						$temp$accumulator = A2($elm$core$List$cons, first, accumulator);
+					f = $temp$f;
+					existing = $temp$existing;
+					remaining = $temp$remaining;
+					accumulator = $temp$accumulator;
+					continue uniqueHelp;
+				}
+			}
+		}
+	});
+var $elm_community$list_extra$List$Extra$uniqueBy = F2(
+	function (f, list) {
+		return A4($elm_community$list_extra$List$Extra$uniqueHelp, f, $elm$core$Set$empty, list, _List_Nil);
+	});
+var $author$project$Railroad$Layout$connectors = function (_v0) {
+	var t = _v0;
+	return A2(
+		$elm_community$list_extra$List$Extra$uniqueBy,
+		function (_v1) {
+			var x = _v1.a;
+			var y = _v1.b;
+			return A2($elm$core$Basics$pow, x, y);
+		},
+		A3(
+			$elm$core$List$foldr,
+			$elm$core$Basics$append,
+			_List_Nil,
+			A2($elm$core$List$map, $author$project$Railroad$Layout$trackConnectors, t)));
 };
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
 var $elm$virtual_dom$VirtualDom$lazy = _VirtualDom_lazy;
 var $elm$html$Html$Lazy$lazy = $elm$virtual_dom$VirtualDom$lazy;
+var $elm$virtual_dom$VirtualDom$lazy2 = _VirtualDom_lazy2;
+var $elm$html$Html$Lazy$lazy2 = $elm$virtual_dom$VirtualDom$lazy2;
 var $author$project$Main$scaleTransform = function (scale) {
 	var scaleStr = $elm$core$String$fromFloat(scale);
 	return 'scale(' + (scaleStr + (' ' + (scaleStr + ')')));
@@ -6153,6 +6122,11 @@ var $author$project$Main$scaleTransform = function (scale) {
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
+var $author$project$Railroad$Layout$getConnectors = function (_v0) {
+	var from = _v0.a;
+	var to = _v0.b;
+	return {az: from, a4: to};
+};
 var $elm$svg$Svg$line = $elm$svg$Svg$trustedNode('line');
 var $elm$svg$Svg$Attributes$strokeLinecap = _VirtualDom_attribute('stroke-linecap');
 var $elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
@@ -6162,7 +6136,7 @@ var $elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
 var $author$project$Main$trackToSvg = function (track) {
 	var conns = $author$project$Railroad$Layout$getConnectors(track);
 	var from = $author$project$Railroad$Layout$getPosition(conns.az);
-	var to = $author$project$Railroad$Layout$getPosition(conns.a5);
+	var to = $author$project$Railroad$Layout$getPosition(conns.a4);
 	return A2(
 		$elm$svg$Svg$line,
 		_List_fromArray(
@@ -6180,17 +6154,9 @@ var $author$project$Main$trackToSvg = function (track) {
 			]),
 		_List_Nil);
 };
-var $author$project$Railroad$Layout$tracks = function (layout) {
-	var _v0 = layout;
-	var trackDict = _v0.b;
-	return $elm$core$Dict$values(
-		A2(
-			$elm$core$Dict$map,
-			F2(
-				function (index, _v1) {
-					return A2($author$project$Railroad$Layout$Track, index, layout);
-				}),
-			trackDict));
+var $author$project$Railroad$Layout$tracks = function (_v0) {
+	var t = _v0;
+	return t;
 };
 var $author$project$Railroad$Orientation$reverse = function (orient) {
 	if (!orient) {
@@ -6204,7 +6170,7 @@ var $author$project$Main$trackSegment = F3(
 		var tl = $author$project$Railroad$Layout$trackLength(track);
 		var conns = $author$project$Railroad$Layout$getConnectors(track);
 		var from = $author$project$Railroad$Layout$getPosition(conns.az);
-		var to = $author$project$Railroad$Layout$getPosition(conns.a5);
+		var to = $author$project$Railroad$Layout$getPosition(conns.a4);
 		var dx = to.D - from.D;
 		var dy = to.E - from.E;
 		return A2(
@@ -6225,8 +6191,8 @@ var $author$project$Main$trackSegment = F3(
 				]),
 			_List_Nil);
 	});
-var $author$project$Main$trainToSvgRecursive = F3(
-	function (loc, length, svgList) {
+var $author$project$Main$trainToSvgRecursive = F4(
+	function (loc, length, layout, svgList) {
 		if (length <= 0) {
 			return svgList;
 		} else {
@@ -6240,7 +6206,7 @@ var $author$project$Main$trainToSvgRecursive = F3(
 				A3($author$project$Main$trackSegment, loc.w, loc.A, newClampedPos),
 				function () {
 					if (newPos < 0) {
-						var _v1 = $author$project$Railroad$Layout$getPreviousTrack(loc.w);
+						var _v1 = A2($author$project$Railroad$Layout$getPreviousTrack, loc.w, layout);
 						if (_v1.$ === 1) {
 							return svgList;
 						} else {
@@ -6254,7 +6220,7 @@ var $author$project$Main$trainToSvgRecursive = F3(
 									return $author$project$Railroad$Layout$trackLength(newTrack);
 								}
 							}();
-							return A3(
+							return A4(
 								$author$project$Main$trainToSvgRecursive,
 								{
 									W: $author$project$Railroad$Orientation$reverse(newOrient),
@@ -6262,13 +6228,14 @@ var $author$project$Main$trainToSvgRecursive = F3(
 									w: newTrack
 								},
 								newLength,
+								layout,
 								svgList);
 						}
 					} else {
 						if (_Utils_cmp(
 							newPos,
 							$author$project$Railroad$Layout$trackLength(loc.w)) > 0) {
-							var _v4 = $author$project$Railroad$Layout$getNextTrack(loc.w);
+							var _v4 = A2($author$project$Railroad$Layout$getNextTrack, loc.w, layout);
 							if (_v4.$ === 1) {
 								return svgList;
 							} else {
@@ -6282,7 +6249,7 @@ var $author$project$Main$trainToSvgRecursive = F3(
 										return $author$project$Railroad$Layout$trackLength(newTrack);
 									}
 								}();
-								return A3(
+								return A4(
 									$author$project$Main$trainToSvgRecursive,
 									{
 										W: $author$project$Railroad$Orientation$reverse(newOrient),
@@ -6290,6 +6257,7 @@ var $author$project$Main$trainToSvgRecursive = F3(
 										w: newTrack
 									},
 									newLength,
+									layout,
 									svgList);
 							}
 						} else {
@@ -6299,12 +6267,13 @@ var $author$project$Main$trainToSvgRecursive = F3(
 				}());
 		}
 	});
-var $author$project$Main$trainToSvg = function (train) {
-	return A2(
-		$elm$svg$Svg$g,
-		_List_Nil,
-		A3($author$project$Main$trainToSvgRecursive, train.T, train.aJ, _List_Nil));
-};
+var $author$project$Main$trainToSvg = F2(
+	function (train, layout) {
+		return A2(
+			$elm$svg$Svg$g,
+			_List_Nil,
+			A4($author$project$Main$trainToSvgRecursive, train.T, train.aI, layout, _List_Nil));
+	});
 var $elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
 var $author$project$Main$Reset = {$: 4};
 var $author$project$Main$SingleStep = {$: 3};
@@ -6390,10 +6359,39 @@ var $author$project$Main$viewSimulationControls = function (isRunning) {
 					]))
 			]));
 };
-var $author$project$Railroad$Layout$getTrackId = function (_v0) {
-	var id = _v0.a;
-	return id;
+var $elm_community$list_extra$List$Extra$findIndexHelp = F3(
+	function (index, predicate, list) {
+		findIndexHelp:
+		while (true) {
+			if (!list.b) {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (predicate(x)) {
+					return $elm$core$Maybe$Just(index);
+				} else {
+					var $temp$index = index + 1,
+						$temp$predicate = predicate,
+						$temp$list = xs;
+					index = $temp$index;
+					predicate = $temp$predicate;
+					list = $temp$list;
+					continue findIndexHelp;
+				}
+			}
+		}
+	});
+var $elm_community$list_extra$List$Extra$findIndex = $elm_community$list_extra$List$Extra$findIndexHelp(0);
+var $elm_community$list_extra$List$Extra$elemIndex = function (x) {
+	return $elm_community$list_extra$List$Extra$findIndex(
+		$elm$core$Basics$eq(x));
 };
+var $author$project$Railroad$Layout$getTrackId = F2(
+	function (t, _v0) {
+		var tl = _v0;
+		return A2($elm_community$list_extra$List$Extra$elemIndex, t, tl);
+	});
 var $elm$core$Basics$composeR = F3(
 	function (f, g, x) {
 		return g(
@@ -6421,27 +6419,6 @@ var $elm$core$Basics$not = _Basics_not;
 var $elm$core$Basics$abs = function (n) {
 	return (n < 0) ? (-n) : n;
 };
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
 var $elm$core$String$foldr = _String_foldr;
 var $elm$core$String$toList = function (string) {
 	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
@@ -6696,165 +6673,169 @@ var $author$project$Railroad$Orientation$toString = function (orient) {
 	}
 };
 var $elm$html$Html$tr = _VirtualDom_node('tr');
-var $author$project$Main$viewTrains = function (trains) {
-	return A2(
-		$elm$html$Html$table,
-		_List_fromArray(
-			[
-				$elm$svg$Svg$Attributes$class('table')
-			]),
-		A2(
-			$elm$core$List$cons,
+var $author$project$Main$viewTrains = F2(
+	function (trains, layout) {
+		return A2(
+			$elm$html$Html$table,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$class('table')
+				]),
 			A2(
-				$elm$html$Html$tr,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$th,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$scope('col')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Track')
-							])),
-						A2(
-						$elm$html$Html$th,
-						_List_fromArray(
-							[
-								$elm$svg$Svg$Attributes$class('text-right'),
-								$elm$html$Html$Attributes$scope('col')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Pos')
-							])),
-						A2(
-						$elm$html$Html$th,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$scope('col')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Orientation')
-							])),
-						A2(
-						$elm$html$Html$th,
-						_List_fromArray(
-							[
-								$elm$svg$Svg$Attributes$class('text-right'),
-								$elm$html$Html$Attributes$scope('col')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Speed')
-							])),
-						A2(
-						$elm$html$Html$th,
-						_List_fromArray(
-							[
-								$elm$svg$Svg$Attributes$class('text-right'),
-								$elm$html$Html$Attributes$scope('col')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Length')
-							])),
-						A2(
-						$elm$html$Html$th,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$scope('col')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('State')
-							]))
-					])),
-			A2(
-				$elm$core$List$map,
-				function (train) {
-					return A2(
-						$elm$html$Html$tr,
-						_List_Nil,
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$td,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm$html$Html$text(
-										$elm$core$String$fromInt(
-											$author$project$Railroad$Layout$getTrackId(train.T.w)))
-									])),
-								A2(
-								$elm$html$Html$td,
-								_List_fromArray(
-									[
-										$elm$svg$Svg$Attributes$class('text-right')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text(
-										A2($myrho$elm_round$Round$round, 1, train.T.A))
-									])),
-								A2(
-								$elm$html$Html$td,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm$html$Html$text(
-										$author$project$Railroad$Orientation$toString(train.T.W))
-									])),
-								A2(
-								$elm$html$Html$td,
-								_List_fromArray(
-									[
-										$elm$svg$Svg$Attributes$class('text-right')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text(
-										A2($myrho$elm_round$Round$round, 1, train.bI))
-									])),
-								A2(
-								$elm$html$Html$td,
-								_List_fromArray(
-									[
-										$elm$svg$Svg$Attributes$class('text-right')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text(
-										A2($myrho$elm_round$Round$round, 1, train.aJ))
-									])),
-								A2(
-								$elm$html$Html$td,
-								_List_Nil,
-								_List_fromArray(
-									[
-										function () {
-										var _v0 = train.o;
-										switch (_v0) {
-											case 0:
-												return $elm$html$Html$text($joshforisha$elm_html_entities$Html$Entity$nbsp);
-											case 1:
-												return $elm$html$Html$text('Emergency stop');
-											case 2:
-												return $elm$html$Html$text('Crashed');
-											default:
-												return $elm$html$Html$text('Off map');
-										}
-									}()
-									]))
-							]));
-				},
-				trains)));
-};
+				$elm$core$List$cons,
+				A2(
+					$elm$html$Html$tr,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$th,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$scope('col')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Track')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$class('text-right'),
+									$elm$html$Html$Attributes$scope('col')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Pos')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$scope('col')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Orientation')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$class('text-right'),
+									$elm$html$Html$Attributes$scope('col')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Speed')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$class('text-right'),
+									$elm$html$Html$Attributes$scope('col')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Length')
+								])),
+							A2(
+							$elm$html$Html$th,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$scope('col')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('State')
+								]))
+						])),
+				A2(
+					$elm$core$List$map,
+					function (train) {
+						return A2(
+							$elm$html$Html$tr,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$td,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											$elm$core$String$fromInt(
+												A2(
+													$elm$core$Maybe$withDefault,
+													-1,
+													A2($author$project$Railroad$Layout$getTrackId, train.T.w, layout))))
+										])),
+									A2(
+									$elm$html$Html$td,
+									_List_fromArray(
+										[
+											$elm$svg$Svg$Attributes$class('text-right')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											A2($myrho$elm_round$Round$round, 1, train.T.A))
+										])),
+									A2(
+									$elm$html$Html$td,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											$author$project$Railroad$Orientation$toString(train.T.W))
+										])),
+									A2(
+									$elm$html$Html$td,
+									_List_fromArray(
+										[
+											$elm$svg$Svg$Attributes$class('text-right')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											A2($myrho$elm_round$Round$round, 1, train.bG))
+										])),
+									A2(
+									$elm$html$Html$td,
+									_List_fromArray(
+										[
+											$elm$svg$Svg$Attributes$class('text-right')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											A2($myrho$elm_round$Round$round, 1, train.aI))
+										])),
+									A2(
+									$elm$html$Html$td,
+									_List_Nil,
+									_List_fromArray(
+										[
+											function () {
+											var _v0 = train.o;
+											switch (_v0) {
+												case 0:
+													return $elm$html$Html$text($joshforisha$elm_html_entities$Html$Entity$nbsp);
+												case 1:
+													return $elm$html$Html$text('Emergency stop');
+												case 2:
+													return $elm$html$Html$text('Crashed');
+												default:
+													return $elm$html$Html$text('Off map');
+											}
+										}()
+										]))
+								]));
+					},
+					trains)));
+	});
 var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
 var $author$project$Main$view = function (model) {
 	return {
@@ -6906,18 +6887,23 @@ var $author$project$Main$view = function (model) {
 														A2(
 															$elm$core$List$map,
 															$author$project$Main$trackToSvg,
-															$author$project$Railroad$Layout$tracks(state.aI))),
+															$author$project$Railroad$Layout$tracks(state.S))),
 														A2(
 														$elm$svg$Svg$g,
 														_List_Nil,
 														A2(
 															$elm$core$List$map,
 															$author$project$Main$connectorToSvg,
-															$author$project$Railroad$Layout$connectors(state.aI))),
+															$author$project$Railroad$Layout$connectors(state.S))),
 														A2(
 														$elm$svg$Svg$g,
 														_List_Nil,
-														A2($elm$core$List$map, $author$project$Main$trainToSvg, state.a6))
+														A2(
+															$elm$core$List$map,
+															function (t) {
+																return A2($author$project$Main$trainToSvg, t, state.S);
+															},
+															state.a5))
 													]);
 											} else {
 												return _List_Nil;
@@ -6964,7 +6950,7 @@ var $author$project$Main$view = function (model) {
 										var _v1 = model.o;
 										if (!_v1.$) {
 											var stateRR = _v1.a;
-											return A2($elm$html$Html$Lazy$lazy, $author$project$Main$viewTrains, stateRR.a6);
+											return A3($elm$html$Html$Lazy$lazy2, $author$project$Main$viewTrains, stateRR.a5, stateRR.S);
 										} else {
 											return A2($elm$html$Html$div, _List_Nil, _List_Nil);
 										}
@@ -6973,10 +6959,10 @@ var $author$project$Main$view = function (model) {
 							]))
 					]))
 			]),
-		a4: 'Railroad'
+		a3: 'Railroad'
 	};
 };
 var $author$project$Main$main = $elm$browser$Browser$document(
-	{br: $author$project$Main$init, bJ: $author$project$Main$subscriptions, bN: $author$project$Main$update, bO: $author$project$Main$view});
+	{bp: $author$project$Main$init, bH: $author$project$Main$subscriptions, bK: $author$project$Main$update, bL: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	$elm$json$Json$Decode$succeed(0))(0)}});}(this));
