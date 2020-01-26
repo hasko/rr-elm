@@ -205,7 +205,7 @@ viewTrains trains layout =
                 (\train ->
                     tr []
                         [ td []
-                            [ text (String.fromInt (Maybe.withDefault -1 (Layout.getTrackId train.loc.track layout))) ]
+                            [ text (Layout.getTrackName train.loc.track layout) ]
                         , td [ class "text-right" ] [ text (Round.round 1 train.loc.pos) ]
                         , td [] [ text (Orientation.toString train.loc.orient) ]
                         , td [ class "text-right" ] [ text (Round.round 1 train.speed) ]

@@ -9,7 +9,7 @@ module Railroad.Layout exposing
     , getNextTrack
     , getPosition
     , getPreviousTrack
-    , getTrackId
+    , getTrackName
     , trackLength
     , tracks
     )
@@ -27,9 +27,14 @@ type Track
     = Track Connector Connector
 
 
-getTrackId : Track -> Layout -> Maybe Int
-getTrackId t (Layout tl) =
-    List.Extra.elemIndex t tl
+getTrackName : Track -> Layout -> String
+getTrackName t (Layout tl) =
+    case List.Extra.elemIndex t tl of
+        Nothing ->
+            "[Unknown track]"
+
+        Just n ->
+            "[Unnamed track " ++ String.fromInt n ++ "]"
 
 
 type Connector
