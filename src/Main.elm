@@ -1,8 +1,8 @@
 module Main exposing (Msg(..), main, update, view)
 
 import Browser
-import Html exposing (Html, br, button, div, input, label, li, p, table, td, text, th, tr, ul)
-import Html.Attributes as Att exposing (attribute, disabled, for, scope, value)
+import Html exposing (Html, a, br, button, div, hr, input, label, li, p, table, td, text, th, tr, ul)
+import Html.Attributes as Att exposing (attribute, class, disabled, for, href, scope, target, value)
 import Html.Entity exposing (nbsp)
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
@@ -11,7 +11,7 @@ import Railroad.Layout as Layout exposing (Layout)
 import Railroad.Orientation as Orientation exposing (Orientation(..), byOrientation)
 import Round
 import Svg exposing (Svg, circle, g, line, svg)
-import Svg.Attributes exposing (..)
+import Svg.Attributes exposing (cx, cy, fill, height, r, stroke, strokeLinecap, strokeWidth, transform, width, x1, x2, y1, y2)
 import Time exposing (posixToMillis)
 
 
@@ -148,6 +148,12 @@ view model =
 
                         Nothing ->
                             div [] []
+                    ]
+                ]
+            , div [ class "row mt-3" ]
+                [ div [ class "col" ]
+                    [ hr [] []
+                    , p [] [ a [ href "https://github.com/hasko/rr-elm", target "_blank" ] [ text "Show source" ] ]
                     ]
                 ]
             ]
