@@ -6405,10 +6405,16 @@ var $elm_community$list_extra$List$Extra$elemIndex = function (x) {
 	return $elm_community$list_extra$List$Extra$findIndex(
 		$elm$core$Basics$eq(x));
 };
-var $author$project$Railroad$Layout$getTrackId = F2(
+var $author$project$Railroad$Layout$getTrackName = F2(
 	function (t, _v0) {
 		var tl = _v0;
-		return A2($elm_community$list_extra$List$Extra$elemIndex, t, tl);
+		var _v1 = A2($elm_community$list_extra$List$Extra$elemIndex, t, tl);
+		if (_v1.$ === 1) {
+			return '[Unknown track]';
+		} else {
+			var n = _v1.a;
+			return '[Unnamed track ' + ($elm$core$String$fromInt(n) + ']');
+		}
 	});
 var $elm$core$Basics$composeR = F3(
 	function (f, g, x) {
@@ -6776,11 +6782,7 @@ var $author$project$Main$viewTrains = F2(
 									_List_fromArray(
 										[
 											$elm$html$Html$text(
-											$elm$core$String$fromInt(
-												A2(
-													$elm$core$Maybe$withDefault,
-													-1,
-													A2($author$project$Railroad$Layout$getTrackId, train.T.w, layout))))
+											A2($author$project$Railroad$Layout$getTrackName, train.T.w, layout))
 										])),
 									A2(
 									$elm$html$Html$td,
