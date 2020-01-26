@@ -5998,7 +5998,16 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 		}
 	});
-var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
+var $elm$html$Html$a = _VirtualDom_node('a');
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
 var $elm$svg$Svg$Attributes$cx = _VirtualDom_attribute('cx');
@@ -6111,10 +6120,18 @@ var $author$project$Railroad$Layout$connectors = function (_v0) {
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
 var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
+var $elm$html$Html$hr = _VirtualDom_node('hr');
+var $elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
+};
 var $elm$virtual_dom$VirtualDom$lazy = _VirtualDom_lazy;
 var $elm$html$Html$Lazy$lazy = $elm$virtual_dom$VirtualDom$lazy;
 var $elm$virtual_dom$VirtualDom$lazy2 = _VirtualDom_lazy2;
 var $elm$html$Html$Lazy$lazy2 = $elm$virtual_dom$VirtualDom$lazy2;
+var $elm$html$Html$p = _VirtualDom_node('p');
 var $author$project$Main$scaleTransform = function (scale) {
 	var scaleStr = $elm$core$String$fromFloat(scale);
 	return 'scale(' + (scaleStr + (' ' + (scaleStr + ')')));
@@ -6122,6 +6139,9 @@ var $author$project$Main$scaleTransform = function (scale) {
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
+var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Railroad$Layout$getConnectors = function (_v0) {
 	var from = _v0.a;
 	var to = _v0.b;
@@ -6306,8 +6326,6 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$Main$viewSimulationControls = function (isRunning) {
 	return A2(
 		$elm$html$Html$div,
@@ -6318,7 +6336,7 @@ var $author$project$Main$viewSimulationControls = function (isRunning) {
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
-						$elm$svg$Svg$Attributes$class('btn btn-primary'),
+						$elm$html$Html$Attributes$class('btn btn-primary'),
 						$elm$html$Html$Events$onClick($author$project$Main$Stop)
 					]),
 				_List_fromArray(
@@ -6328,7 +6346,7 @@ var $author$project$Main$viewSimulationControls = function (isRunning) {
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
-						$elm$svg$Svg$Attributes$class('btn btn-primary'),
+						$elm$html$Html$Attributes$class('btn btn-primary'),
 						$elm$html$Html$Events$onClick($author$project$Main$Start)
 					]),
 				_List_fromArray(
@@ -6339,7 +6357,7 @@ var $author$project$Main$viewSimulationControls = function (isRunning) {
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
-						$elm$svg$Svg$Attributes$class('btn btn-secondary ml-2'),
+						$elm$html$Html$Attributes$class('btn btn-secondary ml-2'),
 						isRunning ? $elm$html$Html$Attributes$disabled(true) : $elm$html$Html$Events$onClick($author$project$Main$SingleStep)
 					]),
 				_List_fromArray(
@@ -6350,7 +6368,7 @@ var $author$project$Main$viewSimulationControls = function (isRunning) {
 				$elm$html$Html$button,
 				_List_fromArray(
 					[
-						$elm$svg$Svg$Attributes$class('btn btn-secondary ml-2'),
+						$elm$html$Html$Attributes$class('btn btn-secondary ml-2'),
 						isRunning ? $elm$html$Html$Attributes$disabled(true) : $elm$html$Html$Events$onClick($author$project$Main$Reset)
 					]),
 				_List_fromArray(
@@ -6653,14 +6671,6 @@ var $myrho$elm_round$Round$round = $myrho$elm_round$Round$roundFun(
 				}
 			}
 		}));
-var $elm$json$Json$Encode$string = _Json_wrap;
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
 var $elm$html$Html$Attributes$scope = $elm$html$Html$Attributes$stringProperty('scope');
 var $elm$html$Html$table = _VirtualDom_node('table');
 var $elm$html$Html$td = _VirtualDom_node('td');
@@ -6679,7 +6689,7 @@ var $author$project$Main$viewTrains = F2(
 			$elm$html$Html$table,
 			_List_fromArray(
 				[
-					$elm$svg$Svg$Attributes$class('table')
+					$elm$html$Html$Attributes$class('table')
 				]),
 			A2(
 				$elm$core$List$cons,
@@ -6702,7 +6712,7 @@ var $author$project$Main$viewTrains = F2(
 							$elm$html$Html$th,
 							_List_fromArray(
 								[
-									$elm$svg$Svg$Attributes$class('text-right'),
+									$elm$html$Html$Attributes$class('text-right'),
 									$elm$html$Html$Attributes$scope('col')
 								]),
 							_List_fromArray(
@@ -6723,7 +6733,7 @@ var $author$project$Main$viewTrains = F2(
 							$elm$html$Html$th,
 							_List_fromArray(
 								[
-									$elm$svg$Svg$Attributes$class('text-right'),
+									$elm$html$Html$Attributes$class('text-right'),
 									$elm$html$Html$Attributes$scope('col')
 								]),
 							_List_fromArray(
@@ -6734,7 +6744,7 @@ var $author$project$Main$viewTrains = F2(
 							$elm$html$Html$th,
 							_List_fromArray(
 								[
-									$elm$svg$Svg$Attributes$class('text-right'),
+									$elm$html$Html$Attributes$class('text-right'),
 									$elm$html$Html$Attributes$scope('col')
 								]),
 							_List_fromArray(
@@ -6776,7 +6786,7 @@ var $author$project$Main$viewTrains = F2(
 									$elm$html$Html$td,
 									_List_fromArray(
 										[
-											$elm$svg$Svg$Attributes$class('text-right')
+											$elm$html$Html$Attributes$class('text-right')
 										]),
 									_List_fromArray(
 										[
@@ -6795,7 +6805,7 @@ var $author$project$Main$viewTrains = F2(
 									$elm$html$Html$td,
 									_List_fromArray(
 										[
-											$elm$svg$Svg$Attributes$class('text-right')
+											$elm$html$Html$Attributes$class('text-right')
 										]),
 									_List_fromArray(
 										[
@@ -6806,7 +6816,7 @@ var $author$project$Main$viewTrains = F2(
 									$elm$html$Html$td,
 									_List_fromArray(
 										[
-											$elm$svg$Svg$Attributes$class('text-right')
+											$elm$html$Html$Attributes$class('text-right')
 										]),
 									_List_fromArray(
 										[
@@ -6845,7 +6855,7 @@ var $author$project$Main$view = function (model) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$svg$Svg$Attributes$class('container')
+						$elm$html$Html$Attributes$class('container')
 					]),
 				_List_fromArray(
 					[
@@ -6853,7 +6863,7 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$svg$Svg$Attributes$class('row mt-3')
+								$elm$html$Html$Attributes$class('row mt-3')
 							]),
 						_List_fromArray(
 							[
@@ -6861,7 +6871,7 @@ var $author$project$Main$view = function (model) {
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$svg$Svg$Attributes$class('col')
+										$elm$html$Html$Attributes$class('col')
 									]),
 								_List_fromArray(
 									[
@@ -6915,7 +6925,7 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$svg$Svg$Attributes$class('row mt-3')
+								$elm$html$Html$Attributes$class('row mt-3')
 							]),
 						_List_fromArray(
 							[
@@ -6923,7 +6933,7 @@ var $author$project$Main$view = function (model) {
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$svg$Svg$Attributes$class('col')
+										$elm$html$Html$Attributes$class('col')
 									]),
 								_List_fromArray(
 									[
@@ -6934,7 +6944,7 @@ var $author$project$Main$view = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$svg$Svg$Attributes$class('row mt-3')
+								$elm$html$Html$Attributes$class('row mt-3')
 							]),
 						_List_fromArray(
 							[
@@ -6942,7 +6952,7 @@ var $author$project$Main$view = function (model) {
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$svg$Svg$Attributes$class('col')
+										$elm$html$Html$Attributes$class('col')
 									]),
 								_List_fromArray(
 									[
@@ -6955,6 +6965,42 @@ var $author$project$Main$view = function (model) {
 											return A2($elm$html$Html$div, _List_Nil, _List_Nil);
 										}
 									}()
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row mt-3')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('col')
+									]),
+								_List_fromArray(
+									[
+										A2($elm$html$Html$hr, _List_Nil, _List_Nil),
+										A2(
+										$elm$html$Html$p,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$a,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$href('https://github.com/hasko/rr-elm'),
+														$elm$html$Html$Attributes$target('_blank')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Show source')
+													]))
+											]))
 									]))
 							]))
 					]))
