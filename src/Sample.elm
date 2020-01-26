@@ -1,15 +1,33 @@
-module Sample exposing (sample)
+module Sample exposing (sampleLayout)
 
-import Railroad exposing (Layout, addBezierTrack, addConnector, addStraightTrack)
+import Railroad.Layout as Layout exposing (Connector(..), Layout, Track(..), addTrack)
 
 
-sampleLayout : Maybe Layout
+sampleLayout : Layout
 sampleLayout =
-    Just Layout.empty
-        |> addConnector 1 100 100
-        |> addConnector 2 200 120
-        |> addConnector 3 80 50
-        |> addConnector 4 70 20
-        |> addTrack 1 2 StraightTrack
-        |> addTrack 3 4 StraightTrack
-        |> addTrack 2 3 BezierTrack
+    let
+        c1 =
+            Connector 100 100
+
+        c2 =
+            Connector 200 120
+
+        c3 =
+            Connector 80 50
+
+        c4 =
+            Connector 200 30
+
+        t1 =
+            Track c1 c2
+
+        t2 =
+            Track c1 c3
+
+        t3 =
+            Track c3 c4
+
+        t4 =
+            Track c2 c4
+    in
+    List.foldl addTrack Layout.empty [ t1, t2, t3, t4 ]

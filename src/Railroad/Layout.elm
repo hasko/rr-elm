@@ -1,40 +1,39 @@
 module Railroad.Layout exposing
-    ( Connector
+    ( Connector(..)
     , Layout
-    , Track
-    , TrackGeometry(..)
-    , build
+    , Track(..)
+    , addTrack
     , connectors
-    , emptyLayout
+    , empty
     , getConnectors
     , getNextTrack
     , getPosition
     , getPreviousTrack
-    , getTrack
     , getTrackId
     , trackLength
     , tracks
     )
 
-import Dict exposing (Dict)
+import List
+import List.Extra
 import Railroad.Orientation as Orientation exposing (Orientation(..))
 
 
 type Layout
-    = Layout (Dict Int ConnectorData) (Dict Int TrackData)
+    = Layout (List Track)
 
 
 type Track
-    = Track Int Layout
+    = Track Connector Connector
+
+
+getTrackId : Track -> Layout -> Maybe Int
+getTrackId t (Layout tl) =
+    List.Extra.elemIndex t tl
 
 
 type Connector
-    = Connector Int Layout
-
-
-type TrackGeometry
-    = StraightTrack
-    | BezierTrack
+    = Connector Float Float
 
 
 type alias Point =
@@ -44,38 +43,17 @@ type alias Point =
 {-|
 
 
-# Internally used type aliases
-
--}
-type alias ConnectorData =
-    { pos : Point }
-
-
-type alias TrackData =
-    { from : Int, to : Int, geometry : TrackGeometry }
-
-
-{-|
-
-
 # Constructing
 
 -}
-emptyLayout : Layout
-emptyLayout =
-    Layout Dict.empty Dict.empty
+empty : Layout
+empty =
+    Layout []
 
 
-build : { connectors : Dict Int Point, tracks : Dict Int TrackData } -> Result String Layout
-build spec =
-    let
-        connDataDict =
-            Dict.map (\index point -> { pos = point }) spec.connectors
-
-        trackDataDict =
-            Dict.map (\index trackSpec -> trackSpec) spec.tracks
-    in
-    Ok (Layout connDataDict trackDataDict)
+addTrack : Track -> Layout -> Layout
+addTrack track (Layout t) =
+    Layout (track :: t)
 
 
 {-|
@@ -85,138 +63,81 @@ build spec =
 
 -}
 connectors : Layout -> List Connector
-connectors layout =
-    let
-        (Layout connDict _) =
-            layout
-    in
-    Dict.map (\index _ -> Connector index layout) connDict |> Dict.values
+connectors (Layout t) =
+    List.map trackConnectors t
+        |> List.foldr (++) []
+        |> List.Extra.uniqueBy (\(Connector x y) -> x ^ y)
+
+
+trackConnectors : Track -> List Connector
+trackConnectors (Track from to) =
+    [ from, to ]
 
 
 tracks : Layout -> List Track
-tracks layout =
+tracks (Layout t) =
+    t
+
+
+getPreviousTrack : Track -> Layout -> Maybe ( Track, Orientation )
+getPreviousTrack t l =
     let
-        (Layout _ trackDict) =
-            layout
+        (Track from _) =
+            t
     in
-    Dict.map (\index _ -> Track index layout) trackDict |> Dict.values
+    getSubsequentTrack t from l
 
 
-{-| Internal function to access the layout by ID.
--}
-getTrack : Int -> Layout -> Maybe Track
-getTrack id layout =
+getNextTrack : Track -> Layout -> Maybe ( Track, Orientation )
+getNextTrack t l =
     let
-        (Layout _ trackDict) =
-            layout
+        (Track _ to) =
+            t
     in
-    if Dict.member id trackDict then
-        Just (Track id layout)
-
-    else
-        Nothing
+    getSubsequentTrack t to l
 
 
-getTrackId : Track -> Int
-getTrackId (Track id _) =
-    id
+getSubsequentTrack : Track -> Connector -> Layout -> Maybe ( Track, Orientation )
+getSubsequentTrack t c (Layout tl) =
+    --TODO Allow for points/switches. Currently we assume that there is only one other track.
+    case List.filter (\eachTrack -> eachTrack /= t && List.member c (trackConnectors eachTrack)) tl |> List.head of
+        Nothing ->
+            Nothing
 
+        Just ot ->
+            let
+                (Track otherFrom _) =
+                    ot
 
-getPreviousTrack : Track -> Maybe ( Track, Orientation )
-getPreviousTrack track =
-    getConnectors track
-        |> .from
-        |> getTracksFor
-        |> List.filter (\( otherTrack, _ ) -> track /= otherTrack)
-        |> List.head
+                orient =
+                    if c == otherFrom then
+                        Orientation.Forward
 
-
-getNextTrack : Track -> Maybe ( Track, Orientation )
-getNextTrack track =
-    getConnectors track
-        |> .to
-        |> getTracksFor
-        |> List.filter (\( otherTrack, _ ) -> track /= otherTrack)
-        |> List.head
-
-
-getTracksFor : Connector -> List ( Track, Orientation )
-getTracksFor (Connector id layout) =
-    let
-        (Layout _ trackDict) =
-            layout
-    in
-    trackDict
-        |> Dict.filter (\_ trackData -> trackData.from == id || trackData.to == id)
-        |> Dict.map
-            (\trackId trackData ->
-                ( Track trackId layout
-                , if trackData.from == id then
-                    Forward
-
-                  else
-                    Reverse
-                )
-            )
-        |> Dict.values
+                    else
+                        Orientation.Reverse
+            in
+            Just ( ot, orient )
 
 
 {-| Return the length of a track. TODO Currently, this is assuming it is a straight track. Later, we will support splines.
 -}
 trackLength : Track -> Float
-trackLength track =
+trackLength (Track from to) =
     let
-        conns =
-            getConnectors track
+        (Connector x1 y1) =
+            from
 
-        fromPos =
-            getPosition conns.from
-
-        toPos =
-            getPosition conns.to
+        (Connector x2 y2) =
+            to
     in
-    sqrt ((toPos.x - fromPos.x) ^ 2 + (toPos.y - fromPos.y) ^ 2)
+    sqrt ((x2 - x1) ^ 2 + (y2 - y1) ^ 2)
 
 
 getPosition : Connector -> Point
-getPosition (Connector id layout) =
-    getConnectorData id layout |> .pos
+getPosition (Connector x y) =
+    Point x y
 
 
 getConnectors : Track -> { from : Connector, to : Connector }
-getConnectors (Track id layout) =
-    let
-        trackData =
-            getTrackData id layout
-    in
-    { from = Connector trackData.from layout, to = Connector trackData.to layout }
-
-
-getTrackData : Int -> Layout -> TrackData
-getTrackData id (Layout _ trackDict) =
-    case Dict.get id trackDict of
-        Nothing ->
-            dummyTrackData
-
-        Just td ->
-            td
-
-
-dummyTrackData : TrackData
-dummyTrackData =
-    { from = 0, to = 0, geometry = StraightTrack }
-
-
-getConnectorData : Int -> Layout -> ConnectorData
-getConnectorData id (Layout connDict _) =
-    case Dict.get id connDict of
-        Nothing ->
-            dummyConnectorData
-
-        Just cd ->
-            cd
-
-
-dummyConnectorData : ConnectorData
-dummyConnectorData =
-    { pos = { x = 0 / 0, y = 0 / 0 } }
+getConnectors (Track from to) =
+    { from = from, to = to }

@@ -4,6 +4,7 @@ import Dict exposing (Dict)
 import List
 import Railroad.Layout as Layout exposing (Connector, Layout, Track)
 import Railroad.Orientation exposing (..)
+import Sample
 
 
 type alias State =
@@ -40,13 +41,13 @@ type TrainState
 moved : Int -> State -> State
 moved millis state =
     --TODO Add building tracks and other things.
-    { state | trains = List.map (movedTrain millis) state.trains }
+    { state | trains = List.map (\t -> movedTrain millis t state.layout) state.trains }
 
 
 {-| Takes a number of milliseconds and returns a modified Train that has moved by an amount determined by its speed.
 -}
-movedTrain : Int -> Train -> Train
-movedTrain millis train =
+movedTrain : Int -> Train -> Layout -> Train
+movedTrain millis train layout =
     let
         loc =
             train.loc
@@ -62,7 +63,7 @@ movedTrain millis train =
     in
     --TODO Make recursive so it works also for very short successor tracks. Also, refactor.
     if newLoc.pos < 0 then
-        case Layout.getPreviousTrack loc.track of
+        case Layout.getPreviousTrack loc.track layout of
             Nothing ->
                 { train | loc = { newLoc | pos = 0 }, speed = 0, state = EmergencyStop }
 
@@ -83,7 +84,7 @@ movedTrain millis train =
                 }
 
     else if newLoc.pos > tl then
-        case Layout.getNextTrack loc.track of
+        case Layout.getNextTrack loc.track layout of
             Nothing ->
                 { train | loc = { newLoc | pos = tl }, speed = 0, state = EmergencyStop }
 
@@ -111,34 +112,13 @@ movedTrain millis train =
 sample : Maybe State
 sample =
     let
-        cd =
-            Dict.empty
-                |> Dict.insert 1 { x = 100, y = 100 }
-                |> Dict.insert 2 { x = 200, y = 120 }
-                |> Dict.insert 3 { x = 80, y = 50 }
-                |> Dict.insert 4 { x = 200, y = 30 }
+        layout =
+            Sample.sampleLayout
 
-        td =
-            Dict.empty
-                |> Dict.insert 1 { from = 1, to = 2, geometry = Layout.StraightTrack }
-                |> Dict.insert 2 { from = 1, to = 3, geometry = Layout.StraightTrack }
-                |> Dict.insert 3 { from = 3, to = 4, geometry = Layout.StraightTrack }
-                |> Dict.insert 4 { from = 2, to = 4, geometry = Layout.StraightTrack }
-
-        layoutResult =
-            Layout.build { connectors = cd, tracks = td }
+        t1 =
+            Layout.Track (Layout.Connector 100 100) (Layout.Connector 200 120)
     in
-    case layoutResult of
-        Err t ->
-            Nothing
-
-        Ok layout ->
-            case Layout.getTrack 1 layout of
-                Nothing ->
-                    Nothing
-
-                Just track ->
-                    Just
-                        { layout = layout
-                        , trains = [ { loc = { track = track, pos = 50, orient = Reverse }, length = 30, speed = 11.1, state = Normal } ]
-                        }
+    Just
+        { layout = layout
+        , trains = [ { loc = { track = t1, pos = 50, orient = Reverse }, length = 30, speed = 11.1, state = Normal } ]
+        }

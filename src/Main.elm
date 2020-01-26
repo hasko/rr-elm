@@ -5,9 +5,9 @@ import Html exposing (Html, br, button, div, input, label, li, p, table, td, tex
 import Html.Attributes as Att exposing (attribute, disabled, for, scope, value)
 import Html.Entity exposing (nbsp)
 import Html.Events exposing (onClick)
-import Html.Lazy exposing (lazy)
+import Html.Lazy exposing (lazy, lazy2)
 import Railroad as RR
-import Railroad.Layout as Layout
+import Railroad.Layout as Layout exposing (Layout)
 import Railroad.Orientation as Orientation exposing (Orientation(..), byOrientation)
 import Round
 import Svg exposing (Svg, circle, g, line, svg)
@@ -128,7 +128,7 @@ view model =
                             Just state ->
                                 [ g [] (List.map trackToSvg (Layout.tracks state.layout))
                                 , g [] (List.map connectorToSvg (Layout.connectors state.layout))
-                                , g [] (List.map trainToSvg state.trains)
+                                , g [] (List.map (\t -> trainToSvg t state.layout) state.trains)
                                 ]
 
                             Nothing ->
@@ -144,7 +144,7 @@ view model =
                 [ div [ class "col" ]
                     [ case model.state of
                         Just stateRR ->
-                            lazy viewTrains stateRR.trains
+                            lazy2 viewTrains stateRR.trains stateRR.layout
 
                         Nothing ->
                             div [] []
@@ -184,8 +184,8 @@ viewSimulationControls isRunning =
         ]
 
 
-viewTrains : List RR.Train -> Html Msg
-viewTrains trains =
+viewTrains : List RR.Train -> Layout.Layout -> Html Msg
+viewTrains trains layout =
     table [ class "table" ]
         (tr []
             [ th [ scope "col" ] [ text "Track" ]
@@ -199,7 +199,7 @@ viewTrains trains =
                 (\train ->
                     tr []
                         [ td []
-                            [ text (String.fromInt (Layout.getTrackId train.loc.track)) ]
+                            [ text (String.fromInt (Maybe.withDefault -1 (Layout.getTrackId train.loc.track layout))) ]
                         , td [ class "text-right" ] [ text (Round.round 1 train.loc.pos) ]
                         , td [] [ text (Orientation.toString train.loc.orient) ]
                         , td [ class "text-right" ] [ text (Round.round 1 train.speed) ]
@@ -273,13 +273,13 @@ connectorToSvg conn =
         []
 
 
-trainToSvg : RR.Train -> Svg Msg
-trainToSvg train =
-    g [] (trainToSvgRecursive train.loc train.length [])
+trainToSvg : RR.Train -> Layout -> Svg Msg
+trainToSvg train layout =
+    g [] (trainToSvgRecursive train.loc train.length layout [])
 
 
-trainToSvgRecursive : RR.Location -> Float -> List (Svg Msg) -> List (Svg Msg)
-trainToSvgRecursive loc length svgList =
+trainToSvgRecursive : RR.Location -> Float -> Layout -> List (Svg Msg) -> List (Svg Msg)
+trainToSvgRecursive loc length layout svgList =
     if length <= 0 then
         -- Whole train is covered, return what we accumulated so far.
         svgList
@@ -310,7 +310,7 @@ trainToSvgRecursive loc length svgList =
         trackSegment loc.track loc.pos newClampedPos
             :: (if newPos < 0 then
                     -- Train is spilling onto the previous track.
-                    case Layout.getPreviousTrack loc.track of
+                    case Layout.getPreviousTrack loc.track layout of
                         Nothing ->
                             svgList
 
@@ -324,11 +324,11 @@ trainToSvgRecursive loc length svgList =
                                         Reverse ->
                                             Layout.trackLength newTrack
                             in
-                            trainToSvgRecursive { track = newTrack, pos = newStart, orient = Orientation.reverse newOrient } newLength svgList
+                            trainToSvgRecursive { track = newTrack, pos = newStart, orient = Orientation.reverse newOrient } newLength layout svgList
 
                 else if newPos > Layout.trackLength loc.track then
                     -- Train is spilling onto the next track.
-                    case Layout.getNextTrack loc.track of
+                    case Layout.getNextTrack loc.track layout of
                         Nothing ->
                             svgList
 
@@ -342,7 +342,7 @@ trainToSvgRecursive loc length svgList =
                                         Reverse ->
                                             Layout.trackLength newTrack
                             in
-                            trainToSvgRecursive { track = newTrack, pos = newStart, orient = Orientation.reverse newOrient } newLength svgList
+                            trainToSvgRecursive { track = newTrack, pos = newStart, orient = Orientation.reverse newOrient } newLength layout svgList
 
                 else
                     -- Train fits onto the current track.
