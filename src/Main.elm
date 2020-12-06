@@ -10,7 +10,7 @@ import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
 import Json.Decode
 import Maybe exposing (andThen)
-import Railroad exposing (Layout, RailroadState, Switch, stateToSvg)
+import Railroad exposing (Layout, RailroadState, Switch, createTrain, stateToSvg)
 import Task
 import Time exposing (posixToMillis)
 
@@ -36,6 +36,7 @@ type Msg
     | LoadLayoutSelected File
     | LoadedLayout String
     | ToggleSwitch String Int
+    | CreateTrain String
 
 
 init : () -> ( Model, Cmd Msg )
@@ -68,6 +69,9 @@ update msg model =
 
         ToggleSwitch name state ->
             ( { model | rrState = Maybe.map (\s -> Railroad.toggleSwitch s name state) model.rrState }, Cmd.none )
+
+        CreateTrain trackName ->
+            ( { model | rrState = Maybe.map (\s -> Railroad.createTrain s trackName) model.rrState }, Cmd.none )
 
         _ ->
             ( model, Cmd.none )
@@ -451,7 +455,13 @@ viewTracks state =
                     tr []
                         [ td [] [ text t.name ]
                         , td [] [ text (String.fromFloat t.length ++ nbsp ++ "m") ]
-                        , td [] [ text <| String.join ", " <| List.map .name <| Railroad.occupants state t.name ]
+                        , td []
+                            [ if List.length (Railroad.occupants state t.name) == 0 then
+                                button [ class "btn btn-sm btn-secondary", onClick (CreateTrain t.name) ] [ text "Create train" ]
+
+                              else
+                                text <| String.join ", " <| List.map .name <| Railroad.occupants state t.name
+                            ]
                         ]
                 )
                 state.layout.tracks

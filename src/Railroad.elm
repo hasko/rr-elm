@@ -1,4 +1,4 @@
-module Railroad exposing (Layout, RailroadState, Switch, layoutDecoder, loadedLayout, occupants, stateToSvg, switchStateString, toggleSwitch)
+module Railroad exposing (Layout, RailroadState, Switch, createTrain, layoutDecoder, loadedLayout, occupants, stateToSvg, switchStateString, toggleSwitch)
 
 import Graph exposing (Graph)
 import Html exposing (Html)
@@ -28,7 +28,7 @@ type alias Switch =
 
 
 type alias Train =
-    { name : String, length : Float, speed : Float }
+    { name : String, length : Float, speed : Float, track : String }
 
 
 stateToSvg : RailroadState -> Html msg
@@ -102,3 +102,24 @@ switchStateString switch =
         |> List.filter (\( i, _ ) -> i == switch.state)
         |> List.map (\( _, c ) -> c.from ++ mdash ++ c.to)
         |> String.join ", "
+
+
+createTrain : RailroadState -> String -> RailroadState
+createTrain state trackName =
+    let
+        mTrack =
+            state.layout.tracks |> List.filter (\t -> t.name == trackName) |> List.head
+    in
+    case mTrack of
+        Nothing ->
+            state
+
+        Just track ->
+            let
+                length =
+                    min 20 track.length
+
+                train =
+                    Train "Unnamed Train" length 0.0 trackName
+            in
+            { state | trains = train :: state.trains }
