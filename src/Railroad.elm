@@ -1,10 +1,7 @@
-module Railroad exposing (Layout, RailroadState, Switch, layoutDecoder, loadedLayout, stateToSvg, toggleSwitch, viewTracks, viewTrains)
+module Railroad exposing (Layout, RailroadState, Switch, layoutDecoder, loadedLayout, occupants, stateToSvg, toggleSwitch)
 
 import Graph exposing (Graph)
-import Html exposing (Html, button, div, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (class, disabled)
-import Html.Entity exposing (nbsp)
-import Html.Events exposing (onClick)
+import Html exposing (Html)
 import Json.Decode as JD exposing (Decoder, field, float, string)
 import Svg exposing (Svg, svg)
 
@@ -36,58 +33,6 @@ type alias Train =
 stateToSvg : RailroadState -> Html msg
 stateToSvg s =
     svg [] []
-
-
-viewTrains : RailroadState -> Html msg
-viewTrains state =
-    table [ class "table table-sm" ]
-        [ thead []
-            [ tr []
-                [ th [] [ text "Name" ]
-                , th [] [ text "Length" ]
-                , th [] [ text "Tracks" ]
-                , th [] [ text "Orientation" ]
-                , th [] [ text "Speed" ]
-                ]
-            ]
-        , tbody []
-            (List.map
-                (\t ->
-                    tr []
-                        [ td [] [ text t.name ]
-                        , td [] [ text (String.fromFloat t.length ++ nbsp ++ "m") ]
-                        , td [] [ text nbsp ]
-                        , td [] [ text nbsp ]
-                        , td [] [ text (String.fromFloat (t.speed * 3.6) ++ nbsp ++ "km/h") ]
-                        ]
-                )
-                state.trains
-            )
-        ]
-
-
-viewTracks : RailroadState -> Html msg
-viewTracks state =
-    table [ class "table table-sm" ]
-        [ thead []
-            [ tr []
-                [ th [] [ text "Name" ]
-                , th [] [ text "Length" ]
-                , th [] [ text "Occupied by" ]
-                ]
-            ]
-        , tbody []
-            (List.map
-                (\t ->
-                    tr []
-                        [ td [] [ text t.name ]
-                        , td [] [ text (String.fromFloat t.length ++ nbsp ++ "m") ]
-                        , td [] [ text <| String.join ", " <| List.map .name <| occupants state t.name ]
-                        ]
-                )
-                state.layout.tracks
-            )
-        ]
 
 
 trackDecoder : Decoder Track

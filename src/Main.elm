@@ -10,7 +10,7 @@ import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
 import Json.Decode
 import Maybe exposing (andThen)
-import Railroad exposing (Layout, RailroadState, Switch, stateToSvg, viewTracks, viewTrains)
+import Railroad exposing (Layout, RailroadState, Switch, stateToSvg)
 import Task
 import Time exposing (posixToMillis)
 
@@ -405,6 +405,58 @@ viewLoadSaveControls model =
            ]
            []
 -}
+
+
+viewTrains : RailroadState -> Html msg
+viewTrains state =
+    table [ class "table table-sm" ]
+        [ thead []
+            [ tr []
+                [ th [] [ text "Name" ]
+                , th [] [ text "Length" ]
+                , th [] [ text "Tracks" ]
+                , th [] [ text "Orientation" ]
+                , th [] [ text "Speed" ]
+                ]
+            ]
+        , tbody []
+            (List.map
+                (\t ->
+                    tr []
+                        [ td [] [ text t.name ]
+                        , td [] [ text (String.fromFloat t.length ++ nbsp ++ "m") ]
+                        , td [] [ text nbsp ]
+                        , td [] [ text nbsp ]
+                        , td [] [ text (String.fromFloat (t.speed * 3.6) ++ nbsp ++ "km/h") ]
+                        ]
+                )
+                state.trains
+            )
+        ]
+
+
+viewTracks : RailroadState -> Html Msg
+viewTracks state =
+    table [ class "table table-sm" ]
+        [ thead []
+            [ tr []
+                [ th [] [ text "Name" ]
+                , th [] [ text "Length" ]
+                , th [] [ text "Occupied by" ]
+                ]
+            ]
+        , tbody []
+            (List.map
+                (\t ->
+                    tr []
+                        [ td [] [ text t.name ]
+                        , td [] [ text (String.fromFloat t.length ++ nbsp ++ "m") ]
+                        , td [] [ text <| String.join ", " <| List.map .name <| Railroad.occupants state t.name ]
+                        ]
+                )
+                state.layout.tracks
+            )
+        ]
 
 
 viewSwitches : RailroadState -> Html Msg
