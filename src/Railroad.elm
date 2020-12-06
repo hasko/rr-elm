@@ -1,7 +1,8 @@
-module Railroad exposing (Layout, RailroadState, Switch, layoutDecoder, loadedLayout, occupants, stateToSvg, toggleSwitch)
+module Railroad exposing (Layout, RailroadState, Switch, layoutDecoder, loadedLayout, occupants, stateToSvg, switchStateString, toggleSwitch)
 
 import Graph exposing (Graph)
 import Html exposing (Html)
+import Html.Entity exposing (mdash)
 import Json.Decode as JD exposing (Decoder, field, float, string)
 import Svg exposing (Svg, svg)
 
@@ -93,3 +94,11 @@ toggleSwitch state switchName switchState =
                         l.switches
             }
     }
+
+
+switchStateString : Switch -> String
+switchStateString switch =
+    List.indexedMap Tuple.pair switch.connections
+        |> List.filter (\( i, _ ) -> i == switch.state)
+        |> List.map (\( _, c ) -> c.from ++ mdash ++ c.to)
+        |> String.join ", "

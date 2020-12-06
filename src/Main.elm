@@ -477,21 +477,21 @@ viewSwitch : Switch -> Html Msg
 viewSwitch switch =
     tr []
         [ td [] [ text switch.name ]
-        , td [] [ text "Undefined" ]
+        , td [] [ text (Railroad.switchStateString switch) ]
         , td []
-            (List.indexedMap
-                (\i s ->
-                    td []
-                        [ button
+            [ div [ class "btn-group" ]
+                (List.indexedMap
+                    (\i s ->
+                        button
                             (if switch.state == i then
                                 [ class "btn btn-sm btn-secondary", disabled True ]
 
                              else
-                                [ class "btn btn-sm btn-primary", onClick (ToggleSwitch switch.name i) ]
+                                [ class "btn btn-sm btn-secondary", onClick (ToggleSwitch switch.name i) ]
                             )
                             [ text (String.fromInt i) ]
-                        ]
+                    )
+                    switch.connections
                 )
-                switch.connections
-            )
+            ]
         ]
