@@ -1,0 +1,26 @@
+{
+  "name": "Two to two",
+  "tracks": [
+    { "name": "A1", "length": 200.0 },
+    { "name": "A2", "length": 200.0 },
+    { "name": "B", "length": 200.0 },
+    { "name": "C", "length": 200.0 },
+    { "name": "D", "length": 200.0 },
+    { "name": "E1", "length": 200.0 },
+    { "name": "E2", "length": 200.0 }
+  ],
+  "connections": [
+    { "from": "B", "to": "C" },
+    { "from": "D", "to": "C" }
+  ],
+  "switches": [
+    { "name": "A", "connections": [
+      { "from": "A1", "to": "B" },
+      { "from": "A2", "to": "B" }
+    ]},
+    { "name": "E", "connections": [
+      { "from": "E1", "to": "D" },
+      { "from": "E2", "to": "D" }
+    ]}
+  ]
+}

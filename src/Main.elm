@@ -1,13 +1,17 @@
 module Main exposing (Msg(..), main, update, view)
 
 import Browser
-import Html exposing (Html, a, br, button, div, hr, input, label, li, p, table, td, text, th, tr, ul)
+import File exposing (File)
+import File.Select as Select
+import Html exposing (Html, a, br, button, div, h3, hr, input, label, li, p, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes as Att exposing (attribute, class, disabled, for, href, scope, target, value)
 import Html.Entity exposing (nbsp)
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
+import Json.Decode
 import Maybe exposing (andThen)
-import Railroad exposing (RailroadState, stateToSvg, viewTrains)
+import Railroad exposing (Layout, RailroadState, Switch, stateToSvg, viewTracks, viewTrains)
+import Task
 import Time exposing (posixToMillis)
 
 
@@ -18,6 +22,7 @@ main =
 type alias Model =
     { rrState : Maybe RailroadState
     , isRunning : Bool
+    , lastMessage : Maybe String
     }
 
 
@@ -27,11 +32,15 @@ type Msg
     | Stop
     | SingleStep
     | Reset
+    | LoadLayout
+    | LoadLayoutSelected File
+    | LoadedLayout String
+    | ToggleSwitch String Int
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { rrState = Nothing, isRunning = False }
+    ( { rrState = Nothing, isRunning = False, lastMessage = Nothing }
     , Cmd.none
     )
 
@@ -42,54 +51,75 @@ subscriptions _ =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    {-
-       case msg of
-           Tick newTime ->
-               let
-                   newMillis =
-                       posixToMillis newTime
+    case msg of
+        LoadLayout ->
+            ( { model | lastMessage = Just "Select layout file to load" }, Select.file [ "application/json" ] LoadLayoutSelected )
 
-                   duration =
-                       case model.millis of
-                           Nothing ->
-                               0
+        LoadLayoutSelected file ->
+            ( { model | lastMessage = Just "Loading file" }, Task.perform LoadedLayout (File.toString file) )
 
-                           Just m ->
-                               newMillis - m
-               in
-               ( { model
-                   | millis = Just newMillis
-                   , state =
-                       case model.state of
-                           Just s ->
-                               if model.isRunning then
-                                   Just (RR.moved duration s)
+        LoadedLayout string ->
+            case Json.Decode.decodeString Railroad.layoutDecoder string of
+                Ok layout ->
+                    ( { rrState = Just (Railroad.loadedLayout layout), isRunning = False, lastMessage = Just "Loaded successfully" }, Cmd.none )
 
-                               else
-                                   model.state
+                Err err ->
+                    ( { model | lastMessage = Just (Json.Decode.errorToString err) }, Cmd.none )
 
-                           Nothing ->
-                               Nothing
-                   , frame = duration
-                 }
-               , Cmd.none
-               )
+        ToggleSwitch name state ->
+            ( { model | rrState = Maybe.map (\s -> Railroad.toggleSwitch s name state) model.rrState }, Cmd.none )
 
-           Start ->
-               ( { model | isRunning = True }, Cmd.none )
+        _ ->
+            ( model, Cmd.none )
 
-           Stop ->
-               ( { model | isRunning = False }, Cmd.none )
 
-           SingleStep ->
-               ( { model | state = model.state |> Maybe.andThen (\s -> Just (RR.moved 100 s)) }
-               , Cmd.none
-               )
 
-           Reset ->
-               ( { model | state = model.initialState }, Cmd.none )
-    -}
-    ( model, Cmd.none )
+{-
+   Tick newTime ->
+       let
+           newMillis =
+               posixToMillis newTime
+
+           duration =
+               case model.millis of
+                   Nothing ->
+                       0
+
+                   Just m ->
+                       newMillis - m
+       in
+       ( { model
+           | millis = Just newMillis
+           , state =
+               case model.state of
+                   Just s ->
+                       if model.isRunning then
+                           Just (RR.moved duration s)
+
+                       else
+                           model.state
+
+                   Nothing ->
+                       Nothing
+           , frame = duration
+         }
+       , Cmd.none
+       )
+
+   Start ->
+       ( { model | isRunning = True }, Cmd.none )
+
+   Stop ->
+       ( { model | isRunning = False }, Cmd.none )
+
+   SingleStep ->
+       ( { model | state = model.state |> Maybe.andThen (\s -> Just (RR.moved 100 s)) }
+       , Cmd.none
+       )
+
+   Reset ->
+       ( { model | state = model.initialState }, Cmd.none )
+-}
 
 
 type alias Document msg =
@@ -113,16 +143,27 @@ view model =
                         [ div [ class "col" ] [ viewSimulationControls model.isRunning ]
                         ]
                     , div [ class "row mt-3" ]
-                        [ div [ class "col" ] [ viewTrains rrState.trains ] ]
+                        [ div [ class "col" ] [ h3 [] [ text "Trains" ], viewTrains rrState ]
+                        , div [ class "col" ] [ h3 [] [ text "Tracks" ], viewTracks rrState ]
+                        , div [ class "col" ] [ h3 [] [ text "Switches" ], viewSwitches rrState ]
+                        ]
                     ]
              )
-                ++ [ div [ class "row mt-3" ]
+                ++ [ div [ class "row" ] [ div [ class "col" ] [ viewLoadSaveControls model ] ]
+                   , div [ class "row mt-3" ]
                         [ div [ class "col" ]
                             [ hr [] []
                             , p [] [ a [ href "https://github.com/hasko/rr-elm", target "_blank" ] [ text "Show source" ] ]
                             ]
                         ]
                    ]
+                ++ (case model.lastMessage of
+                        Nothing ->
+                            []
+
+                        Just string ->
+                            [ p [] [ text string ] ]
+                   )
             )
         ]
     }
@@ -155,6 +196,12 @@ viewSimulationControls isRunning =
             ]
             [ text "Reset" ]
         ]
+
+
+viewLoadSaveControls : Model -> Html Msg
+viewLoadSaveControls model =
+    div []
+        [ button [ class "btn btn-secondary", onClick LoadLayout ] [ text "Load layout" ] ]
 
 
 
@@ -360,5 +407,39 @@ viewSimulationControls isRunning =
 -}
 
 
-buttonGroup content =
-    div [ class "btn-group", attribute "role" "group" ] content
+viewSwitches : RailroadState -> Html Msg
+viewSwitches state =
+    table [ class "table table-sm" ]
+        [ thead []
+            [ tr []
+                [ th [] [ text "Name" ]
+                , th [] [ text "State" ]
+                , th [] [ text "Switch" ]
+                ]
+            ]
+        , tbody [] (List.map viewSwitch state.layout.switches)
+        ]
+
+
+viewSwitch : Switch -> Html Msg
+viewSwitch switch =
+    tr []
+        [ td [] [ text switch.name ]
+        , td [] [ text "Undefined" ]
+        , td []
+            (List.indexedMap
+                (\i s ->
+                    td []
+                        [ button
+                            (if switch.state == i then
+                                [ class "btn btn-sm btn-secondary", disabled True ]
+
+                             else
+                                [ class "btn btn-sm btn-primary", onClick (ToggleSwitch switch.name i) ]
+                            )
+                            [ text (String.fromInt i) ]
+                        ]
+                )
+                switch.connections
+            )
+        ]
