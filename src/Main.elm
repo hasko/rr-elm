@@ -434,7 +434,7 @@ viewTrains state =
                         , td [] [ text (String.fromFloat (t.speed * 3.6) ++ nbsp ++ "km/h") ]
                         ]
                 )
-                state.trains
+                (List.sortBy .name state.trains)
             )
         ]
 

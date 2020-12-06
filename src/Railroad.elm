@@ -116,7 +116,7 @@ createTrain state trackName =
                     min 20 track.length
 
                 train =
-                    Train "Unnamed Train" length 0.0 trackName
+                    Train (nextName "Train" 1 (List.map .name state.trains)) length 0.0 trackName
             in
             { state | trains = train :: state.trains }
 
@@ -130,3 +130,16 @@ tracksForTrain state trainName =
         Just train ->
             {- TODO Reflect trains extending over more than one track. -}
             [ train.track ]
+
+
+nextName : String -> Int -> List String -> String
+nextName prefix index names =
+    let
+        n =
+            prefix ++ " " ++ String.fromInt index
+    in
+    if List.any (\s -> s == n) names then
+        nextName prefix (index + 1) names
+
+    else
+        n
