@@ -2,6 +2,7 @@ module Railroad exposing
     ( Layout
     , RailroadState
     , Switch
+    , Train
     , createTrain
     , layoutDecoder
     , loadedLayout

@@ -10,7 +10,7 @@ import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
 import Json.Decode
 import Maybe exposing (andThen)
-import Railroad exposing (Layout, RailroadState, Switch, createTrain, stateToSvg)
+import Railroad exposing (Layout, RailroadState, Switch, Train, createTrain, stateToSvg)
 import Task
 import Time exposing (posixToMillis)
 
@@ -20,9 +20,15 @@ main =
 
 
 type alias Model =
-    { rrState : Maybe RailroadState
-    , isRunning : Bool
+    { state : Maybe LoadedState
     , lastMessage : Maybe String
+    }
+
+
+type alias LoadedState =
+    { rrState : RailroadState
+    , isRunning : Bool
+    , editingTrain : Maybe String
     }
 
 
@@ -38,13 +44,12 @@ type Msg
     | ToggleSwitch String Int
     | CreateTrain String
     | RemoveTrain String
+    | EditTrain String
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { rrState = Nothing, isRunning = False, lastMessage = Nothing }
-    , Cmd.none
-    )
+    ( { state = Nothing, lastMessage = Nothing }, Cmd.none )
 
 
 subscriptions _ =
@@ -63,19 +68,26 @@ update msg model =
         LoadedLayout string ->
             case Json.Decode.decodeString Railroad.layoutDecoder string of
                 Ok layout ->
-                    ( { rrState = Just (Railroad.loadedLayout layout), isRunning = False, lastMessage = Just "Loaded successfully" }, Cmd.none )
+                    ( { state = Just { rrState = Railroad.loadedLayout layout, isRunning = False, editingTrain = Nothing }
+                      , lastMessage = Just "Loaded successfully"
+                      }
+                    , Cmd.none
+                    )
 
                 Err err ->
                     ( { model | lastMessage = Just (Json.Decode.errorToString err) }, Cmd.none )
 
-        ToggleSwitch name state ->
-            ( { model | rrState = Maybe.map (\s -> Railroad.toggleSwitch s name state) model.rrState }, Cmd.none )
+        ToggleSwitch name switchState ->
+            ( { model | state = Maybe.map (\s -> { s | rrState = Railroad.toggleSwitch s.rrState name switchState }) model.state }, Cmd.none )
 
         CreateTrain trackName ->
-            ( { model | rrState = Maybe.map (\s -> Railroad.createTrain s trackName) model.rrState }, Cmd.none )
+            ( { model | state = Maybe.map (\s -> { s | rrState = Railroad.createTrain s.rrState trackName }) model.state }, Cmd.none )
 
         RemoveTrain trainName ->
-            ( { model | rrState = Maybe.map (\s -> Railroad.removeTrain s trainName) model.rrState }, Cmd.none )
+            ( { model | state = Maybe.map (\s -> { s | rrState = Railroad.removeTrain s.rrState trainName }) model.state }, Cmd.none )
+
+        EditTrain trainName ->
+            ( { model | state = Maybe.map (\s -> { s | editingTrain = Just trainName }) model.state }, Cmd.none )
 
         _ ->
             ( model, Cmd.none )
@@ -139,21 +151,21 @@ view model =
     { title = "Railroad"
     , body =
         [ div [ class "container" ]
-            ((case model.rrState of
+            ((case model.state of
                 Nothing ->
                     [ div [ class "alert alert-primary" ] [ text "No model loaded" ] ]
 
-                Just rrState ->
+                Just state ->
                     [ div [ class "row mt-3" ]
-                        [ div [ class "col" ] [ Railroad.stateToSvg rrState ]
+                        [ div [ class "col" ] [ Railroad.stateToSvg state.rrState ]
                         ]
                     , div [ class "row mt-3" ]
-                        [ div [ class "col" ] [ viewSimulationControls model.isRunning ]
+                        [ div [ class "col" ] [ viewSimulationControls state.isRunning ]
                         ]
                     , div [ class "row mt-3" ]
-                        [ div [ class "col-6" ] [ h3 [] [ text "Trains" ], viewTrains rrState ]
-                        , div [ class "col" ] [ h3 [] [ text "Tracks" ], viewTracks rrState ]
-                        , div [ class "col" ] [ h3 [] [ text "Switches" ], viewSwitches rrState ]
+                        [ div [ class "col-6" ] [ h3 [] [ text "Trains" ], viewTrains state ]
+                        , div [ class "col" ] [ h3 [] [ text "Tracks" ], viewTracks state.rrState ]
+                        , div [ class "col" ] [ h3 [] [ text "Switches" ], viewSwitches state.rrState ]
                         ]
                     ]
              )
@@ -415,7 +427,7 @@ viewLoadSaveControls model =
 -}
 
 
-viewTrains : RailroadState -> Html Msg
+viewTrains : LoadedState -> Html Msg
 viewTrains state =
     table [ class "table table-sm" ]
         [ thead []
@@ -431,23 +443,57 @@ viewTrains state =
         , tbody []
             (List.map
                 (\t ->
-                    tr []
-                        [ td [] [ text t.name ]
-                        , td [] [ text (String.fromFloat t.length ++ nbsp ++ "m") ]
-                        , td [] [ text (String.join ", " (Railroad.tracksForTrain state t.name)) ]
-                        , td [] [ text nbsp ]
-                        , td [] [ text (String.fromFloat (t.speed * 3.6) ++ nbsp ++ "km/h") ]
-                        , td []
-                            [ if t.speed == 0.0 then
-                                button [ class "btn btn-sm btn-secondary", onClick (RemoveTrain t.name) ] [ text "Remove" ]
+                    case state.editingTrain of
+                        Nothing ->
+                            viewTrain state.rrState t
 
-                              else
-                                text nbsp
-                            ]
-                        ]
+                        Just et ->
+                            if et == t.name then
+                                editTrain state.rrState t
+
+                            else
+                                viewTrain state.rrState t
                 )
-                (List.sortBy .name state.trains)
+                (List.sortBy .name state.rrState.trains)
             )
+        ]
+
+
+viewTrain : RailroadState -> Train -> Html Msg
+viewTrain state train =
+    tr []
+        [ td [] [ text train.name ]
+        , td [] [ text (String.fromFloat train.length ++ nbsp ++ "m") ]
+        , td [] [ text (String.join ", " (Railroad.tracksForTrain state train.name)) ]
+        , td [] [ text nbsp ]
+        , td [] [ text (String.fromFloat (train.speed * 3.6) ++ nbsp ++ "km/h") ]
+        , td []
+            (if train.speed == 0.0 then
+                [ button [ class "btn btn-sm btn-secondary", onClick (EditTrain train.name) ] [ text "Edit" ]
+                , button [ class "btn btn-sm btn-secondary", onClick (RemoveTrain train.name) ] [ text "Remove" ]
+                ]
+
+             else
+                []
+            )
+        ]
+
+
+editTrain : RailroadState -> Train -> Html Msg
+editTrain state train =
+    tr []
+        [ td [] [ input [ class "form-control form-control-sm", value train.name ] [] ]
+        , td [] [ text (String.fromFloat train.length ++ nbsp ++ "m") ]
+        , td [] [ text (String.join ", " (Railroad.tracksForTrain state train.name)) ]
+        , td [] [ text nbsp ]
+        , td [] [ text (String.fromFloat (train.speed * 3.6) ++ nbsp ++ "km/h") ]
+        , td []
+            [ if train.speed == 0.0 then
+                button [ class "btn btn-sm btn-secondary", onClick (RemoveTrain train.name) ] [ text "Remove" ]
+
+              else
+                text nbsp
+            ]
         ]
 
 
