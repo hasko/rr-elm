@@ -1,4 +1,4 @@
-module Railroad exposing (Layout, RailroadState, Switch, createTrain, layoutDecoder, loadedLayout, occupants, stateToSvg, switchStateString, toggleSwitch)
+module Railroad exposing (Layout, RailroadState, Switch, createTrain, layoutDecoder, loadedLayout, occupants, stateToSvg, switchStateString, toggleSwitch, tracksForTrain)
 
 import Graph exposing (Graph)
 import Html exposing (Html)
@@ -70,7 +70,7 @@ loadedLayout layout =
 
 occupants : RailroadState -> String -> List Train
 occupants state trackName =
-    []
+    state.trains |> List.filter (\train -> train.track == trackName)
 
 
 toggleSwitch : RailroadState -> String -> Int -> RailroadState
@@ -106,11 +106,7 @@ switchStateString switch =
 
 createTrain : RailroadState -> String -> RailroadState
 createTrain state trackName =
-    let
-        mTrack =
-            state.layout.tracks |> List.filter (\t -> t.name == trackName) |> List.head
-    in
-    case mTrack of
+    case state.layout.tracks |> List.filter (\t -> t.name == trackName) |> List.head of
         Nothing ->
             state
 
@@ -123,3 +119,14 @@ createTrain state trackName =
                     Train "Unnamed Train" length 0.0 trackName
             in
             { state | trains = train :: state.trains }
+
+
+tracksForTrain : RailroadState -> String -> List String
+tracksForTrain state trainName =
+    case state.trains |> List.filter (\t -> t.name == trainName) |> List.head of
+        Nothing ->
+            []
+
+        Just train ->
+            {- TODO Reflect trains extending over more than one track. -}
+            [ train.track ]
