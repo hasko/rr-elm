@@ -1,4 +1,17 @@
-module Railroad exposing (Layout, RailroadState, Switch, createTrain, layoutDecoder, loadedLayout, occupants, stateToSvg, switchStateString, toggleSwitch, tracksForTrain)
+module Railroad exposing
+    ( Layout
+    , RailroadState
+    , Switch
+    , createTrain
+    , layoutDecoder
+    , loadedLayout
+    , occupants
+    , removeTrain
+    , stateToSvg
+    , switchStateString
+    , toggleSwitch
+    , tracksForTrain
+    )
 
 import Graph exposing (Graph)
 import Html exposing (Html)
@@ -143,3 +156,8 @@ nextName prefix index names =
 
     else
         n
+
+
+removeTrain : RailroadState -> String -> RailroadState
+removeTrain state trainName =
+    { state | trains = List.filter (\t -> t.name /= trainName) state.trains }

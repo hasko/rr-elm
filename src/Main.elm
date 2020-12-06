@@ -37,6 +37,7 @@ type Msg
     | LoadedLayout String
     | ToggleSwitch String Int
     | CreateTrain String
+    | RemoveTrain String
 
 
 init : () -> ( Model, Cmd Msg )
@@ -72,6 +73,9 @@ update msg model =
 
         CreateTrain trackName ->
             ( { model | rrState = Maybe.map (\s -> Railroad.createTrain s trackName) model.rrState }, Cmd.none )
+
+        RemoveTrain trainName ->
+            ( { model | rrState = Maybe.map (\s -> Railroad.removeTrain s trainName) model.rrState }, Cmd.none )
 
         _ ->
             ( model, Cmd.none )
@@ -411,7 +415,7 @@ viewLoadSaveControls model =
 -}
 
 
-viewTrains : RailroadState -> Html msg
+viewTrains : RailroadState -> Html Msg
 viewTrains state =
     table [ class "table table-sm" ]
         [ thead []
@@ -421,6 +425,7 @@ viewTrains state =
                 , th [] [ text "Tracks" ]
                 , th [] [ text "Orientation" ]
                 , th [] [ text "Speed" ]
+                , th [] [ text "Action" ]
                 ]
             ]
         , tbody []
@@ -432,6 +437,13 @@ viewTrains state =
                         , td [] [ text (String.join ", " (Railroad.tracksForTrain state t.name)) ]
                         , td [] [ text nbsp ]
                         , td [] [ text (String.fromFloat (t.speed * 3.6) ++ nbsp ++ "km/h") ]
+                        , td []
+                            [ if t.speed == 0.0 then
+                                button [ class "btn btn-sm btn-secondary", onClick (RemoveTrain t.name) ] [ text "Remove" ]
+
+                              else
+                                text nbsp
+                            ]
                         ]
                 )
                 (List.sortBy .name state.trains)
