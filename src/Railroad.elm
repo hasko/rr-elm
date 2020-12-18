@@ -58,8 +58,8 @@ moveCursor cursor track =
 
         CurvedTrack c ->
             Cursor
-                (cursor.x + c.radius * cos c.angle)
-                (cursor.y + c.radius * sin c.angle)
+                (cursor.x + c.radius * sin (c.angle / 180.0 * pi))
+                (cursor.y + c.radius * (1 - cos (c.angle / 180.0 * pi)))
                 (cursor.dir + c.angle)
 
 

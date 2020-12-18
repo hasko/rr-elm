@@ -52,7 +52,7 @@ initialLayout =
         |> insertEdge 0 1
         |> insertEdge 1 0
         |> insertData 0 (StraightTrack { length = 50.0 })
-        |> insertData 1 (StraightTrack { length = 100.0 })
+        |> insertData 1 (CurvedTrack { radius = 190.0, angle = 15.0 })
 
 
 subscriptions _ =
@@ -104,15 +104,15 @@ view : Model -> Html Msg
 view model =
     div [ class "container" ]
         [ svg
-            [ width "100%", height "50%", viewBox "0 0 100000 5000" ]
-            [ layoutToSvg 0 (Cursor 0.0 0.0 0.0) model.layout
+            [ width "100%", viewBox "0 0 100 20" ]
+            [ layoutToSvg 0 (Cursor 0.0 2.5 0.0) model.layout
             , rect
-                [ x (String.fromFloat (1000.0 * ((toFloat model.state.track * 50.0) + model.state.trackPosition - model.state.length)))
-                , y "1005"
-                , width (String.fromFloat (model.state.length * 1000.0))
-                , height "2990"
-                , rx "15"
-                , ry "15"
+                [ x (String.fromFloat ((toFloat model.state.track * 50.0) + model.state.trackPosition - model.state.length))
+                , y "1.005"
+                , width (String.fromFloat model.state.length)
+                , height "2.990"
+                , rx "0.5"
+                , ry "0.5"
                 , fill "#3B3332"
                 ]
                 []
@@ -151,26 +151,32 @@ layoutToSvg track_id cursor layout =
 trackToSvg : Track -> Cursor -> Svg Msg
 trackToSvg track cursor =
     let
-        new_cursor =
+        newCursor =
             Railroad.moveCursor cursor track
     in
     case track of
         StraightTrack s ->
-            rect [ x (floatToSvg cursor.x), y (floatToSvg cursor.y), width (floatToSvg s.length), height "1435", fill "gray", stroke "black", strokeWidth "125" ] []
+            line
+                [ x1 (cursor.x |> String.fromFloat)
+                , y1 (cursor.y |> String.fromFloat)
+                , x2 (newCursor.x |> String.fromFloat)
+                , y2 (newCursor.y |> String.fromFloat)
+                , stroke "blue"
+                , strokeWidth "1.435"
+                ]
+                []
 
         CurvedTrack c ->
             path
                 [ d
-                    ("M"
-                        ++ floatToSvg cursor.x
-                        ++ ","
-                        ++ floatToSvg cursor.y
-                        ++ " B"
-                        ++ floatToSvg cursor.dir
-                        ++ " a"
-                        ++ floatToSvg c.radius
+                    ("M "
+                        ++ (cursor.x |> String.fromFloat)
                         ++ " "
-                        ++ floatToSvg c.radius
+                        ++ (cursor.y |> String.fromFloat)
+                        ++ " A "
+                        ++ (c.radius |> String.fromFloat)
+                        ++ " "
+                        ++ (c.radius |> String.fromFloat)
                         ++ " 0 "
                         ++ (if c.angle >= 180.0 then
                                 "1"
@@ -178,18 +184,18 @@ trackToSvg track cursor =
                             else
                                 "0"
                            )
-                        ++ ",1 "
-                        ++ floatToSvg new_cursor.x
-                        ++ ","
-                        ++ floatToSvg new_cursor.y
+                        ++ " 1 "
+                        ++ (newCursor.x |> String.fromFloat)
+                        ++ " "
+                        ++ (newCursor.y |> String.fromFloat)
+                     -- ++ " 0 "
+                     -- ++ ",0 "
+                     -- ++ floatToSvg (cursor.x + 50.0)
+                     -- ++ ","
+                     -- ++ floatToSvg cursor.y
                     )
-                , fill "gray"
-                , stroke "black"
-                , strokeWidth "1435"
+                , fill "none"
+                , stroke "green"
+                , strokeWidth "1.435"
                 ]
                 []
-
-
-floatToSvg : Float -> String
-floatToSvg f =
-    String.fromInt (f * 1000 |> floor)
