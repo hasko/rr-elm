@@ -1,16 +1,19 @@
 module Main exposing (Msg(..), main, update, view)
 
 import Browser
+import Dict exposing (Dict)
 import Graph exposing (empty, insertData, insertEdge)
 import Html exposing (Html, button, div, pre, text)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import Maybe.Extra
 import Railroad exposing (..)
-import Svg exposing (Svg, g, line, rect, svg)
-import Svg.Attributes exposing (fill, height, rx, ry, stroke, strokeWidth, viewBox, width, x, x1, x2, y, y1, y2)
+import Set exposing (Set)
+import Svg exposing (Svg, g, line, path, rect, svg)
+import Svg.Attributes exposing (d, fill, height, rx, ry, stroke, strokeWidth, viewBox, width, x, x1, x2, y, y1, y2)
 import Task
 import Time
+import Tuple
 
 
 main =
@@ -102,7 +105,7 @@ view model =
     div [ class "container" ]
         [ svg
             [ width "100%", height "50%", viewBox "0 0 100000 5000" ]
-            [ tracksToSvg model.layout
+            [ layoutToSvg 0 (Cursor 0.0 0.0 0.0) model.layout
             , rect
                 [ x (String.fromFloat (1000.0 * ((toFloat model.state.track * 50.0) + model.state.trackPosition - model.state.length)))
                 , y "1005"
@@ -135,35 +138,58 @@ view model =
         ]
 
 
-tracksToSvg : Layout -> Svg Msg
-tracksToSvg layout =
-    g []
-        (List.map
-            trackToSvg
-            (Graph.nodes layout)
-        )
-
-
-trackToSvg : ( Int, Maybe Track ) -> Svg Msg
-trackToSvg ( track_id, maybe_track ) =
-    case maybe_track of
+layoutToSvg : Int -> Cursor -> Layout -> Svg Msg
+layoutToSvg track_id cursor layout =
+    case Graph.getData track_id layout of
         Nothing ->
             g [] []
 
         Just track ->
-            let
-                px =
-                    track_id * 50000
+            g [] [ trackToSvg track cursor ]
 
-                lx =
-                    Railroad.trackLength track * 1000 |> floor
-            in
-            rect
-                [ x (String.fromInt px)
-                , y "1783"
-                , width (String.fromInt lx)
-                , height "1435"
-                , fill ([ "red", "blue" ] |> List.drop track_id |> List.head |> Maybe.withDefault "green")
-                , strokeWidth "100"
+
+trackToSvg : Track -> Cursor -> Svg Msg
+trackToSvg track cursor =
+    let
+        new_cursor =
+            Railroad.moveCursor cursor track
+    in
+    case track of
+        StraightTrack s ->
+            rect [ x (floatToSvg cursor.x), y (floatToSvg cursor.y), width (floatToSvg s.length), height "1435", fill "gray", stroke "black", strokeWidth "125" ] []
+
+        CurvedTrack c ->
+            path
+                [ d
+                    ("M"
+                        ++ floatToSvg cursor.x
+                        ++ ","
+                        ++ floatToSvg cursor.y
+                        ++ " B"
+                        ++ floatToSvg cursor.dir
+                        ++ " a"
+                        ++ floatToSvg c.radius
+                        ++ " "
+                        ++ floatToSvg c.radius
+                        ++ " 0 "
+                        ++ (if c.angle >= 180.0 then
+                                "1"
+
+                            else
+                                "0"
+                           )
+                        ++ ",1 "
+                        ++ floatToSvg new_cursor.x
+                        ++ ","
+                        ++ floatToSvg new_cursor.y
+                    )
+                , fill "gray"
+                , stroke "black"
+                , strokeWidth "1435"
                 ]
                 []
+
+
+floatToSvg : Float -> String
+floatToSvg f =
+    String.fromInt (f * 1000 |> floor)

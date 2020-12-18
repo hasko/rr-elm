@@ -1,8 +1,10 @@
 module Railroad exposing
-    ( Layout
+    ( Cursor
+    , Layout
     , Track(..)
     , TrainState
     , move
+    , moveCursor
     , trackLength
     )
 
