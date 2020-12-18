@@ -48,8 +48,8 @@ initialLayout =
     Graph.empty
         |> insertEdge 0 1
         |> insertEdge 1 0
-        |> insertData 0 (Track 50.0)
-        |> insertData 1 (Track 100.0)
+        |> insertData 0 (StraightTrack { length = 50.0 })
+        |> insertData 1 (StraightTrack { length = 100.0 })
 
 
 subscriptions _ =
@@ -156,7 +156,7 @@ trackToSvg ( track_id, maybe_track ) =
                     track_id * 50000
 
                 lx =
-                    track.length * 1000 |> floor
+                    Railroad.trackLength track * 1000 |> floor
             in
             rect
                 [ x (String.fromInt px)

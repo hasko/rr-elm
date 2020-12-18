@@ -1,8 +1,9 @@
 module Railroad exposing
     ( Layout
-    , Track
+    , Track(..)
     , TrainState
     , move
+    , trackLength
     )
 
 import Graph exposing (Graph)
@@ -20,9 +21,44 @@ type alias TrainState =
     }
 
 
-type alias Track =
-    { length : Float -- in m
-    }
+type Track
+    = StraightTrack
+        { length : Float -- in m
+        }
+    | CurvedTrack
+        { radius : Float -- in m
+        , angle : Float -- in degrees, why not
+        }
+
+
+trackLength : Track -> Float
+trackLength track =
+    case track of
+        StraightTrack s ->
+            s.length
+
+        CurvedTrack c ->
+            pi * c.radius * c.angle / 180.0
+
+
+type alias Cursor =
+    { x : Float, y : Float, dir : Float }
+
+
+moveCursor : Cursor -> Track -> Cursor
+moveCursor cursor track =
+    case track of
+        StraightTrack s ->
+            Cursor
+                (cursor.x + s.length * cos cursor.dir)
+                (cursor.y + s.length * sin cursor.dir)
+                cursor.dir
+
+        CurvedTrack c ->
+            Cursor
+                (cursor.x + c.radius * cos c.angle)
+                (cursor.y + c.radius * sin c.angle)
+                (cursor.dir + c.angle)
 
 
 type alias Layout =
@@ -44,7 +80,7 @@ move_along : Layout -> TrainState -> TrainState
 move_along layout state =
     let
         current_track_length =
-            Graph.getData state.track layout |> map .length |> withDefault 1000000.0
+            Graph.getData state.track layout |> map trackLength |> withDefault 1000000.0
     in
     if state.trackPosition < current_track_length then
         state
