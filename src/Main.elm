@@ -1,11 +1,13 @@
 module Main exposing (Msg(..), main, update, view)
 
 import Browser
+import Graph exposing (empty, insertData, insertEdge)
 import Html exposing (Html, button, div, pre, text)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
-import Railroad exposing (TrainState, move)
-import Svg exposing (line, rect, svg)
+import Maybe.Extra
+import Railroad exposing (..)
+import Svg exposing (Svg, g, line, rect, svg)
 import Svg.Attributes exposing (fill, height, rx, ry, stroke, strokeWidth, viewBox, width, x, x1, x2, y, y1, y2)
 import Task
 import Time
@@ -17,6 +19,7 @@ main =
 
 type alias Model =
     { state : TrainState
+    , layout : Layout
     , lastTick : Maybe Int
     , running : Bool
     }
@@ -31,7 +34,22 @@ type Msg
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { state = TrainState "Happy Train" 30.0 10.0 0 50.0, lastTick = Nothing, running = True }, Cmd.none )
+    ( { state = TrainState "Happy Train" 30.0 10.0 0 40.0
+      , layout = initialLayout
+      , lastTick = Nothing
+      , running = True
+      }
+    , Cmd.none
+    )
+
+
+initialLayout : Layout
+initialLayout =
+    Graph.empty
+        |> insertEdge 0 1
+        |> insertEdge 1 0
+        |> insertData 0 (Track 50.0)
+        |> insertData 1 (Track 100.0)
 
 
 subscriptions _ =
@@ -53,7 +71,7 @@ update msg model =
                                 toFloat (newMillis - lastMillis)
                         in
                         ( { model
-                            | state = Railroad.move elapsedMillis model.state
+                            | state = Railroad.move elapsedMillis model.layout model.state
                             , lastTick = Just newMillis
                           }
                         , Cmd.none
@@ -72,7 +90,11 @@ update msg model =
             ( { model | running = False }, Cmd.none )
 
         Reset ->
-            init ()
+            let
+                ( m, cmd ) =
+                    init ()
+            in
+            ( { m | running = model.running }, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -80,10 +102,9 @@ view model =
     div [ class "container" ]
         [ svg
             [ width "100%", height "50%", viewBox "0 0 100000 5000" ]
-            [ line [ x1 "0", y1 "1783", x2 "100000", y2 "1783", stroke "black", strokeWidth "100" ] []
-            , line [ x1 "0", y1 "3218", x2 "100000", y2 "3218", stroke "black", strokeWidth "100" ] []
+            [ tracksToSvg model.layout
             , rect
-                [ x (String.fromFloat (1000.0 * (model.state.trackPosition - model.state.length)))
+                [ x (String.fromFloat (1000.0 * ((toFloat model.state.track * 50.0) + model.state.trackPosition - model.state.length)))
                 , y "1005"
                 , width (String.fromFloat (model.state.length * 1000.0))
                 , height "2990"
@@ -112,3 +133,37 @@ view model =
                 )
             ]
         ]
+
+
+tracksToSvg : Layout -> Svg Msg
+tracksToSvg layout =
+    g []
+        (List.map
+            trackToSvg
+            (Graph.nodes layout)
+        )
+
+
+trackToSvg : ( Int, Maybe Track ) -> Svg Msg
+trackToSvg ( track_id, maybe_track ) =
+    case maybe_track of
+        Nothing ->
+            g [] []
+
+        Just track ->
+            let
+                px =
+                    track_id * 50000
+
+                lx =
+                    track.length * 1000 |> floor
+            in
+            rect
+                [ x (String.fromInt px)
+                , y "1783"
+                , width (String.fromInt lx)
+                , height "1435"
+                , fill ([ "red", "blue" ] |> List.drop track_id |> List.head |> Maybe.withDefault "green")
+                , strokeWidth "100"
+                ]
+                []

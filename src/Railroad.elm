@@ -1,5 +1,7 @@
 module Railroad exposing
-    ( TrainState
+    ( Layout
+    , Track
+    , TrainState
     , move
     )
 
