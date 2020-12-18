@@ -37,7 +37,7 @@ type Msg
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { state = TrainState "Happy Train" 30.0 10.0 0 40.0
+    ( { state = TrainState "Happy Train" 7.83 10.0 0 40.0
       , layout = initialLayout
       , lastTick = Nothing
       , running = True
@@ -105,7 +105,7 @@ view model =
     div [ class "container" ]
         [ svg
             [ width "100%", viewBox "0 0 100 20" ]
-            [ layoutToSvg 0 (Cursor 0.0 2.5 0.0) model.layout
+            [ layoutToSvg 0 (Cursor 0.0 2.5 0.0) model.layout Set.empty
             , rect
                 [ x (String.fromFloat ((toFloat model.state.track * 50.0) + model.state.trackPosition - model.state.length))
                 , y "1.005"
@@ -138,23 +138,37 @@ view model =
         ]
 
 
-layoutToSvg : Int -> Cursor -> Layout -> Svg Msg
-layoutToSvg track_id cursor layout =
-    case Graph.getData track_id layout of
-        Nothing ->
-            g [] []
+layoutToSvg : Int -> Cursor -> Layout -> Set Int -> Svg Msg
+layoutToSvg track_id cursor layout rendered =
+    if Set.member track_id rendered then
+        g [] []
 
-        Just track ->
-            g [] [ trackToSvg track cursor ]
+    else
+        case Graph.getData track_id layout of
+            Nothing ->
+                g [] []
+
+            Just track ->
+                let
+                    ( svg, newCursor ) =
+                        trackToSvg track cursor
+                in
+                g []
+                    (svg
+                        :: (Graph.outgoing track_id layout
+                                |> Set.toList
+                                |> List.map (\i -> layoutToSvg i newCursor layout (Set.insert track_id rendered))
+                           )
+                    )
 
 
-trackToSvg : Track -> Cursor -> Svg Msg
+trackToSvg : Track -> Cursor -> ( Svg Msg, Cursor )
 trackToSvg track cursor =
     let
         newCursor =
             Railroad.moveCursor cursor track
     in
-    case track of
+    ( case track of
         StraightTrack s ->
             line
                 [ x1 (cursor.x |> String.fromFloat)
@@ -188,14 +202,11 @@ trackToSvg track cursor =
                         ++ (newCursor.x |> String.fromFloat)
                         ++ " "
                         ++ (newCursor.y |> String.fromFloat)
-                     -- ++ " 0 "
-                     -- ++ ",0 "
-                     -- ++ floatToSvg (cursor.x + 50.0)
-                     -- ++ ","
-                     -- ++ floatToSvg cursor.y
                     )
                 , fill "none"
                 , stroke "green"
                 , strokeWidth "1.435"
                 ]
                 []
+    , newCursor
+    )
