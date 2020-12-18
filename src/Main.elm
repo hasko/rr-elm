@@ -93,9 +93,9 @@ view model =
                 ]
                 []
             ]
-        , button [ onClick Start, style "margin" "12px 12px 0 12px" ] [ text "Start" ]
-        , button [ onClick Stop, style "margin" "12px 12px 0 0" ] [ text "Stop" ]
-        , button [ onClick Reset, style "margin" "12px 12px 0 0" ] [ text "Reset" ]
+        , button [ onClick Start, style "margin" "12px 12px 12px 12px" ] [ text "Start" ]
+        , button [ onClick Stop, style "margin" "12px 12px 12px 0" ] [ text "Stop" ]
+        , button [ onClick Reset, style "margin" "12px 12px 12px 0" ] [ text "Reset" ]
         , pre []
             [ text
                 ("{ name='"
