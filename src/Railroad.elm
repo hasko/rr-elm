@@ -6,10 +6,10 @@ module Railroad exposing
 
 type alias TrainState =
     { name : String
-    , length : Float
-    , speed : Float
+    , length : Float -- in m
+    , speed : Float -- in m/s
     , track : Int
-    , trackPosition : Float
+    , trackPosition : Float -- location of train head in m from the track start
     }
 
 

@@ -1,7 +1,7 @@
 module Main exposing (Msg(..), main, update, view)
 
 import Browser
-import Html exposing (Html, button, div, text)
+import Html exposing (Html, button, div, pre, text)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import Railroad exposing (TrainState, move)
@@ -93,7 +93,22 @@ view model =
                 ]
                 []
             ]
-        , button [ onClick Start ] [ text "Start" ]
-        , button [ onClick Stop ] [ text "Stop" ]
-        , button [ onClick Reset ] [ text "Reset" ]
+        , button [ onClick Start, style "margin" "12px 12px 0 12px" ] [ text "Start" ]
+        , button [ onClick Stop, style "margin" "12px 12px 0 0" ] [ text "Stop" ]
+        , button [ onClick Reset, style "margin" "12px 12px 0 0" ] [ text "Reset" ]
+        , pre []
+            [ text
+                ("{ name='"
+                    ++ model.state.name
+                    ++ "'\n, length="
+                    ++ String.fromFloat model.state.length
+                    ++ "\n, speed="
+                    ++ String.fromFloat model.state.speed
+                    ++ "\n, track="
+                    ++ String.fromInt model.state.track
+                    ++ "\n, trackPosition="
+                    ++ String.fromFloat model.state.trackPosition
+                    ++ "\n}"
+                )
+            ]
         ]
