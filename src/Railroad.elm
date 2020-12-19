@@ -57,10 +57,17 @@ moveCursor cursor track =
                 cursor.dir
 
         CurvedTrack c ->
+            let
+                newDir =
+                    cursor.dir + c.angle
+
+                s =
+                    2 * c.radius * sin (degrees c.angle / 2)
+            in
             Cursor
-                (cursor.x + c.radius * sin (c.angle / 180.0 * pi))
-                (cursor.y + c.radius * (1 - cos (c.angle / 180.0 * pi)))
-                (cursor.dir + c.angle)
+                (cursor.x + s * cos (degrees (cursor.dir + c.angle / 2)))
+                (cursor.y + s * sin (degrees (cursor.dir + c.angle / 2)))
+                newDir
 
 
 type alias Layout =

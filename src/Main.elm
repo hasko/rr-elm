@@ -50,9 +50,11 @@ initialLayout : Layout
 initialLayout =
     Graph.empty
         |> insertEdge 0 1
-        |> insertEdge 1 0
+        |> insertEdge 1 2
+        |> insertEdge 2 0
         |> insertData 0 (StraightTrack { length = 50.0 })
         |> insertData 1 (CurvedTrack { radius = 190.0, angle = 15.0 })
+        |> insertData 2 (CurvedTrack { radius = 190.0, angle = 15.0 })
 
 
 subscriptions _ =
@@ -104,7 +106,7 @@ view : Model -> Html Msg
 view model =
     div [ class "container" ]
         [ svg
-            [ width "100%", viewBox "0 0 100 20" ]
+            [ width "100%", viewBox "0 0 150 50" ]
             [ layoutToSvg 0 (Cursor 0.0 2.5 0.0) model.layout Set.empty
             , rect
                 [ x (String.fromFloat ((toFloat model.state.track * 50.0) + model.state.trackPosition - model.state.length))
