@@ -58,7 +58,7 @@ initialLayout =
 
 
 subscriptions _ =
-    Time.every 200 Tick
+    Time.every 50 Tick
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -106,18 +106,9 @@ view : Model -> Html Msg
 view model =
     div [ class "container" ]
         [ svg
-            [ width "100%", viewBox "0 0 150 50" ]
-            [ layoutToSvg 0 (Cursor 0.0 2.5 0.0) model.layout Set.empty
-            , rect
-                [ x (String.fromFloat ((toFloat model.state.track * 50.0) + model.state.trackPosition - model.state.length))
-                , y "1.005"
-                , width (String.fromFloat model.state.length)
-                , height "2.990"
-                , rx "0.5"
-                , ry "0.5"
-                , fill "#3B3332"
-                ]
-                []
+            [ width "100%", viewBox "0 -2.5 150 50" ]
+            [ layoutToSvg 0 (Cursor 0.0 0 0.0) model.layout Set.empty
+            , viewTrain model.state model.layout
             ]
         , button [ onClick Start, style "margin" "12px 12px 12px 12px" ] [ text "Start" ]
         , button [ onClick Stop, style "margin" "12px 12px 12px 0" ] [ text "Stop" ]
@@ -212,3 +203,36 @@ trackToSvg track cursor =
                 []
     , newCursor
     )
+
+
+viewTrain : TrainState -> Layout -> Svg Msg
+viewTrain train layout =
+    case Railroad.cursors layout |> Dict.get train.track of
+        -- TODO Something went wrong, our layout is inconsistent.
+        Nothing ->
+            g [] []
+
+        Just c ->
+            case Graph.getData train.track layout of
+                -- TODO Something went wrong, our layout is inconsistent.
+                Nothing ->
+                    g [] []
+
+                Just t ->
+                    let
+                        c1 =
+                            Railroad.getPositionOnTrack train.trackPosition c t
+
+                        c2 =
+                            Railroad.getPositionOnTrack (train.trackPosition - train.length) c t
+                    in
+                    line
+                        [ Svg.Attributes.id "train"
+                        , x1 (c1.x |> String.fromFloat)
+                        , y1 (c1.y |> String.fromFloat)
+                        , x2 (c2.x |> String.fromFloat)
+                        , y2 (c2.y |> String.fromFloat)
+                        , stroke "#3B3332"
+                        , strokeWidth "2.990"
+                        ]
+                        []
