@@ -6,12 +6,11 @@ import Graph exposing (empty, insertData, insertEdge)
 import Html exposing (Html, button, div, pre, text)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
-import Maybe.Extra
+import Html.Lazy exposing (lazy)
 import Railroad exposing (..)
 import Set exposing (Set)
 import Svg exposing (Svg, g, line, path, rect, svg)
-import Svg.Attributes exposing (d, fill, height, rx, ry, stroke, strokeWidth, viewBox, width, x, x1, x2, y, y1, y2)
-import Task
+import Svg.Attributes exposing (d, fill, id, stroke, strokeWidth, viewBox, width, x1, x2, y1, y2)
 import Time
 import Tuple
 
@@ -58,7 +57,7 @@ initialLayout =
 
 
 subscriptions _ =
-    Time.every 50 Tick
+    Time.every 40 Tick
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -107,7 +106,7 @@ view model =
     div [ class "container" ]
         [ svg
             [ width "100%", viewBox "0 -2.5 150 50" ]
-            [ layoutToSvg 0 (Cursor 0.0 0 0.0) model.layout Set.empty
+            [ lazy viewLayout model.layout
             , viewTrain model.state model.layout
             ]
         , button [ onClick Start, style "margin" "12px 12px 12px 12px" ] [ text "Start" ]
@@ -131,37 +130,31 @@ view model =
         ]
 
 
-layoutToSvg : Int -> Cursor -> Layout -> Set Int -> Svg Msg
-layoutToSvg track_id cursor layout rendered =
-    if Set.member track_id rendered then
-        g [] []
+viewLayout : Layout -> Svg Msg
+viewLayout layout =
+    g [ id "layout" ]
+        (Dict.foldl
+            (\trackId cursor acc ->
+                case Graph.getData trackId layout of
+                    Nothing ->
+                        -- TODO Something went wrong, our layout is inconsistent.
+                        acc
 
-    else
-        case Graph.getData track_id layout of
-            Nothing ->
-                g [] []
-
-            Just track ->
-                let
-                    ( svg, newCursor ) =
-                        trackToSvg track cursor
-                in
-                g []
-                    (svg
-                        :: (Graph.outgoing track_id layout
-                                |> Set.toList
-                                |> List.map (\i -> layoutToSvg i newCursor layout (Set.insert track_id rendered))
-                           )
-                    )
+                    Just track ->
+                        viewTrack track cursor :: acc
+            )
+            []
+            (Railroad.cursors layout)
+        )
 
 
-trackToSvg : Track -> Cursor -> ( Svg Msg, Cursor )
-trackToSvg track cursor =
+viewTrack : Track -> Cursor -> Svg Msg
+viewTrack track cursor =
     let
         newCursor =
             Railroad.moveCursor cursor track
     in
-    ( case track of
+    case track of
         StraightTrack s ->
             line
                 [ x1 (cursor.x |> String.fromFloat)
@@ -201,8 +194,6 @@ trackToSvg track cursor =
                 , strokeWidth "1.435"
                 ]
                 []
-    , newCursor
-    )
 
 
 viewTrain : TrainState -> Layout -> Svg Msg
