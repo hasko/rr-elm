@@ -36,7 +36,7 @@ type Msg
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { state = TrainState "Happy Train" 7.83 10.0 0 40.0
+    ( { state = TrainState "Happy Train" 30 10.0 0 40.0
       , layout = initialLayout
       , lastTick = Nothing
       , running = True

@@ -13,7 +13,7 @@ module Railroad exposing
 import Dict exposing (Dict)
 import Graph exposing (Graph)
 import List
-import Maybe exposing (map, withDefault)
+import Maybe exposing (andThen, map, withDefault)
 import Set
 
 
@@ -97,6 +97,68 @@ getPositionOnTrack trackPosition cursor track =
                 (cursor.x + s * cos (degrees (cursor.dir + a / 2)))
                 (cursor.y + s * sin (degrees (cursor.dir + a / 2)))
                 newDir
+
+
+normalizePosition : ( Float, Int ) -> Layout -> ( Float, Int )
+normalizePosition ( trackPosition, trackId ) layout =
+    if trackPosition < 0 then
+        case previousTrack trackId layout of
+            Nothing ->
+                ( trackPosition, trackId )
+
+            Just ( prevId, prev ) ->
+                normalizePosition ( trackPosition + trackLength prev, prevId ) layout
+
+    else
+        case Graph.getData trackId layout of
+            Nothing ->
+                -- TODO Inconsistent layout
+                ( trackPosition, trackId )
+
+            Just track ->
+                if trackPosition > trackLength track then
+                    case nextTrack trackId layout of
+                        Nothing ->
+                            -- TODO Inconsistent layout
+                            ( trackPosition, trackId )
+
+                        Just ( otherId, _ ) ->
+                            normalizePosition ( trackPosition - trackLength track, otherId ) layout
+
+                else
+                    ( trackPosition, trackId )
+
+
+previousTrack : Int -> Layout -> Maybe ( Int, Track )
+previousTrack trackId layout =
+    -- TODO Implement switching instead of just taking the head.
+    case Graph.incoming trackId layout |> Set.toList |> List.head of
+        Nothing ->
+            Nothing
+
+        Just otherId ->
+            case Graph.getData otherId layout of
+                Nothing ->
+                    Nothing
+
+                Just otherTrack ->
+                    Just ( otherId, otherTrack )
+
+
+nextTrack : Int -> Layout -> Maybe ( Int, Track )
+nextTrack trackId layout =
+    -- TODO Implement switching instead of just taking the head.
+    case Graph.outgoing trackId layout |> Set.toList |> List.head of
+        Nothing ->
+            Nothing
+
+        Just otherId ->
+            case Graph.getData otherId layout of
+                Nothing ->
+                    Nothing
+
+                Just otherTrack ->
+                    Just ( otherId, otherTrack )
 
 
 type alias Layout =
