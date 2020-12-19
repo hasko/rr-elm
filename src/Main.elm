@@ -3,8 +3,9 @@ module Main exposing (Msg(..), main, update, view)
 import Browser
 import Dict exposing (Dict)
 import Graph exposing (empty, insertData, insertEdge)
-import Html exposing (Html, button, div, pre, text)
+import Html exposing (Html, button, div, pre, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class, style)
+import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
 import Railroad exposing (..)
@@ -54,6 +55,9 @@ initialLayout =
         |> insertData 0 (StraightTrack { length = 50.0 })
         |> insertData 1 (CurvedTrack { radius = 300.0, angle = 15.0 })
         |> insertData 2 (StraightTrack { length = 100.0 })
+        |> insertEdge 0 3
+        |> insertEdge 3 0
+        |> insertData 3 (StraightTrack { length = 100.0 })
 
 
 subscriptions _ =
@@ -109,9 +113,16 @@ view model =
             [ lazy viewLayout model.layout
             , viewTrain model.state model.layout
             ]
-        , button [ onClick Start, style "margin" "12px 12px 12px 12px" ] [ text "Start" ]
-        , button [ onClick Stop, style "margin" "12px 12px 12px 0" ] [ text "Stop" ]
-        , button [ onClick Reset, style "margin" "12px 12px 12px 0" ] [ text "Reset" ]
+        , div [ class "row" ]
+            [ div [ class "col-3" ]
+                [ button [ class "btn btn-secondary", onClick Start, style "margin" "12px 12px 12px 12px" ] [ text "Start" ]
+                , button [ class "btn btn-secondary", onClick Stop, style "margin" "12px 12px 12px 0" ] [ text "Stop" ]
+                , button [ class "btn btn-secondary", onClick Reset, style "margin" "12px 12px 12px 0" ] [ text "Reset" ]
+                ]
+            , div [ class "col" ]
+                [ viewSwitches model.layout
+                ]
+            ]
         , pre []
             [ text
                 ("{ name='"
@@ -233,3 +244,26 @@ viewTrain train layout =
                         , strokeWidth "2.990"
                         ]
                         []
+
+
+viewSwitches : Layout -> Html Msg
+viewSwitches layout =
+    table [ class "table" ]
+        [ thead [] [ tr [] [ th [] [ text "ID" ], th [] [ text "Connections" ], th [] [ text "Active" ], th [] [] ] ]
+        , tbody []
+            (Railroad.switches layout
+                |> List.indexedMap
+                    (\i conns ->
+                        tr []
+                            [ td [] [ text (String.fromInt i) ]
+                            , td []
+                                [ List.map (\( inc, out ) -> String.fromInt inc ++ Html.Entity.rarr ++ String.fromInt out) conns
+                                    |> String.join ", "
+                                    |> text
+                                ]
+                            , td [] []
+                            , td [] []
+                            ]
+                    )
+            )
+        ]

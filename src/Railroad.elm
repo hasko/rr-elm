@@ -8,6 +8,7 @@ module Railroad exposing
     , move
     , moveCursor
     , normalizePosition
+    , switches
     , trackLength
     )
 
@@ -227,3 +228,16 @@ move_along layout state =
                 }
         in
         move_along layout new_state
+
+
+switches : Layout -> List (List ( Int, Int ))
+switches layout =
+    Graph.keys layout
+        |> List.map
+            (\i ->
+                Set.foldl
+                    (\o acc -> ( i, o ) :: acc)
+                    []
+                    (Graph.outgoing i layout)
+            )
+        |> List.filter (\s -> List.length s > 1)
