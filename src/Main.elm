@@ -214,8 +214,14 @@ viewTrain train layout =
                         c1 =
                             Railroad.getPositionOnTrack train.trackPosition c t
 
+                        ( ntp, nti ) =
+                            Railroad.normalizePosition ( train.trackPosition - train.length, train.track ) layout
+
+                        nt =
+                            Graph.getData nti layout |> Maybe.withDefault (StraightTrack { length = 1000000.0 })
+
                         c2 =
-                            Railroad.getPositionOnTrack (train.trackPosition - train.length) c t
+                            Railroad.getPositionOnTrack (train.trackPosition - train.length) c nt
                     in
                     line
                         [ Svg.Attributes.id "train"

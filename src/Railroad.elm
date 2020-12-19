@@ -7,6 +7,7 @@ module Railroad exposing
     , getPositionOnTrack
     , move
     , moveCursor
+    , normalizePosition
     , trackLength
     )
 
