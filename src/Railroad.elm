@@ -52,8 +52,8 @@ moveCursor cursor track =
     case track of
         StraightTrack s ->
             Cursor
-                (cursor.x + s.length * cos cursor.dir)
-                (cursor.y + s.length * sin cursor.dir)
+                (cursor.x + s.length * cos (degrees cursor.dir))
+                (cursor.y + s.length * sin (degrees cursor.dir))
                 cursor.dir
 
         CurvedTrack c ->
