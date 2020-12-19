@@ -52,8 +52,8 @@ initialLayout =
         |> insertEdge 1 2
         |> insertEdge 2 0
         |> insertData 0 (StraightTrack { length = 50.0 })
-        |> insertData 1 (CurvedTrack { radius = 190.0, angle = 15.0 })
-        |> insertData 2 (CurvedTrack { radius = 190.0, angle = 15.0 })
+        |> insertData 1 (CurvedTrack { radius = 300.0, angle = 15.0 })
+        |> insertData 2 (StraightTrack { length = 100.0 })
 
 
 subscriptions _ =

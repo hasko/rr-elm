@@ -15,7 +15,7 @@ import Dict exposing (Dict)
 import Graph exposing (Graph)
 import List
 import Maybe exposing (andThen, map, withDefault)
-import Set
+import Set exposing (Set)
 
 
 type alias TrainState =
@@ -100,6 +100,10 @@ getPositionOnTrack trackPosition cursor track =
                 newDir
 
 
+type alias Layout =
+    Graph Int Track ()
+
+
 normalizePosition : ( Float, Int ) -> Layout -> ( Float, Int )
 normalizePosition ( trackPosition, trackId ) layout =
     if trackPosition < 0 then
@@ -131,25 +135,19 @@ normalizePosition ( trackPosition, trackId ) layout =
 
 
 previousTrack : Int -> Layout -> Maybe ( Int, Track )
-previousTrack trackId layout =
-    -- TODO Implement switching instead of just taking the head.
-    case Graph.incoming trackId layout |> Set.toList |> List.head of
-        Nothing ->
-            Nothing
-
-        Just otherId ->
-            case Graph.getData otherId layout of
-                Nothing ->
-                    Nothing
-
-                Just otherTrack ->
-                    Just ( otherId, otherTrack )
+previousTrack =
+    getOtherTrack Graph.incoming
 
 
 nextTrack : Int -> Layout -> Maybe ( Int, Track )
-nextTrack trackId layout =
+nextTrack =
+    getOtherTrack Graph.outgoing
+
+
+getOtherTrack : (Int -> Layout -> Set Int) -> Int -> Layout -> Maybe ( Int, Track )
+getOtherTrack f trackId layout =
     -- TODO Implement switching instead of just taking the head.
-    case Graph.outgoing trackId layout |> Set.toList |> List.head of
+    case f trackId layout |> Set.toList |> List.head of
         Nothing ->
             Nothing
 
@@ -160,10 +158,6 @@ nextTrack trackId layout =
 
                 Just otherTrack ->
                     Just ( otherId, otherTrack )
-
-
-type alias Layout =
-    Graph Int Track ()
 
 
 cursors : Layout -> Dict Int Cursor
