@@ -1,9 +1,4 @@
-module Railroad exposing
-    ( TrainState
-    , move
-    , normalizePosition
-    , switches
-    )
+module Railroad exposing (normalizePosition)
 
 import Dict exposing (Dict)
 import Graph exposing (Graph)
@@ -11,15 +6,6 @@ import List
 import Maybe exposing (andThen, map, withDefault)
 import Railroad.Layout exposing (..)
 import Set exposing (Set)
-
-
-type alias TrainState =
-    { name : String
-    , length : Float -- in m
-    , speed : Float -- in m/s
-    , track : Int
-    , trackPosition : Float -- location of train head in m from the track start
-    }
 
 
 normalizePosition : ( Float, Int ) -> Layout -> ( Float, Int )
@@ -76,50 +62,3 @@ getOtherTrack f trackId layout =
 
                 Just otherTrack ->
                     Just ( otherId, otherTrack )
-
-
-move : Float -> Layout -> TrainState -> TrainState
-move millis layout state =
-    let
-        new_state =
-            { state
-                | trackPosition = state.trackPosition + state.speed * millis / 1000.0
-            }
-    in
-    move_along layout new_state
-
-
-move_along : Layout -> TrainState -> TrainState
-move_along layout state =
-    let
-        current_track_length =
-            Graph.getData state.track layout |> map trackLength |> withDefault 1000000.0
-    in
-    if state.trackPosition < current_track_length then
-        state
-
-    else
-        let
-            next_track_id =
-                Graph.outgoing state.track layout |> Set.toList |> List.head |> withDefault 0
-
-            new_state =
-                { state
-                    | track = next_track_id
-                    , trackPosition = state.trackPosition - current_track_length
-                }
-        in
-        move_along layout new_state
-
-
-switches : Layout -> List (List ( Int, Int ))
-switches layout =
-    Graph.keys layout
-        |> List.map
-            (\i ->
-                Set.foldl
-                    (\o acc -> ( i, o ) :: acc)
-                    []
-                    (Graph.outgoing i layout)
-            )
-        |> List.filter (\s -> List.length s > 1)

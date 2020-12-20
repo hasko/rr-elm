@@ -5,6 +5,7 @@ module Railroad.Layout exposing
     , cursors
     , getPositionOnTrack
     , moveCursor
+    , switches
     , trackLength
     )
 
@@ -126,3 +127,23 @@ getPositionOnTrack trackPosition cursor track =
                 (cursor.x + s * cos (degrees (cursor.dir + a / 2)))
                 (cursor.y + s * sin (degrees (cursor.dir + a / 2)))
                 newDir
+
+
+switches : Layout -> List (List ( Int, Int ))
+switches layout =
+    -- Get all the track ids.
+    Graph.keys layout
+        -- And map them to the list of outgoing connections.
+        |> List.map
+            (\fromTrackId ->
+                -- Collect all the connections from this track id.
+                Set.foldl
+                    -- Create a pair and add it to the list.
+                    (\toTrackId acc -> ( fromTrackId, toTrackId ) :: acc)
+                    -- Start with an empty list.
+                    []
+                    -- Do this for all outgoing connections of this track.
+                    (Graph.outgoing fromTrackId layout)
+            )
+        -- Remove all the pseudo-switches that only have one connection.
+        |> List.filter (\s -> List.length s > 1)

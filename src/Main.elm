@@ -9,7 +9,8 @@ import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
 import Railroad exposing (..)
-import Railroad.Layout exposing (..)
+import Railroad.Layout as Layout exposing (..)
+import Railroad.Train as Train exposing (..)
 import Set exposing (Set)
 import Svg exposing (Svg, g, line, path, rect, svg)
 import Svg.Attributes exposing (d, fill, id, stroke, strokeWidth, viewBox, width, x1, x2, y1, y2)
@@ -80,7 +81,7 @@ update msg model =
                                 toFloat (newMillis - lastMillis)
                         in
                         ( { model
-                            | state = Railroad.move elapsedMillis model.layout model.state
+                            | state = Train.move elapsedMillis model.layout model.state
                             , lastTick = Just newMillis
                           }
                         , Cmd.none
@@ -258,7 +259,7 @@ viewSwitches layout =
     table [ class "table" ]
         [ thead [] [ tr [] [ th [] [ text "ID" ], th [] [ text "Connections" ], th [] [ text "Active" ], th [] [] ] ]
         , tbody []
-            (Railroad.switches layout
+            (Layout.switches layout
                 |> List.indexedMap
                     (\i conns ->
                         tr []
