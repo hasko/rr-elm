@@ -9,6 +9,7 @@ import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
 import Railroad exposing (..)
+import Railroad.Layout exposing (..)
 import Set exposing (Set)
 import Svg exposing (Svg, g, line, path, rect, svg)
 import Svg.Attributes exposing (d, fill, id, stroke, strokeWidth, viewBox, width, x1, x2, y1, y2)
@@ -143,19 +144,25 @@ view model =
 
 viewLayout : Layout -> Svg Msg
 viewLayout layout =
+    -- Create a g element to contain the layout.
     g [ id "layout" ]
+        -- Collect the rendered elements into a list.
         (Dict.foldl
-            (\trackId cursor acc ->
+            -- To render the current track id into the list of elements:
+            (\trackId cursor elements ->
                 case Graph.getData trackId layout of
                     Nothing ->
-                        -- TODO Something went wrong, our layout is inconsistent.
-                        acc
+                        -- If there is no such track, just return the current list unchanged.
+                        elements
 
                     Just track ->
-                        viewTrack track cursor :: acc
+                        -- Render the track and add the result to the front of the list.
+                        viewTrack track cursor :: elements
             )
+            -- Start with an empty list of elements.
             []
-            (Railroad.cursors layout)
+            -- Iterate over all the cursors in the layout.
+            (cursors layout)
         )
 
 
@@ -163,7 +170,7 @@ viewTrack : Track -> Cursor -> Svg Msg
 viewTrack track cursor =
     let
         newCursor =
-            Railroad.moveCursor cursor track
+            moveCursor cursor track
     in
     case track of
         StraightTrack s ->
@@ -209,7 +216,7 @@ viewTrack track cursor =
 
 viewTrain : TrainState -> Layout -> Svg Msg
 viewTrain train layout =
-    case Railroad.cursors layout |> Dict.get train.track of
+    case cursors layout |> Dict.get train.track of
         -- TODO Something went wrong, our layout is inconsistent.
         Nothing ->
             g [] []
@@ -223,7 +230,7 @@ viewTrain train layout =
                 Just t ->
                     let
                         c1 =
-                            Railroad.getPositionOnTrack train.trackPosition c t
+                            getPositionOnTrack train.trackPosition c t
 
                         ( ntp, nti ) =
                             Railroad.normalizePosition ( train.trackPosition - train.length, train.track ) layout
@@ -232,7 +239,7 @@ viewTrain train layout =
                             Graph.getData nti layout |> Maybe.withDefault (StraightTrack { length = 1000000.0 })
 
                         c2 =
-                            Railroad.getPositionOnTrack (train.trackPosition - train.length) c nt
+                            getPositionOnTrack (train.trackPosition - train.length) c nt
                     in
                     line
                         [ Svg.Attributes.id "train"
