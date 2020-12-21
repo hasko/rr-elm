@@ -1,5 +1,6 @@
 module Railroad.Train exposing (TrainLocation, TrainState, move, normalizeLocation, stopped)
 
+import Dict exposing (Dict)
 import Graph
 import Graph.Pair exposing (getEdgeData)
 import Maybe exposing (andThen, withDefault)
@@ -22,8 +23,8 @@ type alias TrainLocation =
     }
 
 
-move : Layout -> Int -> TrainState -> TrainState
-move layout millis trainState =
+move : Layout -> Dict Int Int -> Int -> TrainState -> TrainState
+move layout switchState millis trainState =
     case trainState.location of
         Nothing ->
             -- If the train has no location, no need to move.
@@ -37,16 +38,16 @@ move layout millis trainState =
                     -- ... based on the old location but with an updated position ...
                     { loc | pos = loc.pos + trainState.speed * toFloat millis / 1000.0 }
                         -- and finally "normalize" the location in case we are on a different track now.
-                        |> normalizeLocation layout
+                        |> normalizeLocation layout switchState
             }
 
 
-normalizeLocation : Layout -> TrainLocation -> Maybe TrainLocation
-normalizeLocation layout loc =
+normalizeLocation : Layout -> Dict Int Int -> TrainLocation -> Maybe TrainLocation
+normalizeLocation layout switchState loc =
     -- If the position is beyond the end of the current track ...
     if loc.pos > trackLength loc.track then
         -- ... get the next track.
-        case nextTrack loc.edge layout of
+        case nextTrack loc.edge layout switchState of
             Nothing ->
                 -- If there is no next track, return.
                 Nothing
@@ -64,10 +65,10 @@ normalizeLocation layout loc =
                     , track = otherTrack
                 }
                     -- ... and repeat until done.
-                    |> normalizeLocation layout
+                    |> normalizeLocation layout switchState
 
     else if loc.pos < 0 then
-        case previousTrack loc.edge layout of
+        case previousTrack loc.edge layout switchState of
             Nothing ->
                 Nothing
 
@@ -77,15 +78,15 @@ normalizeLocation layout loc =
                     , edge = otherEdge
                     , track = otherTrack
                 }
-                    |> normalizeLocation layout
+                    |> normalizeLocation layout switchState
 
     else
         -- We are within the track bounds, so return.
         Just loc
 
 
-previousTrack : ( Int, Int ) -> Layout -> Maybe ( ( Int, Int ), Track )
-previousTrack ( fromId, toId ) layout =
+previousTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe ( ( Int, Int ), Track )
+previousTrack ( fromId, toId ) layout switchState =
     Graph.incoming fromId layout
         |> Set.toList
         -- TODO Consider switching
@@ -102,8 +103,8 @@ previousTrack ( fromId, toId ) layout =
             )
 
 
-nextTrack : ( Int, Int ) -> Layout -> Maybe ( ( Int, Int ), Track )
-nextTrack ( fromId, toId ) layout =
+nextTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe ( ( Int, Int ), Track )
+nextTrack ( fromId, toId ) layout switchState =
     Graph.outgoing toId layout
         |> Set.toList
         -- TODO Consider switching

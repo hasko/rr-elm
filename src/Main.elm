@@ -9,6 +9,7 @@ import Html.Attributes exposing (class, style)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
+import List.Extra
 import Maybe exposing (andThen, withDefault)
 import Railroad.Layout as Layout exposing (..)
 import Railroad.Train as Train exposing (..)
@@ -26,6 +27,7 @@ main =
 type alias Model =
     { state : TrainState
     , layout : Layout
+    , switchState : Dict Int Int
     , lastTick : Maybe Int
     , running : Bool
     }
@@ -36,6 +38,7 @@ type Msg
     | Start
     | Stop
     | Reset
+    | ChangeSwitch Int Switch
 
 
 init : () -> ( Model, Cmd Msg )
@@ -53,6 +56,7 @@ init _ =
                         Just { edge = ( 0, 1 ), pos = 40.0, track = track }
             }
       , layout = initialLayout
+      , switchState = Dict.empty
       , lastTick = Nothing
       , running = True
       }
@@ -99,7 +103,7 @@ update msg model =
                                 newMillis - lastMillis
 
                             newTrainState =
-                                Train.move model.layout elapsedMillis model.state
+                                Train.move model.layout model.switchState elapsedMillis model.state
                         in
                         case newTrainState.location of
                             Nothing ->
@@ -108,7 +112,7 @@ update msg model =
 
                             Just loc ->
                                 ( { model
-                                    | state = Train.move model.layout elapsedMillis model.state
+                                    | state = newTrainState
                                     , lastTick = Just newMillis
                                   }
                                 , Cmd.none
@@ -133,6 +137,19 @@ update msg model =
             in
             ( { m | running = model.running }, Cmd.none )
 
+        ChangeSwitch i switch ->
+            let
+                -- Get the next configuration number, cycling around if necessary.
+                newCfg =
+                    modBy (List.length switch.configs) ((Dict.get i model.switchState |> withDefault 0) + 1)
+
+                -- Get the new switch state for the model.
+                newState =
+                    Dict.insert i newCfg model.switchState
+            in
+            -- Construct the new model based on the new switch state.
+            ( { model | switchState = newState }, Cmd.none )
+
 
 view : Model -> Html Msg
 view model =
@@ -140,7 +157,7 @@ view model =
         [ svg
             [ width "100%", viewBox "0 -2.5 160 15" ]
             [ lazy viewLayout model.layout
-            , viewTrain model.state model.layout
+            , viewTrain model.state model.layout model.switchState
             ]
         , div [ class "row" ]
             [ div [ class "col-3" ]
@@ -149,7 +166,7 @@ view model =
                 , button [ class "btn btn-secondary", onClick Reset, style "margin" "12px 12px 12px 0" ] [ text "Reset" ]
                 ]
             , div [ class "col" ]
-                [ viewSwitches model.layout
+                [ viewSwitches model.layout model.switchState
                 ]
             ]
         , pre []
@@ -238,8 +255,8 @@ viewTrack layout edge =
                         []
 
 
-viewTrain : TrainState -> Layout -> Svg Msg
-viewTrain train layout =
+viewTrain : TrainState -> Layout -> Dict Int Int -> Svg Msg
+viewTrain train layout switchState =
     case train.location of
         Nothing ->
             g [] []
@@ -252,7 +269,7 @@ viewTrain train layout =
                     g [] []
 
                 Just c1 ->
-                    case { loc | pos = loc.pos - train.length } |> Train.normalizeLocation layout of
+                    case { loc | pos = loc.pos - train.length } |> Train.normalizeLocation layout switchState of
                         Nothing ->
                             -- If the train end fits on no track, draw nothing.
                             g [] []
@@ -276,23 +293,31 @@ viewTrain train layout =
                                         []
 
 
-viewSwitches : Layout -> Html Msg
-viewSwitches layout =
+viewSwitches : Layout -> Dict Int Int -> Html Msg
+viewSwitches layout switchState =
     table [ class "table" ]
         [ thead [] [ tr [] [ th [] [ text "ID" ], th [] [ text "Connections" ], th [] [ text "Active" ], th [] [] ] ]
         , tbody []
-            (Layout.switches layout |> List.map (\( i, switch ) -> viewSwitch i switch))
+            (Layout.switches layout |> List.map (\( i, switch ) -> viewSwitch i switch (Dict.get i switchState |> withDefault 0)))
         ]
 
 
-viewSwitch : Int -> Switch -> Html Msg
-viewSwitch i switch =
+viewSwitch : Int -> Switch -> Int -> Html Msg
+viewSwitch i switch state =
     tr []
         [ td [] [ text (String.fromInt i) ]
         , td []
-            [ ul [] (List.map viewSwitchConfig switch.configs) ]
-        , td [] []
-        , td [] []
+            [ ul [] (List.map viewSwitchConfig switch.configs |> List.map (\t -> li [] [ t ])) ]
+        , td []
+            [ case List.Extra.getAt state switch.configs of
+                Nothing ->
+                    -- Switch state is inconsistent
+                    text "inconsistent"
+
+                Just cfg ->
+                    viewSwitchConfig cfg
+            ]
+        , td [] [ button [ class "btn btn-secondary btn-sm", onClick (ChangeSwitch i switch) ] [ text "Change" ] ]
         ]
 
 
@@ -301,4 +326,4 @@ viewSwitchConfig routes =
     routes
         |> List.map (\( from, to ) -> String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to)
         |> String.join ", "
-        |> (\s -> li [] [ text s ])
+        |> text
