@@ -3,6 +3,7 @@ module Railroad.Train exposing (TrainLocation, TrainState, move, normalizeLocati
 import Dict exposing (Dict)
 import Graph
 import Graph.Pair exposing (getEdgeData)
+import List.Extra
 import Maybe exposing (andThen, withDefault)
 import Railroad.Layout as Layout exposing (Layout, Track, trackLength)
 import Set
@@ -105,20 +106,38 @@ previousTrack ( fromId, toId ) layout switchState =
 
 nextTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe ( ( Int, Int ), Track )
 nextTrack ( fromId, toId ) layout switchState =
-    Graph.outgoing toId layout
-        |> Set.toList
-        -- TODO Consider switching
-        |> List.head
-        |> andThen (\otherId -> Just ( toId, otherId ))
-        |> andThen
-            (\edge ->
-                case Graph.Pair.getEdgeData edge layout of
-                    Nothing ->
-                        Nothing
+    case Graph.getData toId layout of
+        Nothing ->
+            Graph.outgoing toId layout
+                |> Set.toList
+                |> List.head
+                |> andThen (\otherId -> Just ( toId, otherId ))
+                |> andThen
+                    (\edge ->
+                        case Graph.Pair.getEdgeData edge layout of
+                            Nothing ->
+                                Nothing
 
-                    Just track ->
-                        Just ( edge, track )
-            )
+                            Just track ->
+                                Just ( edge, track )
+                    )
+
+        Just switch ->
+            Dict.get toId switchState
+                |> withDefault 0
+                |> (\i -> List.Extra.getAt i switch.configs)
+                |> Maybe.map (\cfg -> List.filter (\( from, to ) -> from == fromId) cfg)
+                |> andThen List.head
+                |> Maybe.map (\( from, to ) -> ( toId, to ))
+                |> andThen
+                    (\edge ->
+                        case getEdgeData edge layout of
+                            Nothing ->
+                                Nothing
+
+                            Just track ->
+                                Just ( edge, track )
+                    )
 
 
 stopped : TrainState -> TrainState
