@@ -88,20 +88,43 @@ normalizeLocation layout switchState loc =
 
 previousTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe ( ( Int, Int ), Track )
 previousTrack ( fromId, toId ) layout switchState =
-    Graph.incoming fromId layout
-        |> Set.toList
-        -- TODO Consider switching
-        |> List.head
-        |> andThen (\otherId -> Just ( otherId, fromId ))
-        |> andThen
-            (\edge ->
-                case Graph.Pair.getEdgeData edge layout of
-                    Nothing ->
-                        Nothing
+    case Graph.getData toId layout of
+        Nothing ->
+            Graph.incoming fromId layout
+                |> Set.toList
+                -- TODO Consider switching
+                |> List.head
+                |> andThen (\otherId -> Just ( otherId, fromId ))
+                |> andThen
+                    (\edge ->
+                        case Graph.Pair.getEdgeData edge layout of
+                            Nothing ->
+                                Nothing
 
-                    Just track ->
-                        Just ( edge, track )
-            )
+                            Just track ->
+                                Just ( edge, track )
+                    )
+
+        Just switch ->
+            Dict.get fromId switchState
+                |> withDefault 0
+                -- Select the right switch congiguration.
+                |> (\i -> List.Extra.getAt i switch.configs)
+                -- Get the right route.
+                |> Maybe.map (\cfg -> List.filter (\( _, routeTo ) -> routeTo == toId) cfg)
+                |> andThen List.head
+                -- Choose the previous edge.
+                |> Maybe.map (\( routeFrom, _ ) -> ( routeFrom, fromId ))
+                -- Get the track for the edge
+                |> andThen
+                    (\edge ->
+                        case getEdgeData edge layout of
+                            Nothing ->
+                                Nothing
+
+                            Just track ->
+                                Just ( edge, track )
+                    )
 
 
 nextTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe ( ( Int, Int ), Track )
