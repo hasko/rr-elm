@@ -2,9 +2,9 @@ module Main exposing (Msg(..), main, update, view)
 
 import Browser
 import Dict exposing (Dict)
-import Graph exposing (empty, insertEdgeData)
+import Graph exposing (empty, insertData, insertEdgeData)
 import Graph.Pair exposing (getEdgeData)
-import Html exposing (Html, button, div, pre, table, tbody, td, text, th, thead, tr)
+import Html exposing (Html, button, div, li, pre, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, style)
 import Html.Entity
 import Html.Events exposing (onClick)
@@ -65,6 +65,8 @@ initialLayout =
     Graph.empty
         |> insertEdgeData 0 1 (StraightTrack { length = 75.0 })
         |> insertEdgeData 1 2 (CurvedTrack { radius = 300.0, angle = 15.0 })
+        |> insertEdgeData 1 3 (StraightTrack { length = 75.0 })
+        |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ] ])
 
 
 trackColor : ( Int, Int ) -> String
@@ -72,6 +74,7 @@ trackColor ( from, to ) =
     Dict.empty
         |> Dict.insert 0 (Dict.empty |> Dict.insert 1 "blue")
         |> Dict.insert 1 (Dict.empty |> Dict.insert 2 "green")
+        |> Dict.insert 1 (Dict.empty |> Dict.insert 3 "orange")
         |> Dict.get from
         |> andThen (\d -> Dict.get to d)
         |> withDefault "grey"
@@ -145,12 +148,9 @@ view model =
                 , button [ class "btn btn-secondary", onClick Stop, style "margin" "12px 12px 12px 0" ] [ text "Stop" ]
                 , button [ class "btn btn-secondary", onClick Reset, style "margin" "12px 12px 12px 0" ] [ text "Reset" ]
                 ]
-
-            {-
-               , div [ class "col" ]
-                   [ viewSwitches model.layout
-                   ]
-            -}
+            , div [ class "col" ]
+                [ viewSwitches model.layout
+                ]
             ]
         , pre []
             [ text
@@ -281,19 +281,24 @@ viewSwitches layout =
     table [ class "table" ]
         [ thead [] [ tr [] [ th [] [ text "ID" ], th [] [ text "Connections" ], th [] [ text "Active" ], th [] [] ] ]
         , tbody []
-            (Layout.switches layout
-                |> List.indexedMap
-                    (\i conns ->
-                        tr []
-                            [ td [] [ text (String.fromInt i) ]
-                            , td []
-                                [ List.map (\( inc, out ) -> String.fromInt inc ++ Html.Entity.rarr ++ String.fromInt out) conns
-                                    |> String.join ", "
-                                    |> text
-                                ]
-                            , td [] []
-                            , td [] []
-                            ]
-                    )
-            )
+            (Layout.switches layout |> List.map (\( i, switch ) -> viewSwitch i switch))
         ]
+
+
+viewSwitch : Int -> Switch -> Html Msg
+viewSwitch i switch =
+    tr []
+        [ td [] [ text (String.fromInt i) ]
+        , td []
+            [ ul [] (List.map viewSwitchConfig switch.configs) ]
+        , td [] []
+        , td [] []
+        ]
+
+
+viewSwitchConfig : List ( Int, Int ) -> Html Msg
+viewSwitchConfig routes =
+    routes
+        |> List.map (\( from, to ) -> String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to)
+        |> String.join ", "
+        |> (\s -> li [] [ text s ])

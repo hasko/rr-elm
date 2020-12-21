@@ -1,6 +1,7 @@
 module Railroad.Layout exposing
     ( Cursor
     , Layout
+    , Switch
     , Track(..)
     , coordsFor
     , cursors
@@ -16,11 +17,12 @@ import Graph exposing (Graph)
 import Graph.Pair exposing (getEdgeData)
 import List.Extra exposing (cartesianProduct)
 import Maybe exposing (Maybe(..))
+import Maybe.Extra
 import Set
 
 
 type alias Layout =
-    Graph Int () Track
+    Graph Int Switch Track
 
 
 type Track
@@ -41,6 +43,10 @@ trackLength track =
 
         CurvedTrack c ->
             pi * c.radius * c.angle / 180.0
+
+
+type alias Switch =
+    { configs : List (List ( Int, Int )) }
 
 
 type alias Cursor =
@@ -152,10 +158,13 @@ coordsFor pos ( fromNode, toNode ) layout =
                     Just (getPositionOnTrack pos cursor track)
 
 
-switches : Layout -> List (List ( Int, Int ))
+switches : Layout -> List ( Int, Switch )
 switches layout =
-    -- TODO
-    []
+    Graph.nodes layout
+        -- Convert from a list of pairs with a Maybe inside to a list of Maybes
+        |> List.map (\( vertex, data ) -> Maybe.map (\switch -> ( vertex, switch )) data)
+        -- Filter out the Nothings
+        |> Maybe.Extra.values
 
 
 renderInfo : Layout -> ( Int, Int ) -> Maybe ( Cursor, Cursor, Track )
