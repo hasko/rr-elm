@@ -157,13 +157,13 @@ view model =
                                 "Nothing"
 
                             Just loc ->
-                                "Just { "
+                                "Just\n  { edge=("
                                     ++ String.fromInt (Tuple.first loc.edge)
                                     ++ ", "
                                     ++ String.fromInt (Tuple.second loc.edge)
-                                    ++ ")\n, pos="
+                                    ++ ")\n  , pos="
                                     ++ String.fromFloat loc.pos
-                                    ++ "\n}"
+                                    ++ "\n  }"
                        )
                     ++ "\n}"
                 )
