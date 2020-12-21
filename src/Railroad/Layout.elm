@@ -2,20 +2,23 @@ module Railroad.Layout exposing
     ( Cursor
     , Layout
     , Track(..)
+    , coordsFor
     , cursors
     , getPositionOnTrack
     , moveCursor
+    , renderInfo
     , switches
     , trackLength
     )
 
 import Dict exposing (Dict)
 import Graph exposing (Graph)
+import Maybe exposing (Maybe(..))
 import Set
 
 
 type alias Layout =
-    Graph Int Track ()
+    Graph Int () Track
 
 
 type Track
@@ -49,35 +52,38 @@ cursors layout =
 
 
 renderLayout : Int -> Cursor -> Layout -> Dict Int Cursor -> Dict Int Cursor
-renderLayout trackId currentCursor layout knownCursors =
-    -- If the track is already rendered...
-    if Dict.member trackId knownCursors then
-        -- then we are done.
+renderLayout nodeId currentCursor layout knownCursors =
+    -- If the node cursor is already calculated ...
+    if Dict.member nodeId knownCursors then
+        -- ... then we are done.
         knownCursors
 
     else
-        let
-            -- Add the cursor for the current track to the known cursors.
-            newCursors =
-                Dict.insert trackId currentCursor knownCursors
-        in
-        -- Get the track data so we can move further.
-        case Graph.getData trackId layout of
-            -- If this track has no data, the layout is inconsistent. Just return what we know so far.
-            Nothing ->
-                knownCursors
+        -- Get all the outoing tracks from this node.
+        -- TODO Consider incoming tracks too.
+        Graph.outgoing nodeId layout
+            -- Calculate the next node position for each track and collect them.
+            |> Set.foldl
+                (\nextNodeId acc ->
+                    -- Get the track for this pair of nodes.
+                    case Graph.getEdgeData nodeId nextNodeId layout of
+                        Nothing ->
+                            -- If there is no track, our layout is inconsistent. Return what we know so far.
+                            acc
 
-            Just track ->
-                let
-                    -- Calculate the next position and direction.
-                    newCursor =
-                        moveCursor currentCursor track
-                in
-                -- Get the outgoing tracks.
-                -- TODO Consider incoming tracks as well, working backwards.
-                Graph.outgoing trackId layout
-                    -- Now run the same function again for all the connected tracks and return the result.
-                    |> Set.foldl (\i acc -> renderLayout i newCursor layout acc) newCursors
+                        Just track ->
+                            -- Move the current cursor along the track and recurse.
+                            renderLayout
+                                -- Start with the next node id.
+                                nextNodeId
+                                -- Move the cursor along the track.
+                                (moveCursor currentCursor track)
+                                -- And the rest.
+                                layout
+                                acc
+                )
+                -- Begin with the list of known cursors plus the current one.
+                (Dict.insert nodeId currentCursor knownCursors)
 
 
 moveCursor : Cursor -> Track -> Cursor
@@ -129,6 +135,21 @@ getPositionOnTrack trackPosition cursor track =
                 newDir
 
 
+coordsFor : Float -> ( Int, Int ) -> Layout -> Maybe Cursor
+coordsFor pos ( fromNode, toNode ) layout =
+    case Graph.getEdgeData fromNode toNode layout of
+        Nothing ->
+            Nothing
+
+        Just track ->
+            case cursors layout |> Dict.get fromNode of
+                Nothing ->
+                    Nothing
+
+                Just cursor ->
+                    Just (getPositionOnTrack pos cursor track)
+
+
 switches : Layout -> List (List ( Int, Int ))
 switches layout =
     -- Get all the track ids.
@@ -147,3 +168,23 @@ switches layout =
             )
         -- Remove all the pseudo-switches that only have one connection.
         |> List.filter (\s -> List.length s > 1)
+
+
+renderInfo : Layout -> ( Int, Int ) -> Maybe ( Cursor, Cursor, Track )
+renderInfo layout ( from, to ) =
+    case Graph.getEdgeData from to layout of
+        Nothing ->
+            Nothing
+
+        Just track ->
+            case Dict.get from (cursors layout) of
+                Nothing ->
+                    Nothing
+
+                Just c1 ->
+                    case Dict.get to (cursors layout) of
+                        Nothing ->
+                            Nothing
+
+                        Just c2 ->
+                            Just ( c1, c2, track )

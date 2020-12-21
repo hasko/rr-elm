@@ -2,13 +2,14 @@ module Main exposing (Msg(..), main, update, view)
 
 import Browser
 import Dict exposing (Dict)
-import Graph exposing (empty, insertData, insertEdge)
+import Graph exposing (empty, insertEdgeData)
+import Graph.Pair
 import Html exposing (Html, button, div, pre, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class, style)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
-import Railroad exposing (..)
+import Maybe exposing (withDefault)
 import Railroad.Layout as Layout exposing (..)
 import Railroad.Train as Train exposing (..)
 import Set exposing (Set)
@@ -39,7 +40,7 @@ type Msg
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { state = TrainState "Happy Train" 30 10.0 0 40.0
+    ( { state = TrainState "Happy Train" 30 10.0 ( 0, 1 ) 40.0
       , layout = initialLayout
       , lastTick = Nothing
       , running = True
@@ -51,15 +52,12 @@ init _ =
 initialLayout : Layout
 initialLayout =
     Graph.empty
-        |> insertEdge 0 1
-        |> insertEdge 1 2
-        |> insertEdge 2 0
-        |> insertData 0 (StraightTrack { length = 50.0 })
-        |> insertData 1 (CurvedTrack { radius = 300.0, angle = 15.0 })
-        |> insertData 2 (StraightTrack { length = 100.0 })
-        |> insertEdge 0 3
-        |> insertEdge 3 0
-        |> insertData 3 (StraightTrack { length = 100.0 })
+        |> insertEdgeData 0 1 (StraightTrack { length = 50.0 })
+        |> insertEdgeData 1 2 (CurvedTrack { radius = 300.0, angle = 15.0 })
+        |> insertEdgeData 1 3 (StraightTrack { length = 100.0 })
+        -- Add some behind the scenes connections.
+        |> insertEdgeData 2 0 (StraightTrack { length = 200.0 })
+        |> insertEdgeData 3 0 (StraightTrack { length = 200.0 })
 
 
 subscriptions _ =
@@ -133,9 +131,11 @@ view model =
                     ++ String.fromFloat model.state.length
                     ++ "\n, speed="
                     ++ String.fromFloat model.state.speed
-                    ++ "\n, track="
-                    ++ String.fromInt model.state.track
-                    ++ "\n, trackPosition="
+                    ++ "\n, track=("
+                    ++ String.fromInt (Tuple.first model.state.track)
+                    ++ ", "
+                    ++ String.fromInt (Tuple.second model.state.track)
+                    ++ ")\n, trackPosition="
                     ++ String.fromFloat model.state.trackPosition
                     ++ "\n}"
                 )
@@ -147,101 +147,78 @@ viewLayout : Layout -> Svg Msg
 viewLayout layout =
     -- Create a g element to contain the layout.
     g [ id "layout" ]
-        -- Collect the rendered elements into a list.
-        (Dict.foldl
-            -- To render the current track id into the list of elements:
-            (\trackId cursor elements ->
-                case Graph.getData trackId layout of
-                    Nothing ->
-                        -- If there is no such track, just return the current list unchanged.
-                        elements
-
-                    Just track ->
-                        -- Render the track and add the result to the front of the list.
-                        viewTrack track cursor :: elements
-            )
-            -- Start with an empty list of elements.
-            []
-            -- Iterate over all the cursors in the layout.
-            (cursors layout)
-        )
+        -- Map the graph edges to SVG elements.
+        (Graph.edges layout |> List.map (viewTrack layout))
 
 
-viewTrack : Track -> Cursor -> Svg Msg
-viewTrack track cursor =
-    let
-        newCursor =
-            moveCursor cursor track
-    in
-    case track of
-        StraightTrack s ->
-            line
-                [ x1 (cursor.x |> String.fromFloat)
-                , y1 (cursor.y |> String.fromFloat)
-                , x2 (newCursor.x |> String.fromFloat)
-                , y2 (newCursor.y |> String.fromFloat)
-                , stroke "blue"
-                , strokeWidth "1.435"
-                ]
-                []
+viewTrack : Layout -> ( Int, Int ) -> Svg Msg
+viewTrack layout edge =
+    case Layout.renderInfo layout edge of
+        Nothing ->
+            -- Track cannot be rendered.
+            g [] []
 
-        CurvedTrack c ->
-            path
-                [ d
-                    ("M "
-                        ++ (cursor.x |> String.fromFloat)
-                        ++ " "
-                        ++ (cursor.y |> String.fromFloat)
-                        ++ " A "
-                        ++ (c.radius |> String.fromFloat)
-                        ++ " "
-                        ++ (c.radius |> String.fromFloat)
-                        ++ " 0 "
-                        ++ (if c.angle >= 180.0 then
-                                "1"
+        Just ( c1, c2, track ) ->
+            case track of
+                StraightTrack s ->
+                    line
+                        [ x1 (c1.x |> String.fromFloat)
+                        , y1 (c1.y |> String.fromFloat)
+                        , x2 (c2.x |> String.fromFloat)
+                        , y2 (c2.y |> String.fromFloat)
+                        , stroke "blue"
+                        , strokeWidth "1.435"
+                        ]
+                        []
 
-                            else
-                                "0"
-                           )
-                        ++ " 1 "
-                        ++ (newCursor.x |> String.fromFloat)
-                        ++ " "
-                        ++ (newCursor.y |> String.fromFloat)
-                    )
-                , fill "none"
-                , stroke "green"
-                , strokeWidth "1.435"
-                ]
-                []
+                CurvedTrack c ->
+                    path
+                        [ d
+                            ("M "
+                                ++ (c1.x |> String.fromFloat)
+                                ++ " "
+                                ++ (c1.y |> String.fromFloat)
+                                ++ " A "
+                                ++ (c.radius |> String.fromFloat)
+                                ++ " "
+                                ++ (c.radius |> String.fromFloat)
+                                ++ " 0 "
+                                ++ (if c.angle >= 180.0 then
+                                        "1"
+
+                                    else
+                                        "0"
+                                   )
+                                ++ " 1 "
+                                ++ (c2.x |> String.fromFloat)
+                                ++ " "
+                                ++ (c2.y |> String.fromFloat)
+                            )
+                        , fill "none"
+                        , stroke "green"
+                        , strokeWidth "1.435"
+                        ]
+                        []
 
 
 viewTrain : TrainState -> Layout -> Svg Msg
 viewTrain train layout =
-    case cursors layout |> Dict.get train.track of
-        -- TODO Something went wrong, our layout is inconsistent.
+    case Layout.coordsFor train.trackPosition train.track layout of
+        -- Train head is not on any track
         Nothing ->
             g [] []
 
-        Just c ->
-            case Graph.getData train.track layout of
-                -- TODO Something went wrong, our layout is inconsistent.
+        Just c1 ->
+            let
+                trainEnd =
+                    Train.normalizePosition { train | trackPosition = train.trackPosition - train.length } layout
+            in
+            case Layout.coordsFor trainEnd.trackPosition trainEnd.track layout of
+                -- Train end is not on any track.
                 Nothing ->
                     g [] []
 
-                Just t ->
-                    let
-                        c1 =
-                            getPositionOnTrack train.trackPosition c t
-
-                        ( ntp, nti ) =
-                            Railroad.normalizePosition ( train.trackPosition - train.length, train.track ) layout
-
-                        nt =
-                            Graph.getData nti layout |> Maybe.withDefault (StraightTrack { length = 1000000.0 })
-
-                        c2 =
-                            getPositionOnTrack (train.trackPosition - train.length) c nt
-                    in
+                Just c2 ->
                     line
                         [ Svg.Attributes.id "train"
                         , x1 (c1.x |> String.fromFloat)

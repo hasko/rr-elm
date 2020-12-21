@@ -1,8 +1,9 @@
-module Railroad.Train exposing (TrainState, move)
+module Railroad.Train exposing (TrainState, move, normalizePosition)
 
 import Graph
-import Maybe exposing (withDefault)
-import Railroad.Layout exposing (Layout, trackLength)
+import Graph.Pair
+import Maybe exposing (andThen, withDefault)
+import Railroad.Layout exposing (Layout, Track, trackLength)
 import Set
 
 
@@ -10,40 +11,97 @@ type alias TrainState =
     { name : String
     , length : Float -- in m
     , speed : Float -- in m/s
-    , track : Int
+    , track : ( Int, Int )
     , trackPosition : Float -- location of train head in m from the track start
     }
 
 
 move : Float -> Layout -> TrainState -> TrainState
-move millis layout state =
-    let
-        new_state =
-            { state
-                | trackPosition = state.trackPosition + state.speed * millis / 1000.0
-            }
-    in
-    move_along layout new_state
+move millis layout trainState =
+    normalizePosition
+        { trainState | trackPosition = trainState.trackPosition + trainState.speed * millis / 1000.0 }
+        layout
 
 
-move_along : Layout -> TrainState -> TrainState
-move_along layout state =
-    let
-        current_track_length =
-            Graph.getData state.track layout |> Maybe.map trackLength |> withDefault 1000000.0
-    in
-    if state.trackPosition < current_track_length then
-        state
+normalizePosition : TrainState -> Layout -> TrainState
+normalizePosition trainState layout =
+    -- If the track posision is before the track start ...
+    if trainState.trackPosition < 0 then
+        -- ... get the previous track.
+        case previousTrack trainState.track layout of
+            Nothing ->
+                -- If there is no previous track, the layout is inconsistent. Return what we have.
+                trainState
+
+            Just ( n, t ) ->
+                -- Calculate the new position on the previous track and recurse.
+                normalizePosition
+                    { trainState
+                        | trackPosition = trainState.trackPosition + trackLength t
+                        , track = n
+                    }
+                    layout
 
     else
-        let
-            next_track_id =
-                Graph.outgoing state.track layout |> Set.toList |> List.head |> withDefault 0
+        case Graph.Pair.getEdgeData trainState.track layout of
+            Nothing ->
+                -- If there is no current track, the layout is inconsistent. Return.
+                trainState
 
-            new_state =
-                { state
-                    | track = next_track_id
-                    , trackPosition = state.trackPosition - current_track_length
-                }
-        in
-        move_along layout new_state
+            Just track ->
+                -- If the position is beyond the end of the current track ...
+                if trainState.trackPosition > trackLength track then
+                    -- ... get the next track.
+                    case nextTrack trainState.track layout of
+                        Nothing ->
+                            -- If there is no next track, the layout is inconsistent. Return.
+                            trainState
+
+                        Just ( n, t ) ->
+                            -- Calculate the new position and recurse.
+                            normalizePosition
+                                { trainState
+                                    | trackPosition = trainState.trackPosition - trackLength t
+                                    , track = n
+                                }
+                                layout
+
+                else
+                    -- We are within the track bounds, so return.
+                    trainState
+
+
+previousTrack : ( Int, Int ) -> Layout -> Maybe ( ( Int, Int ), Track )
+previousTrack ( fromId, toId ) layout =
+    Graph.incoming fromId layout
+        |> Set.toList
+        -- TODO Consider switching
+        |> List.head
+        |> andThen (\otherId -> Just ( otherId, fromId ))
+        |> andThen
+            (\edge ->
+                case Graph.Pair.getEdgeData edge layout of
+                    Nothing ->
+                        Nothing
+
+                    Just track ->
+                        Just ( edge, track )
+            )
+
+
+nextTrack : ( Int, Int ) -> Layout -> Maybe ( ( Int, Int ), Track )
+nextTrack ( fromId, toId ) layout =
+    Graph.outgoing toId layout
+        |> Set.toList
+        -- TODO Consider switching
+        |> List.head
+        |> andThen (\otherId -> Just ( toId, otherId ))
+        |> andThen
+            (\edge ->
+                case Graph.Pair.getEdgeData edge layout of
+                    Nothing ->
+                        Nothing
+
+                    Just track ->
+                        Just ( edge, track )
+            )
