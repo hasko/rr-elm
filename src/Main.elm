@@ -54,10 +54,8 @@ initialLayout =
     Graph.empty
         |> insertEdgeData 0 1 (StraightTrack { length = 50.0 })
         |> insertEdgeData 1 2 (CurvedTrack { radius = 300.0, angle = 15.0 })
+        |> insertEdgeData 2 4 (StraightTrack { length = 100.0 })
         |> insertEdgeData 1 3 (StraightTrack { length = 100.0 })
-        -- Add some behind the scenes connections.
-        |> insertEdgeData 2 0 (StraightTrack { length = 200.0 })
-        |> insertEdgeData 3 0 (StraightTrack { length = 200.0 })
 
 
 subscriptions _ =
