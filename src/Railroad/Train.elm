@@ -1,9 +1,9 @@
 module Railroad.Train exposing (TrainState, move, normalizePosition)
 
 import Graph
-import Graph.Pair
+import Graph.Pair exposing (getEdgeData)
 import Maybe exposing (andThen, withDefault)
-import Railroad.Layout exposing (Layout, Track, trackLength)
+import Railroad.Layout as Layout exposing (Layout, Track, trackLength)
 import Set
 
 
@@ -11,20 +11,19 @@ type alias TrainState =
     { name : String
     , length : Float -- in m
     , speed : Float -- in m/s
-    , track : ( Int, Int )
+    , track : ( Int, Int ) -- Vertice numbers for the track
     , trackPosition : Float -- location of train head in m from the track start
     }
 
 
-move : Float -> Layout -> TrainState -> TrainState
-move millis layout trainState =
-    normalizePosition
-        { trainState | trackPosition = trainState.trackPosition + trainState.speed * millis / 1000.0 }
-        layout
+move : Layout -> Float -> TrainState -> TrainState
+move layout millis trainState =
+    { trainState | trackPosition = trainState.trackPosition + trainState.speed * millis / 1000.0 }
+        |> normalizePosition layout
 
 
-normalizePosition : TrainState -> Layout -> TrainState
-normalizePosition trainState layout =
+normalizePosition : Layout -> TrainState -> TrainState
+normalizePosition layout trainState =
     -- If the track posision is before the track start ...
     if trainState.trackPosition < 0 then
         -- ... get the previous track.
@@ -35,17 +34,16 @@ normalizePosition trainState layout =
 
             Just ( n, t ) ->
                 -- Calculate the new position on the previous track and recurse.
-                normalizePosition
-                    { trainState
-                        | trackPosition = trainState.trackPosition + trackLength t
-                        , track = n
-                    }
-                    layout
+                { trainState
+                    | trackPosition = trainState.trackPosition + trackLength t
+                    , track = n
+                }
+                    |> normalizePosition layout
 
     else
-        case Graph.Pair.getEdgeData trainState.track layout of
+        case getEdgeData trainState.track layout of
             Nothing ->
-                -- If there is no current track, the layout is inconsistent. Return.
+                -- The track has no information. Just return.
                 trainState
 
             Just track ->
@@ -59,12 +57,11 @@ normalizePosition trainState layout =
 
                         Just ( n, _ ) ->
                             -- Calculate the new position and recurse.
-                            normalizePosition
-                                { trainState
-                                    | trackPosition = trainState.trackPosition - trackLength track
-                                    , track = n
-                                }
-                                layout
+                            { trainState
+                                | trackPosition = trainState.trackPosition - trackLength track
+                                , track = n
+                            }
+                                |> normalizePosition layout
 
                 else
                     -- We are within the track bounds, so return.

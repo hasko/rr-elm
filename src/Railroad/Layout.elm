@@ -13,6 +13,8 @@ module Railroad.Layout exposing
 
 import Dict exposing (Dict)
 import Graph exposing (Graph)
+import Graph.Pair exposing (getEdgeData)
+import List.Extra exposing (cartesianProduct)
 import Maybe exposing (Maybe(..))
 import Set
 
@@ -152,22 +154,8 @@ coordsFor pos ( fromNode, toNode ) layout =
 
 switches : Layout -> List (List ( Int, Int ))
 switches layout =
-    -- Get all the track ids.
-    Graph.keys layout
-        -- And map them to the list of outgoing connections.
-        |> List.map
-            (\fromTrackId ->
-                -- Collect all the connections from this track id.
-                Set.foldl
-                    -- Create a pair and add it to the list.
-                    (\toTrackId acc -> ( fromTrackId, toTrackId ) :: acc)
-                    -- Start with an empty list.
-                    []
-                    -- Do this for all outgoing connections of this track.
-                    (Graph.outgoing fromTrackId layout)
-            )
-        -- Remove all the pseudo-switches that only have one connection.
-        |> List.filter (\s -> List.length s > 1)
+    -- TODO
+    []
 
 
 renderInfo : Layout -> ( Int, Int ) -> Maybe ( Cursor, Cursor, Track )

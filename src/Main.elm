@@ -9,7 +9,7 @@ import Html.Attributes exposing (class, style)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy)
-import Maybe exposing (withDefault)
+import Maybe exposing (andThen, withDefault)
 import Railroad.Layout as Layout exposing (..)
 import Railroad.Train as Train exposing (..)
 import Set exposing (Set)
@@ -52,10 +52,18 @@ init _ =
 initialLayout : Layout
 initialLayout =
     Graph.empty
-        |> insertEdgeData 0 1 (StraightTrack { length = 50.0 })
-        |> insertEdgeData 1 2 (CurvedTrack { radius = 300.0, angle = 15.0 })
-        |> insertEdgeData 2 4 (StraightTrack { length = 100.0 })
-        |> insertEdgeData 1 3 (StraightTrack { length = 100.0 })
+        |> insertEdgeData 0 1 (StraightTrack { length = 75.0 })
+        |> insertEdgeData 1 2 (StraightTrack { length = 75.0 })
+
+
+trackColor : ( Int, Int ) -> String
+trackColor ( from, to ) =
+    Dict.empty
+        |> Dict.insert 0 (Dict.empty |> Dict.insert 1 "blue")
+        |> Dict.insert 1 (Dict.empty |> Dict.insert 2 "green")
+        |> Dict.get from
+        |> andThen (\d -> Dict.get to d)
+        |> withDefault "grey"
 
 
 subscriptions _ =
@@ -77,7 +85,7 @@ update msg model =
                                 toFloat (newMillis - lastMillis)
                         in
                         ( { model
-                            | state = Train.move elapsedMillis model.layout model.state
+                            | state = Train.move model.layout elapsedMillis model.state
                             , lastTick = Just newMillis
                           }
                         , Cmd.none
@@ -107,7 +115,7 @@ view : Model -> Html Msg
 view model =
     div [ class "container" ]
         [ svg
-            [ width "100%", viewBox "0 -2.5 150 50" ]
+            [ width "100%", viewBox "0 -2.5 150 5" ]
             [ lazy viewLayout model.layout
             , viewTrain model.state model.layout
             ]
@@ -117,9 +125,12 @@ view model =
                 , button [ class "btn btn-secondary", onClick Stop, style "margin" "12px 12px 12px 0" ] [ text "Stop" ]
                 , button [ class "btn btn-secondary", onClick Reset, style "margin" "12px 12px 12px 0" ] [ text "Reset" ]
                 ]
-            , div [ class "col" ]
-                [ viewSwitches model.layout
-                ]
+
+            {-
+               , div [ class "col" ]
+                   [ viewSwitches model.layout
+                   ]
+            -}
             ]
         , pre []
             [ text
@@ -164,7 +175,7 @@ viewTrack layout edge =
                         , y1 (c1.y |> String.fromFloat)
                         , x2 (c2.x |> String.fromFloat)
                         , y2 (c2.y |> String.fromFloat)
-                        , stroke "blue"
+                        , stroke (trackColor edge)
                         , strokeWidth "1.435"
                         ]
                         []
@@ -209,7 +220,7 @@ viewTrain train layout =
         Just c1 ->
             let
                 trainEnd =
-                    Train.normalizePosition { train | trackPosition = train.trackPosition - train.length } layout
+                    Train.normalizePosition layout { train | trackPosition = train.trackPosition - train.length }
             in
             case Layout.coordsFor trainEnd.trackPosition trainEnd.track layout of
                 -- Train end is not on any track.
