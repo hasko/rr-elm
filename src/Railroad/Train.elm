@@ -57,11 +57,11 @@ normalizePosition trainState layout =
                             -- If there is no next track, the layout is inconsistent. Return.
                             trainState
 
-                        Just ( n, t ) ->
+                        Just ( n, _ ) ->
                             -- Calculate the new position and recurse.
                             normalizePosition
                                 { trainState
-                                    | trackPosition = trainState.trackPosition - trackLength t
+                                    | trackPosition = trainState.trackPosition - trackLength track
                                     , track = n
                                 }
                                 layout
