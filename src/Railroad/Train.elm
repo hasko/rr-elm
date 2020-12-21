@@ -1,4 +1,4 @@
-module Railroad.Train exposing (TrainLocation, TrainState, move, normalizeLocation)
+module Railroad.Train exposing (TrainLocation, TrainState, move, normalizeLocation, stopped)
 
 import Graph
 import Graph.Pair exposing (getEdgeData)
@@ -101,3 +101,8 @@ nextTrack ( fromId, toId ) layout =
                     Just track ->
                         Just ( edge, track )
             )
+
+
+stopped : TrainState -> TrainState
+stopped ts =
+    { ts | speed = 0.0 }

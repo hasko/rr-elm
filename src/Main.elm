@@ -94,13 +94,22 @@ update msg model =
 
                             elapsedMillis =
                                 newMillis - lastMillis
+
+                            newTrainState =
+                                Train.move model.layout elapsedMillis model.state
                         in
-                        ( { model
-                            | state = Train.move model.layout elapsedMillis model.state
-                            , lastTick = Just newMillis
-                          }
-                        , Cmd.none
-                        )
+                        case newTrainState.location of
+                            Nothing ->
+                                -- Train could not move, stop it.
+                                ( { model | state = Train.stopped model.state }, Cmd.none )
+
+                            Just loc ->
+                                ( { model
+                                    | state = Train.move model.layout elapsedMillis model.state
+                                    , lastTick = Just newMillis
+                                  }
+                                , Cmd.none
+                                )
 
                     Nothing ->
                         ( { model | lastTick = Just (Time.posixToMillis time) }, Cmd.none )
