@@ -30,9 +30,13 @@ move layout millis trainState =
             trainState
 
         Just loc ->
+            -- Create a new train state ...
             { trainState
+              -- ... but replace the location with a new location ...
                 | location =
+                    -- ... based on the old location but with an updated position ...
                     { loc | pos = loc.pos + trainState.speed * toFloat millis / 1000.0 }
+                        -- and finally "normalize" the location in case we are on a different track now.
                         |> normalizeLocation layout
             }
 
@@ -44,7 +48,7 @@ normalizeLocation layout loc =
         -- ... get the next track.
         case nextTrack loc.edge layout of
             Nothing ->
-                -- If there is no next track, the layout is inconsistent. Return.
+                -- If there is no next track, return.
                 Nothing
 
             Just ( otherEdge, otherTrack ) ->
