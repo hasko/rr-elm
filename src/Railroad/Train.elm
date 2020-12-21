@@ -1,4 +1,4 @@
-module Railroad.Train exposing (TrainState, move, normalizePosition)
+module Railroad.Train exposing (TrainLocation, TrainState, move, normalizeLocation)
 
 import Graph
 import Graph.Pair exposing (getEdgeData)
@@ -11,61 +11,60 @@ type alias TrainState =
     { name : String
     , length : Float -- in m
     , speed : Float -- in m/s
-    , track : ( Int, Int ) -- Vertice numbers for the track
-    , trackPosition : Float -- location of train head in m from the track start
+    , location : Maybe TrainLocation
     }
 
 
-move : Layout -> Float -> TrainState -> TrainState
+type alias TrainLocation =
+    { edge : ( Int, Int ) -- The vertices
+    , pos : Float -- The position on the track
+    , track : Track -- The track information for convenience
+    }
+
+
+move : Layout -> Int -> TrainState -> TrainState
 move layout millis trainState =
-    { trainState | trackPosition = trainState.trackPosition + trainState.speed * millis / 1000.0 }
-        |> normalizePosition layout
+    case trainState.location of
+        Nothing ->
+            -- If the train has no location, no need to move.
+            trainState
+
+        Just loc ->
+            { trainState
+                | location =
+                    { loc | pos = loc.pos + trainState.speed * toFloat millis / 1000.0 }
+                        |> normalizeLocation layout
+            }
 
 
-normalizePosition : Layout -> TrainState -> TrainState
-normalizePosition layout trainState =
-    -- If the track posision is before the track start ...
-    if trainState.trackPosition < 0 then
-        -- ... get the previous track.
-        case previousTrack trainState.track layout of
+normalizeLocation : Layout -> TrainLocation -> Maybe TrainLocation
+normalizeLocation layout loc =
+    -- If the position is beyond the end of the current track ...
+    if loc.pos > trackLength loc.track then
+        -- ... get the next track.
+        case nextTrack loc.edge layout of
             Nothing ->
-                -- If there is no previous track, the layout is inconsistent. Return what we have.
-                trainState
+                -- If there is no next track, the layout is inconsistent. Return.
+                Nothing
 
-            Just ( n, t ) ->
-                -- Calculate the new position on the previous track and recurse.
-                { trainState
-                    | trackPosition = trainState.trackPosition + trackLength t
-                    , track = n
+            Just ( otherEdge, otherTrack ) ->
+                -- Calculate the new position.
+                { loc
+                  -- Subtract the current track length from the position.
+                    | pos = loc.pos - trackLength loc.track
+
+                    -- Set the edge ...
+                    , edge = otherEdge
+
+                    -- ... and track info for the new location.
+                    , track = otherTrack
                 }
-                    |> normalizePosition layout
+                    -- ... and repeat until done.
+                    |> normalizeLocation layout
 
     else
-        case getEdgeData trainState.track layout of
-            Nothing ->
-                -- The track has no information. Just return.
-                trainState
-
-            Just track ->
-                -- If the position is beyond the end of the current track ...
-                if trainState.trackPosition > trackLength track then
-                    -- ... get the next track.
-                    case nextTrack trainState.track layout of
-                        Nothing ->
-                            -- If there is no next track, the layout is inconsistent. Return.
-                            trainState
-
-                        Just ( n, _ ) ->
-                            -- Calculate the new position and recurse.
-                            { trainState
-                                | trackPosition = trainState.trackPosition - trackLength track
-                                , track = n
-                            }
-                                |> normalizePosition layout
-
-                else
-                    -- We are within the track bounds, so return.
-                    trainState
+        -- We are within the track bounds, so return.
+        Just loc
 
 
 previousTrack : ( Int, Int ) -> Layout -> Maybe ( ( Int, Int ), Track )

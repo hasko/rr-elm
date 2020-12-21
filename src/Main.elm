@@ -3,7 +3,7 @@ module Main exposing (Msg(..), main, update, view)
 import Browser
 import Dict exposing (Dict)
 import Graph exposing (empty, insertEdgeData)
-import Graph.Pair
+import Graph.Pair exposing (getEdgeData)
 import Html exposing (Html, button, div, pre, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (class, style)
 import Html.Entity
@@ -40,7 +40,18 @@ type Msg
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { state = TrainState "Happy Train" 30 10.0 ( 0, 1 ) 40.0
+    ( { state =
+            { name = "Happy Train"
+            , length = 30
+            , speed = 10.0
+            , location =
+                case getEdgeData ( 0, 1 ) initialLayout of
+                    Nothing ->
+                        Nothing
+
+                    Just track ->
+                        Just { edge = ( 0, 1 ), pos = 40.0, track = track }
+            }
       , layout = initialLayout
       , lastTick = Nothing
       , running = True
@@ -82,7 +93,7 @@ update msg model =
                                 Time.posixToMillis time
 
                             elapsedMillis =
-                                toFloat (newMillis - lastMillis)
+                                newMillis - lastMillis
                         in
                         ( { model
                             | state = Train.move model.layout elapsedMillis model.state
@@ -140,12 +151,20 @@ view model =
                     ++ String.fromFloat model.state.length
                     ++ "\n, speed="
                     ++ String.fromFloat model.state.speed
-                    ++ "\n, track=("
-                    ++ String.fromInt (Tuple.first model.state.track)
-                    ++ ", "
-                    ++ String.fromInt (Tuple.second model.state.track)
-                    ++ ")\n, trackPosition="
-                    ++ String.fromFloat model.state.trackPosition
+                    ++ "\n, location="
+                    ++ (case model.state.location of
+                            Nothing ->
+                                "Nothing"
+
+                            Just loc ->
+                                "Just { "
+                                    ++ String.fromInt (Tuple.first loc.edge)
+                                    ++ ", "
+                                    ++ String.fromInt (Tuple.second loc.edge)
+                                    ++ ")\n, pos="
+                                    ++ String.fromFloat loc.pos
+                                    ++ "\n}"
+                       )
                     ++ "\n}"
                 )
             ]
@@ -212,32 +231,40 @@ viewTrack layout edge =
 
 viewTrain : TrainState -> Layout -> Svg Msg
 viewTrain train layout =
-    case Layout.coordsFor train.trackPosition train.track layout of
-        -- Train head is not on any track
+    case train.location of
         Nothing ->
             g [] []
 
-        Just c1 ->
-            let
-                trainEnd =
-                    Train.normalizePosition layout { train | trackPosition = train.trackPosition - train.length }
-            in
-            case Layout.coordsFor trainEnd.trackPosition trainEnd.track layout of
-                -- Train end is not on any track.
+        Just loc ->
+            case Layout.coordsFor loc.pos loc.edge layout of
+                -- If the coordinates are unknown ...
                 Nothing ->
+                    -- ... draw nothing.
                     g [] []
 
-                Just c2 ->
-                    line
-                        [ Svg.Attributes.id "train"
-                        , x1 (c1.x |> String.fromFloat)
-                        , y1 (c1.y |> String.fromFloat)
-                        , x2 (c2.x |> String.fromFloat)
-                        , y2 (c2.y |> String.fromFloat)
-                        , stroke "#3B3332"
-                        , strokeWidth "2.990"
-                        ]
-                        []
+                Just c1 ->
+                    case { loc | pos = loc.pos - train.length } |> Train.normalizeLocation layout of
+                        Nothing ->
+                            -- If the train end fits on no track, draw nothing.
+                            g [] []
+
+                        Just trainEndLocation ->
+                            case Layout.coordsFor trainEndLocation.pos trainEndLocation.edge layout of
+                                -- Train end is not on any track.
+                                Nothing ->
+                                    g [] []
+
+                                Just c2 ->
+                                    line
+                                        [ Svg.Attributes.id "train"
+                                        , x1 (c1.x |> String.fromFloat)
+                                        , y1 (c1.y |> String.fromFloat)
+                                        , x2 (c2.x |> String.fromFloat)
+                                        , y2 (c2.y |> String.fromFloat)
+                                        , stroke "#3B3332"
+                                        , strokeWidth "2.990"
+                                        ]
+                                        []
 
 
 viewSwitches : Layout -> Html Msg
