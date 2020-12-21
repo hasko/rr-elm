@@ -64,7 +64,7 @@ initialLayout : Layout
 initialLayout =
     Graph.empty
         |> insertEdgeData 0 1 (StraightTrack { length = 75.0 })
-        |> insertEdgeData 1 2 (StraightTrack { length = 75.0 })
+        |> insertEdgeData 1 2 (CurvedTrack { radius = 300.0, angle = 15.0 })
 
 
 trackColor : ( Int, Int ) -> String
@@ -135,7 +135,7 @@ view : Model -> Html Msg
 view model =
     div [ class "container" ]
         [ svg
-            [ width "100%", viewBox "0 -2.5 150 5" ]
+            [ width "100%", viewBox "0 -2.5 160 15" ]
             [ lazy viewLayout model.layout
             , viewTrain model.state model.layout
             ]

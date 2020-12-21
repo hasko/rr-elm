@@ -66,6 +66,19 @@ normalizeLocation layout loc =
                     -- ... and repeat until done.
                     |> normalizeLocation layout
 
+    else if loc.pos < 0 then
+        case previousTrack loc.edge layout of
+            Nothing ->
+                Nothing
+
+            Just ( otherEdge, otherTrack ) ->
+                { loc
+                    | pos = loc.pos + trackLength otherTrack
+                    , edge = otherEdge
+                    , track = otherTrack
+                }
+                    |> normalizeLocation layout
+
     else
         -- We are within the track bounds, so return.
         Just loc
