@@ -38,12 +38,26 @@ move layout switchState millis trainState =
             trainState
 
         Just loc ->
+            -- Calculate new position, disregarding track transitions.
+            let
+                distanceTraveled =
+                    trainState.speed * toFloat millis / 1000.0
+
+                -- Consider which way the train is traveling on the track.
+                newPos =
+                    case loc.orientation of
+                        Aligned ->
+                            loc.pos + distanceTraveled
+
+                        Reverse ->
+                            loc.pos - distanceTraveled
+            in
             -- Create a new train state ...
             { trainState
               -- ... but replace the location with a new location ...
                 | location =
                     -- ... based on the old location but with an updated position ...
-                    { loc | pos = loc.pos + trainState.speed * toFloat millis / 1000.0 }
+                    { loc | pos = newPos }
                         -- and finally "normalize" the location in case we are on a different track now.
                         |> normalizeLocation layout switchState
             }

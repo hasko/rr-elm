@@ -8,7 +8,7 @@ import Html exposing (Html, button, div, li, pre, table, tbody, td, text, th, th
 import Html.Attributes exposing (class, style)
 import Html.Entity
 import Html.Events exposing (onClick)
-import Html.Lazy exposing (lazy)
+import Html.Lazy exposing (lazy, lazy2)
 import List.Extra
 import Maybe exposing (andThen, withDefault)
 import Railroad.Layout as Layout exposing (..)
@@ -169,7 +169,7 @@ view model =
                 , button [ class "btn btn-secondary", onClick Reset, style "margin" "12px 12px 12px 0" ] [ text "Reset" ]
                 ]
             , div [ class "col" ]
-                [ viewSwitches model.layout model.switchState
+                [ lazy2 viewSwitches model.layout model.switchState
                 ]
             ]
         , pre []
