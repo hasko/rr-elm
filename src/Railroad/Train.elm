@@ -1,4 +1,4 @@
-module Railroad.Train exposing (TrainLocation, TrainState, move, normalizeLocation, stopped)
+module Railroad.Train exposing (Orientation(..), TrainLocation, TrainState, move, normalizeLocation, stopped)
 
 import Dict exposing (Dict)
 import Graph
@@ -20,8 +20,14 @@ type alias TrainState =
 type alias TrainLocation =
     { edge : ( Int, Int ) -- The vertices
     , pos : Float -- The position on the track
+    , orientation : Orientation
     , track : Track -- The track information for convenience
     }
+
+
+type Orientation
+    = Aligned
+    | Reverse
 
 
 move : Layout -> Dict Int Int -> Int -> TrainState -> TrainState

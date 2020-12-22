@@ -48,12 +48,15 @@ init _ =
             , length = 30
             , speed = 10.0
             , location =
-                case getEdgeData ( 0, 1 ) initialLayout of
-                    Nothing ->
-                        Nothing
-
-                    Just track ->
-                        Just { edge = ( 0, 1 ), pos = 40.0, track = track }
+                getEdgeData ( 0, 1 ) initialLayout
+                    |> Maybe.map
+                        (\track ->
+                            { edge = ( 0, 1 )
+                            , pos = 40.0
+                            , orientation = Aligned
+                            , track = track
+                            }
+                        )
             }
       , layout = initialLayout
       , switchState = Dict.empty
