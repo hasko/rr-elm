@@ -1,11 +1,20 @@
-module Railroad.Train exposing (Orientation(..), TrainLocation, TrainState, move, normalizeLocation, stopped)
+module Railroad.Train exposing
+    ( Orientation(..)
+    , TrainLocation
+    , TrainState
+    , initialLocation
+    , move
+    , normalizeLocation
+    , stopped
+    )
 
 import Dict exposing (Dict)
 import Graph
 import Graph.Pair exposing (getEdgeData)
 import List.Extra
 import Maybe exposing (andThen, withDefault)
-import Railroad.Layout as Layout exposing (Layout, Track, trackLength)
+import Railroad.Layout as Layout exposing (Layout)
+import Railroad.Track as Track exposing (Track)
 import Set
 
 
@@ -66,7 +75,7 @@ move layout switchState millis trainState =
 normalizeLocation : Layout -> Dict Int Int -> TrainLocation -> Maybe TrainLocation
 normalizeLocation layout switchState loc =
     -- If the position is beyond the end of the current track ...
-    if loc.pos > trackLength loc.track then
+    if loc.pos > Track.length loc.track then
         -- ... get the next track.
         case nextTrack loc.edge layout switchState of
             Nothing ->
@@ -77,7 +86,7 @@ normalizeLocation layout switchState loc =
                 -- Calculate the new position.
                 { nextLoc
                   -- Subtract the current track length from the position.
-                    | pos = loc.pos - trackLength loc.track
+                    | pos = loc.pos - Track.length loc.track
                 }
                     -- ... and repeat until done.
                     |> normalizeLocation layout switchState
@@ -88,7 +97,7 @@ normalizeLocation layout switchState loc =
                 Nothing
 
             Just nextLoc ->
-                { nextLoc | pos = loc.pos + trackLength nextLoc.track }
+                { nextLoc | pos = loc.pos + Track.length nextLoc.track }
                     |> normalizeLocation layout switchState
 
     else
@@ -98,16 +107,20 @@ normalizeLocation layout switchState loc =
 
 previousTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe TrainLocation
 previousTrack ( fromId, toId ) layout switchState =
-    case Graph.getData toId layout of
+    let
+        g =
+            Layout.toGraph layout
+    in
+    case Graph.getData toId g of
         Nothing ->
             -- If there is no switch, just return the first/only track.
-            Graph.incoming fromId layout
+            Graph.incoming fromId g
                 |> Set.toList
                 |> List.head
                 |> Maybe.map (\otherId -> ( otherId, fromId ))
                 |> andThen
                     (\edge ->
-                        Graph.Pair.getEdgeData edge layout
+                        Graph.Pair.getEdgeData edge g
                             |> andThen
                                 (\track ->
                                     Just { edge = edge, pos = 0.0, orientation = Aligned, track = track }
@@ -127,7 +140,7 @@ previousTrack ( fromId, toId ) layout switchState =
                 -- Get the track for the edge
                 |> andThen
                     (\edge ->
-                        getEdgeData edge layout
+                        getEdgeData edge g
                             |> andThen
                                 (\track ->
                                     Just { edge = edge, pos = 0.0, orientation = Aligned, track = track }
@@ -137,15 +150,19 @@ previousTrack ( fromId, toId ) layout switchState =
 
 nextTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe TrainLocation
 nextTrack ( fromId, toId ) layout switchState =
-    case Graph.getData toId layout of
+    let
+        g =
+            Layout.toGraph layout
+    in
+    case Graph.getData toId g of
         Nothing ->
-            Graph.outgoing toId layout
+            Graph.outgoing toId g
                 |> Set.toList
                 |> List.head
                 |> andThen (\otherId -> Just ( toId, otherId ))
                 |> andThen
                     (\edge ->
-                        Graph.Pair.getEdgeData edge layout
+                        Graph.Pair.getEdgeData edge g
                             |> Maybe.map
                                 (\track ->
                                     { edge = edge, pos = 0.0, orientation = Aligned, track = track }
@@ -161,7 +178,7 @@ nextTrack ( fromId, toId ) layout switchState =
                 |> Maybe.map (\( from, to ) -> ( toId, to ))
                 |> andThen
                     (\edge ->
-                        getEdgeData edge layout
+                        getEdgeData edge g
                             |> Maybe.map
                                 (\track ->
                                     { edge = edge, pos = 0.0, orientation = Aligned, track = track }
@@ -172,3 +189,20 @@ nextTrack ( fromId, toId ) layout switchState =
 stopped : TrainState -> TrainState
 stopped ts =
     { ts | speed = 0.0 }
+
+
+
+-- Samples
+
+
+initialLocation : Layout -> Maybe TrainLocation
+initialLocation layout =
+    getEdgeData ( 0, 1 ) (Layout.toGraph layout)
+        |> Maybe.map
+            (\track ->
+                { edge = ( 0, 1 )
+                , pos = 40.0
+                , orientation = Aligned
+                , track = track
+                }
+            )

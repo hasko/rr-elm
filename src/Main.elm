@@ -2,8 +2,7 @@ module Main exposing (Msg(..), main, update, view)
 
 import Browser
 import Dict exposing (Dict)
-import Graph exposing (empty, insertData, insertEdgeData)
-import Graph.Pair exposing (getEdgeData)
+import Graph
 import Html exposing (Html, button, div, li, pre, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, style)
 import Html.Entity
@@ -12,6 +11,7 @@ import Html.Lazy exposing (lazy, lazy2)
 import List.Extra
 import Maybe exposing (andThen, withDefault)
 import Railroad.Layout as Layout exposing (..)
+import Railroad.Track as Track exposing (Track(..))
 import Railroad.Train as Train exposing (..)
 import Set exposing (Set)
 import Svg exposing (Svg, g, line, path, rect, svg)
@@ -43,37 +43,23 @@ type Msg
 
 init : () -> ( Model, Cmd Msg )
 init _ =
+    let
+        l =
+            Layout.initialLayout
+    in
     ( { state =
             { name = "Happy Train"
             , length = 30
             , speed = 10.0
-            , location =
-                getEdgeData ( 0, 1 ) initialLayout
-                    |> Maybe.map
-                        (\track ->
-                            { edge = ( 0, 1 )
-                            , pos = 40.0
-                            , orientation = Aligned
-                            , track = track
-                            }
-                        )
+            , location = Train.initialLocation l
             }
-      , layout = initialLayout
+      , layout = l
       , switchState = Dict.empty
       , lastTick = Nothing
       , running = True
       }
     , Cmd.none
     )
-
-
-initialLayout : Layout
-initialLayout =
-    Graph.empty
-        |> insertEdgeData 0 1 (StraightTrack { length = 75.0 })
-        |> insertEdgeData 1 2 (CurvedTrack { radius = 300.0, angle = 15.0 })
-        |> insertEdgeData 1 3 (StraightTrack { length = 75.0 })
-        |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ] ])
 
 
 trackColor : ( Int, Int ) -> String
@@ -205,7 +191,7 @@ viewLayout layout =
     -- Create a g element to contain the layout.
     g [ id "layout" ]
         -- Map the graph edges to SVG elements.
-        (Graph.edges layout |> List.map (viewTrack layout))
+        (Graph.edges (Layout.toGraph layout) |> List.map (viewTrack layout))
 
 
 viewTrack : Layout -> ( Int, Int ) -> Svg Msg

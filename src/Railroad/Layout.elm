@@ -2,47 +2,29 @@ module Railroad.Layout exposing
     ( Cursor
     , Layout
     , Switch
-    , Track(..)
     , coordsFor
     , cursors
     , getPositionOnTrack
+    , initialLayout
     , moveCursor
     , renderInfo
     , switches
-    , trackLength
+    , toGraph
+    , tracks
     )
 
 import Dict exposing (Dict)
-import Graph exposing (Graph)
+import Graph exposing (Graph, insertData, insertEdgeData)
 import Graph.Pair exposing (getEdgeData)
 import List.Extra exposing (cartesianProduct)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
+import Railroad.Track as Track exposing (Track(..))
 import Set
 
 
-type alias Layout =
-    Graph Int Switch Track
-
-
-type Track
-    = StraightTrack
-        { length : Float -- in m
-        }
-    | CurvedTrack
-        { radius : Float -- in m
-        , angle : Float -- in degrees, why not
-        }
-
-
-trackLength : Track -> Float
-trackLength track =
-    case track of
-        StraightTrack s ->
-            s.length
-
-        CurvedTrack c ->
-            pi * c.radius * c.angle / 180.0
+type Layout
+    = Layout (Graph Int Switch Track)
 
 
 type alias Switch =
@@ -55,12 +37,12 @@ type alias Cursor =
 
 cursors : Layout -> Dict Int Cursor
 cursors layout =
-    -- Render the layout starting at track 0 and at the origin, facing east, and return the resulting cursors.
+    -- Render the layout starting at connection 0 and at the origin, facing east, and return the resulting cursors.
     renderLayout 0 (Cursor 0 0 0) layout Dict.empty
 
 
 renderLayout : Int -> Cursor -> Layout -> Dict Int Cursor -> Dict Int Cursor
-renderLayout nodeId currentCursor layout knownCursors =
+renderLayout nodeId currentCursor ((Layout g) as layout) knownCursors =
     -- If the node cursor is already calculated ...
     if Dict.member nodeId knownCursors then
         -- ... then we are done.
@@ -69,12 +51,12 @@ renderLayout nodeId currentCursor layout knownCursors =
     else
         -- Get all the outoing tracks from this node.
         -- TODO Consider incoming tracks too.
-        Graph.outgoing nodeId layout
+        Graph.outgoing nodeId g
             -- Calculate the next node position for each track and collect them.
             |> Set.foldl
                 (\nextNodeId acc ->
                     -- Get the track for this pair of nodes.
-                    case Graph.getEdgeData nodeId nextNodeId layout of
+                    case Graph.getEdgeData nodeId nextNodeId g of
                         Nothing ->
                             -- If there is no track, our layout is inconsistent. Return what we know so far.
                             acc
@@ -129,7 +111,7 @@ getPositionOnTrack trackPosition cursor track =
         CurvedTrack c ->
             let
                 a =
-                    c.angle * trackPosition / trackLength track
+                    c.angle * trackPosition / Track.length track
 
                 newDir =
                     cursor.dir + c.angle
@@ -144,8 +126,8 @@ getPositionOnTrack trackPosition cursor track =
 
 
 coordsFor : Float -> ( Int, Int ) -> Layout -> Maybe Cursor
-coordsFor pos ( fromNode, toNode ) layout =
-    case Graph.getEdgeData fromNode toNode layout of
+coordsFor pos ( fromNode, toNode ) ((Layout g) as layout) =
+    case Graph.getEdgeData fromNode toNode g of
         Nothing ->
             Nothing
 
@@ -159,17 +141,24 @@ coordsFor pos ( fromNode, toNode ) layout =
 
 
 switches : Layout -> List ( Int, Switch )
-switches layout =
-    Graph.nodes layout
+switches (Layout g) =
+    Graph.nodes g
         -- Convert from a list of pairs with a Maybe inside to a list of Maybes
         |> List.map (\( vertex, data ) -> Maybe.map (\switch -> ( vertex, switch )) data)
         -- Filter out the Nothings
         |> Maybe.Extra.values
 
 
+tracks : Layout -> List Track
+tracks (Layout g) =
+    Graph.edgesWithData g
+        |> List.map (\( from, to, maybeTrack ) -> maybeTrack)
+        |> Maybe.Extra.values
+
+
 renderInfo : Layout -> ( Int, Int ) -> Maybe ( Cursor, Cursor, Track )
-renderInfo layout ( from, to ) =
-    case Graph.getEdgeData from to layout of
+renderInfo ((Layout g) as layout) ( from, to ) =
+    case Graph.getEdgeData from to g of
         Nothing ->
             Nothing
 
@@ -185,3 +174,26 @@ renderInfo layout ( from, to ) =
 
                         Just c2 ->
                             Just ( c1, c2, track )
+
+
+
+-- Samples
+
+
+initialLayout : Layout
+initialLayout =
+    Graph.empty
+        |> insertEdgeData 0 1 (StraightTrack { length = 75.0 })
+        |> insertEdgeData 1 2 (CurvedTrack { radius = 300.0, angle = 15.0 })
+        |> insertEdgeData 1 3 (StraightTrack { length = 75.0 })
+        |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ] ])
+        |> Layout
+
+
+
+-- TODO: Refactor so we don't need to expose the Graph.
+
+
+toGraph : Layout -> Graph Int Switch Track
+toGraph (Layout g) =
+    g
