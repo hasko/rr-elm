@@ -5,39 +5,38 @@ import Json.Encode as Encode
 
 
 type Track
-    = StraightTrack
-        { length : Float -- in m
-        }
-    | CurvedTrack
-        { radius : Float -- in m
-        , angle : Float -- in degrees, why not
-        }
+    = StraightTrack Float -- length in m
+    | CurvedTrack Float Float -- radius in m, angle in degrees
 
 
 length : Track -> Float
 length track =
     case track of
-        StraightTrack s ->
-            s.length
+        StraightTrack l ->
+            l
 
-        CurvedTrack c ->
-            pi * c.radius * c.angle / 180.0
+        CurvedTrack r a ->
+            pi * r * a / 180.0
+
+
+
+-- JSON encode and decode
 
 
 encode : Track -> Encode.Value
 encode track =
     case track of
-        StraightTrack s ->
+        StraightTrack l ->
             Encode.object
                 [ ( "type", Encode.string "straight" )
-                , ( "length", Encode.float s.length )
+                , ( "length", Encode.float l )
                 ]
 
-        CurvedTrack c ->
+        CurvedTrack r a ->
             Encode.object
                 [ ( "type", Encode.string "curved" )
-                , ( "radius", Encode.float c.radius )
-                , ( "angle", Encode.float c.angle )
+                , ( "radius", Encode.float r )
+                , ( "angle", Encode.float a )
                 ]
 
 
@@ -50,10 +49,10 @@ trackDecoder : String -> Decoder Track
 trackDecoder trackType =
     case trackType of
         "straight" ->
-            Decode.map (\l -> StraightTrack { length = l }) (Decode.field "length" Decode.float)
+            Decode.map StraightTrack (Decode.field "length" Decode.float)
 
         "curved" ->
-            Decode.map2 (\r a -> CurvedTrack { radius = r, angle = a })
+            Decode.map2 CurvedTrack
                 (Decode.field "radius" Decode.float)
                 (Decode.field "angle" Decode.float)
 

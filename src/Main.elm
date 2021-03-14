@@ -214,7 +214,7 @@ viewTrack layout edge =
                         ]
                         []
 
-                CurvedTrack c ->
+                CurvedTrack r a ->
                     path
                         [ d
                             ("M "
@@ -222,11 +222,12 @@ viewTrack layout edge =
                                 ++ " "
                                 ++ (c1.y |> String.fromFloat)
                                 ++ " A "
-                                ++ (c.radius |> String.fromFloat)
+                                ++ (r |> String.fromFloat)
                                 ++ " "
-                                ++ (c.radius |> String.fromFloat)
+                                ++ (r |> String.fromFloat)
                                 ++ " 0 "
-                                ++ (if c.angle >= 180.0 then
+                                -- Consider direction
+                                ++ (if a >= 180.0 then
                                         "1"
 
                                     else

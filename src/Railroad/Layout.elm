@@ -79,23 +79,23 @@ renderLayout nodeId currentCursor ((Layout g) as layout) knownCursors =
 moveCursor : Cursor -> Track -> Cursor
 moveCursor cursor track =
     case track of
-        StraightTrack s ->
+        StraightTrack l ->
             Cursor
-                (cursor.x + s.length * cos (degrees cursor.dir))
-                (cursor.y + s.length * sin (degrees cursor.dir))
+                (cursor.x + l * cos (degrees cursor.dir))
+                (cursor.y + l * sin (degrees cursor.dir))
                 cursor.dir
 
-        CurvedTrack c ->
+        CurvedTrack r a ->
             let
                 newDir =
-                    cursor.dir + c.angle
+                    cursor.dir + a
 
                 s =
-                    2 * c.radius * sin (degrees c.angle / 2)
+                    2 * r * sin (degrees a / 2)
             in
             Cursor
-                (cursor.x + s * cos (degrees (cursor.dir + c.angle / 2)))
-                (cursor.y + s * sin (degrees (cursor.dir + c.angle / 2)))
+                (cursor.x + s * cos (degrees (cursor.dir + a / 2)))
+                (cursor.y + s * sin (degrees (cursor.dir + a / 2)))
                 newDir
 
 
@@ -108,20 +108,20 @@ getPositionOnTrack trackPosition cursor track =
                 (cursor.y + trackPosition * sin (degrees cursor.dir))
                 cursor.dir
 
-        CurvedTrack c ->
+        CurvedTrack r a ->
             let
-                a =
-                    c.angle * trackPosition / Track.length track
+                a2 =
+                    a * trackPosition / Track.length track
 
                 newDir =
-                    cursor.dir + c.angle
+                    cursor.dir + a
 
                 s =
-                    2 * c.radius * sin (degrees a / 2)
+                    2 * r * sin (degrees a2 / 2)
             in
             Cursor
-                (cursor.x + s * cos (degrees (cursor.dir + a / 2)))
-                (cursor.y + s * sin (degrees (cursor.dir + a / 2)))
+                (cursor.x + s * cos (degrees (cursor.dir + a2 / 2)))
+                (cursor.y + s * sin (degrees (cursor.dir + a2 / 2)))
                 newDir
 
 
@@ -183,9 +183,10 @@ renderInfo ((Layout g) as layout) ( from, to ) =
 initialLayout : Layout
 initialLayout =
     Graph.empty
-        |> insertEdgeData 0 1 (StraightTrack { length = 75.0 })
-        |> insertEdgeData 1 2 (CurvedTrack { radius = 300.0, angle = 15.0 })
-        |> insertEdgeData 1 3 (StraightTrack { length = 75.0 })
+        |> insertEdgeData 0 1 (StraightTrack 75.0)
+        |> insertEdgeData 1 2 (CurvedTrack 300.0 15.0)
+        |> insertEdgeData 2 4 (CurvedTrack 300 -15)
+        |> insertEdgeData 1 3 (StraightTrack 75.0)
         |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ] ])
         |> Layout
 
