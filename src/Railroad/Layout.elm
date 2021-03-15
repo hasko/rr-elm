@@ -1,15 +1,15 @@
 module Railroad.Layout exposing
-    ( Cursor
-    , Layout
+    ( Layout
     , Switch
+    , boundingBox
     , coordsFor
     , cursors
     , getPositionOnTrack
     , initialLayout
-    , moveCursor
     , renderInfo
     , switches
     , toGraph
+    , toSvg
     , tracks
     )
 
@@ -19,8 +19,12 @@ import Graph.Pair exposing (getEdgeData)
 import List.Extra exposing (cartesianProduct)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
-import Railroad.Track as Track exposing (Track(..))
+import Railroad.Track as Track exposing (Sweep(..), Track(..), moveCursor)
+import Railroad.Util exposing (Cursor)
+import Rect exposing (Rect(..))
 import Set
+import Svg exposing (Svg)
+import Svg.Attributes
 
 
 type Layout
@@ -31,14 +35,18 @@ type alias Switch =
     { configs : List (List ( Int, Int )) }
 
 
-type alias Cursor =
-    { x : Float, y : Float, dir : Float }
-
-
 cursors : Layout -> Dict Int Cursor
 cursors layout =
     -- Render the layout starting at connection 0 and at the origin, facing east, and return the resulting cursors.
     renderLayout 0 (Cursor 0 0 0) layout Dict.empty
+
+
+boundingBox : Layout -> Rect
+boundingBox layout =
+    List.foldl
+        (\c (Rect x1 y1 x2 y2) -> Rect (min x1 c.x) (min y1 c.y) (max x2 c.x) (max y2 c.y))
+        (Rect 0 0 0 0)
+        (cursors layout |> Dict.values)
 
 
 renderLayout : Int -> Cursor -> Layout -> Dict Int Cursor -> Dict Int Cursor
@@ -76,29 +84,6 @@ renderLayout nodeId currentCursor ((Layout g) as layout) knownCursors =
                 (Dict.insert nodeId currentCursor knownCursors)
 
 
-moveCursor : Cursor -> Track -> Cursor
-moveCursor cursor track =
-    case track of
-        StraightTrack l ->
-            Cursor
-                (cursor.x + l * cos (degrees cursor.dir))
-                (cursor.y + l * sin (degrees cursor.dir))
-                cursor.dir
-
-        CurvedTrack r a ->
-            let
-                newDir =
-                    cursor.dir + a
-
-                s =
-                    2 * r * sin (degrees a / 2)
-            in
-            Cursor
-                (cursor.x + s * cos (degrees (cursor.dir + a / 2)))
-                (cursor.y + s * sin (degrees (cursor.dir + a / 2)))
-                newDir
-
-
 getPositionOnTrack : Float -> Cursor -> Track -> Cursor
 getPositionOnTrack trackPosition cursor track =
     case track of
@@ -108,7 +93,8 @@ getPositionOnTrack trackPosition cursor track =
                 (cursor.y + trackPosition * sin (degrees cursor.dir))
                 cursor.dir
 
-        CurvedTrack r a ->
+        -- TODO check if we need sweep
+        CurvedTrack r a _ ->
             let
                 a2 =
                     a * trackPosition / Track.length track
@@ -160,11 +146,13 @@ renderInfo : Layout -> ( Int, Int ) -> Maybe ( Cursor, Cursor, Track )
 renderInfo ((Layout g) as layout) ( from, to ) =
     case Graph.getEdgeData from to g of
         Nothing ->
+            -- Should never happen but this edge has no track data.
             Nothing
 
         Just track ->
             case Dict.get from (cursors layout) of
                 Nothing ->
+                    -- The position of the from connection cannot be calculated.
                     Nothing
 
                 Just c1 ->
@@ -177,6 +165,75 @@ renderInfo ((Layout g) as layout) ( from, to ) =
 
 
 
+-- Views
+
+
+toSvg : Layout -> Svg msg
+toSvg ((Layout g) as layout) =
+    Svg.g [ Svg.Attributes.id "layout" ]
+        (Graph.edges g |> List.map (viewTrack layout))
+
+
+viewTrack : Layout -> ( Int, Int ) -> Svg msg
+viewTrack layout edge =
+    case renderInfo layout edge of
+        Nothing ->
+            -- Track cannot be rendered.
+            Svg.g [] []
+
+        Just ( c1, c2, track ) ->
+            case track of
+                StraightTrack s ->
+                    Svg.line
+                        [ Svg.Attributes.x1 (c1.x |> String.fromFloat)
+                        , Svg.Attributes.y1 (c1.y |> String.fromFloat)
+                        , Svg.Attributes.x2 (c2.x |> String.fromFloat)
+                        , Svg.Attributes.y2 (c2.y |> String.fromFloat)
+                        , Svg.Attributes.stroke "grey"
+                        , Svg.Attributes.strokeWidth "1.435"
+                        ]
+                        []
+
+                CurvedTrack r a sweep ->
+                    Svg.path
+                        [ Svg.Attributes.d
+                            ("M "
+                                ++ (c1.x |> String.fromFloat)
+                                ++ " "
+                                ++ (c1.y |> String.fromFloat)
+                                ++ " A "
+                                ++ (r |> String.fromFloat)
+                                ++ " "
+                                ++ (r |> String.fromFloat)
+                                -- ellipse rotation
+                                ++ " 0 "
+                                -- large arc flag
+                                ++ (if a <= 180.0 then
+                                        " 0"
+
+                                    else
+                                        " 1"
+                                   )
+                                -- sweep flag
+                                ++ (case sweep of
+                                        CW ->
+                                            " 1 "
+
+                                        CCW ->
+                                            " 0 "
+                                   )
+                                ++ (c2.x |> String.fromFloat)
+                                ++ " "
+                                ++ (c2.y |> String.fromFloat)
+                            )
+                        , Svg.Attributes.fill "none"
+                        , Svg.Attributes.stroke "green"
+                        , Svg.Attributes.strokeWidth "1.435"
+                        ]
+                        []
+
+
+
 -- Samples
 
 
@@ -184,8 +241,9 @@ initialLayout : Layout
 initialLayout =
     Graph.empty
         |> insertEdgeData 0 1 (StraightTrack 75.0)
-        |> insertEdgeData 1 2 (CurvedTrack 300.0 15.0)
-        |> insertEdgeData 2 4 (CurvedTrack 300 -15)
+        |> insertEdgeData 1 2 (CurvedTrack 300.0 15.0 CW)
+        |> insertEdgeData 2 4 (CurvedTrack 300 15 CCW)
+        -- CCW
         |> insertEdgeData 1 3 (StraightTrack 75.0)
         |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ] ])
         |> Layout

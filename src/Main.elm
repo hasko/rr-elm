@@ -13,6 +13,7 @@ import Maybe exposing (andThen, withDefault)
 import Railroad.Layout as Layout exposing (..)
 import Railroad.Track as Track exposing (Track(..))
 import Railroad.Train as Train exposing (..)
+import Rect
 import Set exposing (Set)
 import Svg exposing (Svg, g, line, path, rect, svg)
 import Svg.Attributes exposing (d, fill, id, stroke, strokeWidth, viewBox, width, x1, x2, y1, y2)
@@ -60,17 +61,6 @@ init _ =
       }
     , Cmd.none
     )
-
-
-trackColor : ( Int, Int ) -> String
-trackColor ( from, to ) =
-    Dict.empty
-        |> Dict.insert 0 (Dict.empty |> Dict.insert 1 "blue")
-        |> Dict.insert 1 (Dict.empty |> Dict.insert 2 "green")
-        |> Dict.insert 1 (Dict.empty |> Dict.insert 3 "orange")
-        |> Dict.get from
-        |> andThen (\d -> Dict.get to d)
-        |> withDefault "grey"
 
 
 subscriptions _ =
@@ -144,8 +134,8 @@ view : Model -> Html Msg
 view model =
     div [ class "container" ]
         [ svg
-            [ width "100%", viewBox "0 -2.5 160 15" ]
-            [ lazy viewLayout model.layout
+            [ width "100%", viewBox (model.layout |> Layout.boundingBox |> Rect.expand 5 |> Rect.rectToString) ]
+            [ lazy Layout.toSvg model.layout
             , viewTrain model.state model.layout model.switchState
             ]
         , div [ class "row" ]
@@ -184,65 +174,6 @@ view model =
                 )
             ]
         ]
-
-
-viewLayout : Layout -> Svg Msg
-viewLayout layout =
-    -- Create a g element to contain the layout.
-    g [ id "layout" ]
-        -- Map the graph edges to SVG elements.
-        (Graph.edges (Layout.toGraph layout) |> List.map (viewTrack layout))
-
-
-viewTrack : Layout -> ( Int, Int ) -> Svg Msg
-viewTrack layout edge =
-    case Layout.renderInfo layout edge of
-        Nothing ->
-            -- Track cannot be rendered.
-            g [] []
-
-        Just ( c1, c2, track ) ->
-            case track of
-                StraightTrack s ->
-                    line
-                        [ x1 (c1.x |> String.fromFloat)
-                        , y1 (c1.y |> String.fromFloat)
-                        , x2 (c2.x |> String.fromFloat)
-                        , y2 (c2.y |> String.fromFloat)
-                        , stroke (trackColor edge)
-                        , strokeWidth "1.435"
-                        ]
-                        []
-
-                CurvedTrack r a ->
-                    path
-                        [ d
-                            ("M "
-                                ++ (c1.x |> String.fromFloat)
-                                ++ " "
-                                ++ (c1.y |> String.fromFloat)
-                                ++ " A "
-                                ++ (r |> String.fromFloat)
-                                ++ " "
-                                ++ (r |> String.fromFloat)
-                                ++ " 0 "
-                                -- Consider direction
-                                ++ (if a >= 180.0 then
-                                        "1"
-
-                                    else
-                                        "0"
-                                   )
-                                ++ " 1 "
-                                ++ (c2.x |> String.fromFloat)
-                                ++ " "
-                                ++ (c2.y |> String.fromFloat)
-                            )
-                        , fill "none"
-                        , stroke "green"
-                        , strokeWidth "1.435"
-                        ]
-                        []
 
 
 viewTrain : TrainState -> Layout -> Dict Int Int -> Svg Msg
