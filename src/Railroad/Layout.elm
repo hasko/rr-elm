@@ -4,7 +4,6 @@ module Railroad.Layout exposing
     , boundingBox
     , coordsFor
     , cursors
-    , getPositionOnTrack
     , initialLayout
     , renderInfo
     , switches
@@ -19,7 +18,7 @@ import Graph.Pair exposing (getEdgeData)
 import List.Extra exposing (cartesianProduct)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
-import Railroad.Track as Track exposing (Sweep(..), Track(..), moveCursor)
+import Railroad.Track as Track exposing (Track(..), getPositionOnTrack, moveCursor)
 import Railroad.Util exposing (Cursor)
 import Rect exposing (Rect(..))
 import Set
@@ -82,33 +81,6 @@ renderLayout nodeId currentCursor ((Layout g) as layout) knownCursors =
                 )
                 -- Begin with the list of known cursors plus the current one.
                 (Dict.insert nodeId currentCursor knownCursors)
-
-
-getPositionOnTrack : Float -> Cursor -> Track -> Cursor
-getPositionOnTrack trackPosition cursor track =
-    case track of
-        StraightTrack s ->
-            Cursor
-                (cursor.x + trackPosition * cos (degrees cursor.dir))
-                (cursor.y + trackPosition * sin (degrees cursor.dir))
-                cursor.dir
-
-        -- TODO check if we need sweep
-        CurvedTrack r a _ ->
-            let
-                a2 =
-                    a * trackPosition / Track.length track
-
-                newDir =
-                    cursor.dir + a
-
-                s =
-                    2 * r * sin (degrees a2 / 2)
-            in
-            Cursor
-                (cursor.x + s * cos (degrees (cursor.dir + a2 / 2)))
-                (cursor.y + s * sin (degrees (cursor.dir + a2 / 2)))
-                newDir
 
 
 coordsFor : Float -> ( Int, Int ) -> Layout -> Maybe Cursor
@@ -194,7 +166,7 @@ viewTrack layout edge =
                         ]
                         []
 
-                CurvedTrack r a sweep ->
+                CurvedTrack r a ->
                     Svg.path
                         [ Svg.Attributes.d
                             ("M "
@@ -208,19 +180,18 @@ viewTrack layout edge =
                                 -- ellipse rotation
                                 ++ " 0 "
                                 -- large arc flag
-                                ++ (if a <= 180.0 then
+                                ++ (if abs a <= 180.0 then
                                         " 0"
 
                                     else
                                         " 1"
                                    )
                                 -- sweep flag
-                                ++ (case sweep of
-                                        CW ->
-                                            " 1 "
+                                ++ (if a >= 0 then
+                                        " 1 "
 
-                                        CCW ->
-                                            " 0 "
+                                    else
+                                        " 0 "
                                    )
                                 ++ (c2.x |> String.fromFloat)
                                 ++ " "
@@ -241,8 +212,8 @@ initialLayout : Layout
 initialLayout =
     Graph.empty
         |> insertEdgeData 0 1 (StraightTrack 75.0)
-        |> insertEdgeData 1 2 (CurvedTrack 300.0 15.0 CW)
-        |> insertEdgeData 2 4 (CurvedTrack 300 15 CCW)
+        |> insertEdgeData 1 2 (CurvedTrack 300.0 15.0)
+        |> insertEdgeData 2 4 (CurvedTrack 300 -15)
         -- CCW
         |> insertEdgeData 1 3 (StraightTrack 75.0)
         |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ] ])
