@@ -134,7 +134,14 @@ view : Model -> Html Msg
 view model =
     div [ class "container" ]
         [ svg
-            [ width "100%", viewBox (model.layout |> Layout.boundingBox |> Rect.expand 5 |> Rect.rectToString) ]
+            [ width "100%"
+            , viewBox
+                (model.layout
+                    |> Layout.boundingBox
+                    |> Rect.expand 5
+                    |> Rect.rectToString
+                )
+            ]
             [ lazy Layout.toSvg model.layout
             , viewTrain model.state model.layout model.switchState
             ]
