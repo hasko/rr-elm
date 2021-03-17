@@ -20,7 +20,7 @@ jobs:
       - name: Build Elm code
         run: mkdir build && cp index.html build && elm make src/Main.elm --optimize --output=build/main.js
       - name: Deploy to GitHub pages
-        uses: JamesIves/github-pages-deploy-action@releases/v3
+        uses: JamesIves/github-pages-deploy-action@releases/v4.1.0
         with:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
