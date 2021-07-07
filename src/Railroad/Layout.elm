@@ -38,7 +38,7 @@ type alias Cursor =
 cursors : Layout -> Dict Int Cursor
 cursors layout =
     -- Render the layout starting at connection 0 and at the origin, facing east, and return the resulting cursors.
-    renderLayout 0 (Cursor 0 0 0) layout Dict.empty
+    renderLayout 0 (Cursor 0 2.5 0) layout Dict.empty
 
 
 renderLayout : Int -> Cursor -> Layout -> Dict Int Cursor -> Dict Int Cursor
@@ -165,7 +165,7 @@ renderInfo ((Layout g) as layout) ( from, to ) =
         Just track ->
             case Dict.get from (cursors layout) of
                 Nothing ->
-                    Nothing
+                    Debug.log "Ich bin hier!!" Nothing
 
                 Just c1 ->
                     case Dict.get to (cursors layout) of
@@ -186,7 +186,8 @@ initialLayout =
         |> insertEdgeData 0 1 (StraightTrack { length = 75.0 })
         |> insertEdgeData 1 2 (CurvedTrack { radius = 300.0, angle = 15.0 })
         |> insertEdgeData 1 3 (StraightTrack { length = 75.0 })
-        |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ] ])
+        |> insertEdgeData 4 1 (CurvedTrack { radius = 600, angle = 30 })
+        |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ], [ ( 0, 4 ) ] ])
         |> Layout
 
 
