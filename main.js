@@ -5186,14 +5186,15 @@ var $elm$core$Task$perform = F2(
 var $elm$browser$Browser$element = _Browser_element;
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
 var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
-var $author$project$Railroad$Track$CurvedTrack = F2(
-	function (a, b) {
-		return {$: 1, a: a, b: b};
+var $author$project$Railroad$Track$CurvedTrack = F3(
+	function (a, b, c) {
+		return {$: 1, a: a, b: b, c: c};
 	});
 var $author$project$Railroad$Layout$Layout = $elm$core$Basics$identity;
-var $author$project$Railroad$Track$StraightTrack = function (a) {
-	return {$: 0, a: a};
-};
+var $author$project$Railroad$Track$StraightTrack = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
 var $author$project$Railroad$Layout$Switch = function (configs) {
 	return {ad: configs};
 };
@@ -5439,6 +5440,10 @@ var $drathier$elm_graph$Graph$insertEdgeData = F4(
 			$elm$core$Maybe$Just(edgeData),
 			graph);
 	});
+var $author$project$Railroad$Track$TrackId = $elm$core$Basics$identity;
+var $author$project$Railroad$Track$intToTrackId = function (i) {
+	return i;
+};
 var $elm$core$Basics$negate = function (n) {
 	return -n;
 };
@@ -5461,22 +5466,36 @@ var $author$project$Railroad$Layout$initialLayout = A3(
 		$drathier$elm_graph$Graph$insertEdgeData,
 		1,
 		3,
-		$author$project$Railroad$Track$StraightTrack(75.0),
+		A2(
+			$author$project$Railroad$Track$StraightTrack,
+			$author$project$Railroad$Track$intToTrackId(4),
+			75.0),
 		A4(
 			$drathier$elm_graph$Graph$insertEdgeData,
 			2,
 			4,
-			A2($author$project$Railroad$Track$CurvedTrack, 300, -15),
+			A3(
+				$author$project$Railroad$Track$CurvedTrack,
+				$author$project$Railroad$Track$intToTrackId(3),
+				300,
+				-15),
 			A4(
 				$drathier$elm_graph$Graph$insertEdgeData,
 				1,
 				2,
-				A2($author$project$Railroad$Track$CurvedTrack, 300.0, 15.0),
+				A3(
+					$author$project$Railroad$Track$CurvedTrack,
+					$author$project$Railroad$Track$intToTrackId(2),
+					300.0,
+					15.0),
 				A4(
 					$drathier$elm_graph$Graph$insertEdgeData,
 					0,
 					1,
-					$author$project$Railroad$Track$StraightTrack(75.0),
+					A2(
+						$author$project$Railroad$Track$StraightTrack,
+						$author$project$Railroad$Track$intToTrackId(1),
+						75.0),
 					$drathier$elm_graph$Graph$empty)))));
 var $author$project$Railroad$Train$Aligned = 0;
 var $elm$core$Maybe$andThen = F2(
@@ -5851,11 +5870,11 @@ var $elm$core$Basics$abs = function (n) {
 var $elm$core$Basics$pi = _Basics_pi;
 var $author$project$Railroad$Track$length = function (track) {
 	if (!track.$) {
-		var l = track.a;
+		var l = track.b;
 		return l;
 	} else {
-		var r = track.a;
-		var a = track.b;
+		var r = track.b;
+		var a = track.c;
 		return (($elm$core$Basics$pi * r) * $elm$core$Basics$abs(a)) / 180.0;
 	}
 };
@@ -6301,8 +6320,8 @@ var $author$project$Railroad$Track$getPositionOnTrack = F3(
 					$elm$core$Basics$degrees(cursor.E))),
 				cursor.E);
 		} else {
-			var r = track.a;
-			var a = track.b;
+			var r = track.b;
+			var a = track.c;
 			var a2 = (a * trackPosition) / $author$project$Railroad$Track$length(track);
 			var newDir = cursor.E + a2;
 			var avgDirRad = $elm$core$Basics$degrees((cursor.E + newDir) / 2.0);
@@ -6319,11 +6338,11 @@ var $author$project$Railroad$Track$getPositionOnTrack = F3(
 var $author$project$Railroad$Track$moveCursor = F2(
 	function (cursor, track) {
 		if (!track.$) {
-			var l = track.a;
+			var l = track.b;
 			return A3($author$project$Railroad$Track$getPositionOnTrack, l, cursor, track);
 		} else {
-			var r = track.a;
-			var a = track.b;
+			var r = track.b;
+			var a = track.c;
 			var s = (2 * r) * $elm$core$Basics$sin(
 				$elm$core$Basics$degrees(
 					$elm$core$Basics$abs(a)) / 2);
@@ -6573,7 +6592,7 @@ var $author$project$Railroad$Layout$viewTrack = F2(
 			var c2 = _v1.b;
 			var track = _v1.c;
 			if (!track.$) {
-				var s = track.a;
+				var s = track.b;
 				return A2(
 					$elm$svg$Svg$line,
 					_List_fromArray(
@@ -6591,8 +6610,8 @@ var $author$project$Railroad$Layout$viewTrack = F2(
 						]),
 					_List_Nil);
 			} else {
-				var r = track.a;
-				var a = track.b;
+				var r = track.b;
+				var a = track.c;
 				return A2(
 					$elm$svg$Svg$path,
 					_List_fromArray(
