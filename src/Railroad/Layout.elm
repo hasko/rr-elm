@@ -146,69 +146,7 @@ renderInfo ((Layout g) as layout) ( from, to ) =
 toSvg : Layout -> Svg msg
 toSvg ((Layout g) as layout) =
     Svg.g [ Svg.Attributes.id "layout" ]
-        (Graph.edges g |> List.map (viewTrack layout))
-
-
-viewTrack : Layout -> ( Int, Int ) -> Svg msg
-viewTrack layout edge =
-    case renderInfo layout edge of
-        Nothing ->
-            -- Track cannot be rendered.
-            Svg.g [] []
-
-        Just ( c1, c2, track ) ->
-            case track of
-                StraightTrack s ->
-                    Svg.line
-                        [ Svg.Attributes.x1 (c1.x |> String.fromFloat)
-                        , Svg.Attributes.y1 (c1.y |> String.fromFloat)
-                        , Svg.Attributes.x2 (c2.x |> String.fromFloat)
-                        , Svg.Attributes.y2 (c2.y |> String.fromFloat)
-                        , Svg.Attributes.stroke "grey"
-                        , Svg.Attributes.strokeWidth "1.435"
-                        ]
-                        []
-
-                CurvedTrack r a ->
-                    Svg.path
-                        [ Svg.Attributes.d
-                            ("M "
-                                ++ (c1.x |> String.fromFloat)
-                                ++ " "
-                                ++ (c1.y |> String.fromFloat)
-                                ++ " A "
-                                ++ (r |> String.fromFloat)
-                                ++ " "
-                                ++ (r |> String.fromFloat)
-                                -- ellipse rotation
-                                ++ " 0 "
-                                -- large arc flag
-                                ++ (if abs a <= 180.0 then
-                                        " 0"
-
-                                    else
-                                        " 1"
-                                   )
-                                -- sweep flag
-                                ++ (if a >= 0 then
-                                        " 1 "
-
-                                    else
-                                        " 0 "
-                                   )
-                                ++ (c2.x |> String.fromFloat)
-                                ++ " "
-                                ++ (c2.y |> String.fromFloat)
-                            )
-                        , Svg.Attributes.fill "none"
-                        , Svg.Attributes.stroke "green"
-                        , Svg.Attributes.strokeWidth "1.435"
-                        ]
-                        []
-
-                Point hand l r a ->
-                    -- TODO Draw this properly
-                    Svg.g [] []
+        (Graph.edgesWithData g |> List.filterMap (\( from, _, maybeTrack ) -> maybeTrack) |> List.map Track.toSvg)
 
 
 

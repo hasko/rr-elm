@@ -5,12 +5,15 @@ module Railroad.Track exposing
     , getPositionOnTrack
     , length
     , moveCursor
+    , toSvg
     )
 
 import Array exposing (Array)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
 import Railroad.Util exposing (Cursor)
+import Svg exposing (Svg, g)
+import Svg.Attributes as SA
 
 
 type Track
@@ -62,6 +65,33 @@ connectors track =
 
         Point _ _ _ _ ->
             3
+
+
+connectorCursors : Track -> Array Cursor
+connectorCursors track =
+    Array.fromList
+        (case track of
+            StraightTrack l ->
+                [ Cursor 0 0 0, Cursor l 0 0 ]
+
+            CurvedTrack r a ->
+                [ Cursor 0 0 0, Cursor (r * cos (degrees a)) (r * sin (degrees a)) a ]
+
+            Point hand l r a ->
+                let
+                    y =
+                        r * sin (degrees a)
+
+                    f =
+                        case hand of
+                            RightHanded ->
+                                1
+
+                            LeftHanded ->
+                                -1
+                in
+                [ Cursor 0 0 0, Cursor l 0 0, Cursor (r * cos (degrees a)) (y * f) (a * f) ]
+        )
 
 
 connections : Track -> Array ( Int, Int )
@@ -169,6 +199,66 @@ getPositionOnTrack trackPosition cursor track conn =
                     CurvedTrack r a
                 )
                 0
+
+
+
+-- SVG
+
+
+toSvg : Track -> Svg msg
+toSvg track =
+    let
+        cc =
+            connectorCursors track
+    in
+    case track of
+        StraightTrack s ->
+            Svg.line
+                [ SA.x1 "0"
+                , SA.y1 "0"
+                , Array.get 1 cc |> Maybe.map .x |> Maybe.withDefault 0 |> String.fromFloat |> SA.x2
+                , Array.get 1 cc |> Maybe.map .y |> Maybe.withDefault 0 |> String.fromFloat |> SA.y2
+                , SA.stroke "grey"
+                , SA.strokeWidth "1.435"
+                ]
+                []
+
+        CurvedTrack r a ->
+            Svg.path
+                [ SA.d
+                    ("M 0,0 A "
+                        ++ (r |> String.fromFloat)
+                        ++ " "
+                        ++ (r |> String.fromFloat)
+                        -- ellipse rotation
+                        ++ " 0 "
+                        -- large arc flag
+                        ++ (if abs a <= 180.0 then
+                                " 0"
+
+                            else
+                                " 1"
+                           )
+                        -- sweep flag
+                        ++ (if a >= 0 then
+                                " 1 "
+
+                            else
+                                " 0 "
+                           )
+                        ++ (Array.get 1 cc |> Maybe.map .x |> Maybe.withDefault 0 |> String.fromFloat)
+                        ++ " "
+                        ++ (Array.get 1 cc |> Maybe.map .y |> Maybe.withDefault 0 |> String.fromFloat)
+                    )
+                , SA.fill "none"
+                , SA.stroke "green"
+                , SA.strokeWidth "1.435"
+                ]
+                []
+
+        Point hand l r a ->
+            -- TODO Draw this properly
+            Svg.g [] []
 
 
 
