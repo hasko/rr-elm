@@ -6359,7 +6359,7 @@ var $author$project$Railroad$Layout$cursors = function (layout) {
 	return A4(
 		$author$project$Railroad$Layout$renderLayout,
 		0,
-		A3($author$project$Railroad$Util$Cursor, 0, 0, 0),
+		A3($author$project$Railroad$Util$Cursor, 0, 2.5, 0),
 		layout,
 		$elm$core$Dict$empty);
 };
