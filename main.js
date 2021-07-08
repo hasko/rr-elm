@@ -6842,120 +6842,270 @@ var $drathier$elm_graph$Graph$foldl = F3(
 			acc,
 			graph.a);
 	});
-var $drathier$elm_graph$Graph$edges = function (graph) {
+var $drathier$elm_graph$Graph$edgesWithData = function (graph) {
 	return A3(
 		$drathier$elm_graph$Graph$foldl,
 		F3(
-			function (key, data, list) {
+			function (key, _v0, list) {
 				return _Utils_ap(
 					A2(
 						$elm$core$List$map,
-						function (out) {
-							return _Utils_Tuple2(key, out);
+						function (_v2) {
+							var out = _v2.a;
+							var edgeData = _v2.b;
+							return _Utils_Tuple3(key, out, edgeData);
 						},
-						$elm$core$Set$toList(
-							A2($drathier$elm_graph$Graph$outgoing, key, graph))),
+						$elm$core$Dict$toList(
+							A2(
+								$elm$core$Maybe$withDefault,
+								$elm$core$Dict$empty,
+								A2(
+									$elm$core$Maybe$map,
+									function (_v1) {
+										var node = _v1;
+										return node.b;
+									},
+									A2($drathier$elm_graph$Graph$get, key, graph))))),
 					list);
 			}),
 		_List_Nil,
 		graph);
 };
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (!_v0.$) {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
 var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
 var $elm$svg$Svg$Attributes$id = _VirtualDom_attribute('id');
-var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
-var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
-var $elm$svg$Svg$line = $elm$svg$Svg$trustedNode('line');
-var $elm$svg$Svg$path = $elm$svg$Svg$trustedNode('path');
-var $author$project$Railroad$Layout$renderInfo = F2(
-	function (layout, _v0) {
-		var g = layout;
-		var from = _v0.a;
-		var to = _v0.b;
-		var _v1 = A3($drathier$elm_graph$Graph$getEdgeData, from, to, g);
-		if (_v1.$ === 1) {
-			return $elm$core$Maybe$Nothing;
-		} else {
-			var track = _v1.a;
-			var _v2 = A2(
-				$elm$core$Dict$get,
-				from,
-				$author$project$Railroad$Layout$cursors(layout));
-			if (_v2.$ === 1) {
-				return $elm$core$Maybe$Nothing;
+var $elm$core$Array$fromListHelp = F3(
+	function (list, nodeList, nodeListSize) {
+		fromListHelp:
+		while (true) {
+			var _v0 = A2($elm$core$Elm$JsArray$initializeFromList, $elm$core$Array$branchFactor, list);
+			var jsArray = _v0.a;
+			var remainingItems = _v0.b;
+			if (_Utils_cmp(
+				$elm$core$Elm$JsArray$length(jsArray),
+				$elm$core$Array$branchFactor) < 0) {
+				return A2(
+					$elm$core$Array$builderToArray,
+					true,
+					{h: nodeList, f: nodeListSize, g: jsArray});
 			} else {
-				var c1 = _v2.a;
-				var _v3 = A2(
-					$elm$core$Dict$get,
-					to,
-					$author$project$Railroad$Layout$cursors(layout));
-				if (_v3.$ === 1) {
-					return $elm$core$Maybe$Nothing;
-				} else {
-					var c2 = _v3.a;
-					return $elm$core$Maybe$Just(
-						_Utils_Tuple3(c1, c2, track));
-				}
+				var $temp$list = remainingItems,
+					$temp$nodeList = A2(
+					$elm$core$List$cons,
+					$elm$core$Array$Leaf(jsArray),
+					nodeList),
+					$temp$nodeListSize = nodeListSize + 1;
+				list = $temp$list;
+				nodeList = $temp$nodeList;
+				nodeListSize = $temp$nodeListSize;
+				continue fromListHelp;
 			}
 		}
 	});
+var $elm$core$Array$fromList = function (list) {
+	if (!list.b) {
+		return $elm$core$Array$empty;
+	} else {
+		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
+	}
+};
+var $author$project$Railroad$Track$connectorCursors = function (track) {
+	return $elm$core$Array$fromList(
+		function () {
+			switch (track.$) {
+				case 0:
+					var l = track.a;
+					return _List_fromArray(
+						[
+							A3($author$project$Railroad$Util$Cursor, 0, 0, 0),
+							A3($author$project$Railroad$Util$Cursor, l, 0, 0)
+						]);
+				case 1:
+					var r = track.a;
+					var a = track.b;
+					return _List_fromArray(
+						[
+							A3($author$project$Railroad$Util$Cursor, 0, 0, 0),
+							A3(
+							$author$project$Railroad$Util$Cursor,
+							r * $elm$core$Basics$cos(
+								$elm$core$Basics$degrees(a)),
+							r * $elm$core$Basics$sin(
+								$elm$core$Basics$degrees(a)),
+							a)
+						]);
+				default:
+					var hand = track.a;
+					var l = track.b;
+					var r = track.c;
+					var a = track.d;
+					var y = r * $elm$core$Basics$sin(
+						$elm$core$Basics$degrees(a));
+					var f = function () {
+						if (!hand) {
+							return 1;
+						} else {
+							return -1;
+						}
+					}();
+					return _List_fromArray(
+						[
+							A3($author$project$Railroad$Util$Cursor, 0, 0, 0),
+							A3($author$project$Railroad$Util$Cursor, l, 0, 0),
+							A3(
+							$author$project$Railroad$Util$Cursor,
+							r * $elm$core$Basics$cos(
+								$elm$core$Basics$degrees(a)),
+							y * f,
+							a * f)
+						]);
+			}
+		}());
+};
+var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
+var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
+var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
+var $elm$core$Array$getHelp = F3(
+	function (shift, index, tree) {
+		getHelp:
+		while (true) {
+			var pos = $elm$core$Array$bitMask & (index >>> shift);
+			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (!_v0.$) {
+				var subTree = _v0.a;
+				var $temp$shift = shift - $elm$core$Array$shiftStep,
+					$temp$index = index,
+					$temp$tree = subTree;
+				shift = $temp$shift;
+				index = $temp$index;
+				tree = $temp$tree;
+				continue getHelp;
+			} else {
+				var values = _v0.a;
+				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
+			}
+		}
+	});
+var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
+var $elm$core$Array$tailIndex = function (len) {
+	return (len >>> 5) << 5;
+};
+var $elm$core$Array$get = F2(
+	function (index, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
+			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
+			A3($elm$core$Array$getHelp, startShift, index, tree)));
+	});
+var $elm$svg$Svg$line = $elm$svg$Svg$trustedNode('line');
+var $elm$svg$Svg$path = $elm$svg$Svg$trustedNode('path');
 var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
 var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
 var $elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
 var $elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
 var $elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
 var $elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
-var $author$project$Railroad$Layout$viewTrack = F2(
-	function (layout, edge) {
-		var _v0 = A2($author$project$Railroad$Layout$renderInfo, layout, edge);
-		if (_v0.$ === 1) {
+var $author$project$Railroad$Track$toSvg = function (track) {
+	var cc = $author$project$Railroad$Track$connectorCursors(track);
+	switch (track.$) {
+		case 0:
+			var s = track.a;
+			return A2(
+				$elm$svg$Svg$line,
+				_List_fromArray(
+					[
+						$elm$svg$Svg$Attributes$x1('0'),
+						$elm$svg$Svg$Attributes$y1('0'),
+						$elm$svg$Svg$Attributes$x2(
+						$elm$core$String$fromFloat(
+							A2(
+								$elm$core$Maybe$withDefault,
+								0,
+								A2(
+									$elm$core$Maybe$map,
+									function ($) {
+										return $.a2;
+									},
+									A2($elm$core$Array$get, 1, cc))))),
+						$elm$svg$Svg$Attributes$y2(
+						$elm$core$String$fromFloat(
+							A2(
+								$elm$core$Maybe$withDefault,
+								0,
+								A2(
+									$elm$core$Maybe$map,
+									function ($) {
+										return $.a3;
+									},
+									A2($elm$core$Array$get, 1, cc))))),
+						$elm$svg$Svg$Attributes$stroke('grey'),
+						$elm$svg$Svg$Attributes$strokeWidth('1.435')
+					]),
+				_List_Nil);
+		case 1:
+			var r = track.a;
+			var a = track.b;
+			return A2(
+				$elm$svg$Svg$path,
+				_List_fromArray(
+					[
+						$elm$svg$Svg$Attributes$d(
+						'M 0,0 A ' + ($elm$core$String$fromFloat(r) + (' ' + ($elm$core$String$fromFloat(r) + (' 0 ' + ((($elm$core$Basics$abs(a) <= 180.0) ? ' 0' : ' 1') + (((a >= 0) ? ' 1 ' : ' 0 ') + ($elm$core$String$fromFloat(
+							A2(
+								$elm$core$Maybe$withDefault,
+								0,
+								A2(
+									$elm$core$Maybe$map,
+									function ($) {
+										return $.a2;
+									},
+									A2($elm$core$Array$get, 1, cc)))) + (' ' + $elm$core$String$fromFloat(
+							A2(
+								$elm$core$Maybe$withDefault,
+								0,
+								A2(
+									$elm$core$Maybe$map,
+									function ($) {
+										return $.a3;
+									},
+									A2($elm$core$Array$get, 1, cc))))))))))))),
+						$elm$svg$Svg$Attributes$fill('none'),
+						$elm$svg$Svg$Attributes$stroke('green'),
+						$elm$svg$Svg$Attributes$strokeWidth('1.435')
+					]),
+				_List_Nil);
+		default:
+			var hand = track.a;
+			var l = track.b;
+			var r = track.c;
+			var a = track.d;
 			return A2($elm$svg$Svg$g, _List_Nil, _List_Nil);
-		} else {
-			var _v1 = _v0.a;
-			var c1 = _v1.a;
-			var c2 = _v1.b;
-			var track = _v1.c;
-			switch (track.$) {
-				case 0:
-					var s = track.a;
-					return A2(
-						$elm$svg$Svg$line,
-						_List_fromArray(
-							[
-								$elm$svg$Svg$Attributes$x1(
-								$elm$core$String$fromFloat(c1.a2)),
-								$elm$svg$Svg$Attributes$y1(
-								$elm$core$String$fromFloat(c1.a3)),
-								$elm$svg$Svg$Attributes$x2(
-								$elm$core$String$fromFloat(c2.a2)),
-								$elm$svg$Svg$Attributes$y2(
-								$elm$core$String$fromFloat(c2.a3)),
-								$elm$svg$Svg$Attributes$stroke('grey'),
-								$elm$svg$Svg$Attributes$strokeWidth('1.435')
-							]),
-						_List_Nil);
-				case 1:
-					var r = track.a;
-					var a = track.b;
-					return A2(
-						$elm$svg$Svg$path,
-						_List_fromArray(
-							[
-								$elm$svg$Svg$Attributes$d(
-								'M ' + ($elm$core$String$fromFloat(c1.a2) + (' ' + ($elm$core$String$fromFloat(c1.a3) + (' A ' + ($elm$core$String$fromFloat(r) + (' ' + ($elm$core$String$fromFloat(r) + (' 0 ' + ((($elm$core$Basics$abs(a) <= 180.0) ? ' 0' : ' 1') + (((a >= 0) ? ' 1 ' : ' 0 ') + ($elm$core$String$fromFloat(c2.a2) + (' ' + $elm$core$String$fromFloat(c2.a3)))))))))))))),
-								$elm$svg$Svg$Attributes$fill('none'),
-								$elm$svg$Svg$Attributes$stroke('green'),
-								$elm$svg$Svg$Attributes$strokeWidth('1.435')
-							]),
-						_List_Nil);
-				default:
-					var hand = track.a;
-					var l = track.b;
-					var r = track.c;
-					var a = track.d;
-					return A2($elm$svg$Svg$g, _List_Nil, _List_Nil);
-			}
-		}
-	});
+	}
+};
 var $author$project$Railroad$Layout$toSvg = function (layout) {
 	var g = layout;
 	return A2(
@@ -6966,8 +7116,15 @@ var $author$project$Railroad$Layout$toSvg = function (layout) {
 			]),
 		A2(
 			$elm$core$List$map,
-			$author$project$Railroad$Layout$viewTrack(layout),
-			$drathier$elm_graph$Graph$edges(g)));
+			$author$project$Railroad$Track$toSvg,
+			A2(
+				$elm$core$List$filterMap,
+				function (_v0) {
+					var from = _v0.a;
+					var maybeTrack = _v0.c;
+					return maybeTrack;
+				},
+				$drathier$elm_graph$Graph$edgesWithData(g))));
 };
 var $elm$html$Html$tr = _VirtualDom_node('tr');
 var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
