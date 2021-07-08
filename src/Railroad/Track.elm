@@ -1,43 +1,104 @@
-module Railroad.Track exposing (Track(..), decoder, encode, length)
+module Railroad.Track exposing
+    ( Track(..)
+    , decoder
+    , encode
+    , getPositionOnTrack
+    , length
+    , moveCursor
+    )
 
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
+import Railroad.Util exposing (Cursor)
 
 
 type Track
-    = StraightTrack
-        { length : Float -- in m
-        }
-    | CurvedTrack
-        { radius : Float -- in m
-        , angle : Float -- in degrees, why not
-        }
+    = StraightTrack Float -- length in m
+    | CurvedTrack Float Float -- radius in m, angle in degrees
 
 
 length : Track -> Float
 length track =
     case track of
-        StraightTrack s ->
-            s.length
+        StraightTrack l ->
+            l
 
-        CurvedTrack c ->
-            pi * c.radius * c.angle / 180.0
+        CurvedTrack r a ->
+            pi * r * abs a / 180.0
+
+
+moveCursor : Cursor -> Track -> Cursor
+moveCursor cursor track =
+    case track of
+        StraightTrack l ->
+            getPositionOnTrack l cursor track
+
+        CurvedTrack r a ->
+            let
+                newDir =
+                    cursor.dir + a
+
+                avgDirRad =
+                    degrees ((cursor.dir + newDir) / 2.0)
+
+                s =
+                    2 * r * sin (degrees (abs a) / 2)
+            in
+            Cursor
+                (cursor.x + s * cos avgDirRad)
+                (cursor.y + s * sin avgDirRad)
+                newDir
+
+
+getPositionOnTrack : Float -> Cursor -> Track -> Cursor
+getPositionOnTrack trackPosition cursor track =
+    case track of
+        StraightTrack _ ->
+            Cursor
+                (cursor.x + trackPosition * cos (degrees cursor.dir))
+                (cursor.y + trackPosition * sin (degrees cursor.dir))
+                cursor.dir
+
+        CurvedTrack r a ->
+            let
+                -- Calculate amount of angle covered
+                a2 =
+                    a * trackPosition / length track
+
+                newDir =
+                    cursor.dir + a2
+
+                avgDirRad =
+                    degrees ((cursor.dir + newDir) / 2.0)
+
+                s =
+                    2 * r * sin (degrees (abs a2) / 2)
+            in
+            Cursor
+                (cursor.x + s * cos avgDirRad)
+                (cursor.y + s * sin avgDirRad)
+                newDir
+
+
+
+-- Views
+-- JSON encode and decode
 
 
 encode : Track -> Encode.Value
 encode track =
     case track of
-        StraightTrack s ->
+        StraightTrack l ->
             Encode.object
                 [ ( "type", Encode.string "straight" )
-                , ( "length", Encode.float s.length )
+                , ( "length", Encode.float l )
                 ]
 
-        CurvedTrack c ->
+        CurvedTrack r a ->
             Encode.object
                 [ ( "type", Encode.string "curved" )
-                , ( "radius", Encode.float c.radius )
-                , ( "angle", Encode.float c.angle )
+                , ( "radius", Encode.float r )
+                , ( "angle", Encode.float a )
                 ]
 
 
@@ -50,10 +111,10 @@ trackDecoder : String -> Decoder Track
 trackDecoder trackType =
     case trackType of
         "straight" ->
-            Decode.map (\l -> StraightTrack { length = l }) (Decode.field "length" Decode.float)
+            Decode.map StraightTrack (Decode.field "length" Decode.float)
 
         "curved" ->
-            Decode.map2 (\r a -> CurvedTrack { radius = r, angle = a })
+            Decode.map2 CurvedTrack
                 (Decode.field "radius" Decode.float)
                 (Decode.field "angle" Decode.float)
 
