@@ -1,10 +1,8 @@
 module Railroad.Track exposing
     ( Track(..)
-    , TrackId
     , decoder
     , encode
     , getPositionOnTrack
-    , intToTrackId
     , length
     , moveCursor
     )
@@ -16,9 +14,9 @@ import Railroad.Util exposing (Cursor)
 
 
 type Track
-    = StraightTrack TrackId Float -- length in m
-    | CurvedTrack TrackId Float Float -- radius in m, angle in degrees
-    | Point TrackId Handedness Float Float Float -- length in m, radius in m, angle in degrees
+    = StraightTrack Float -- length in m
+    | CurvedTrack Float Float -- radius in m, angle in degrees
+    | Point Handedness Float Float Float -- length in m, radius in m, angle in degrees
 
 
 type Handedness
@@ -36,20 +34,16 @@ handToString handedness =
             "right"
 
 
-type TrackId
-    = TrackId Int
-
-
 length : Track -> Int -> Float
 length track connection =
     case track of
-        StraightTrack _ l ->
+        StraightTrack l ->
             l
 
-        CurvedTrack _ r a ->
+        CurvedTrack r a ->
             pi * r * abs a / 180.0
 
-        Point _ hand l r a ->
+        Point hand l r a ->
             if connection == 0 then
                 l
 
@@ -60,26 +54,26 @@ length track connection =
 connectors : Track -> Int
 connectors track =
     case track of
-        StraightTrack _ _ ->
+        StraightTrack _ ->
             2
 
-        CurvedTrack _ _ _ ->
+        CurvedTrack _ _ ->
             2
 
-        Point _ _ _ _ _ ->
+        Point _ _ _ _ ->
             3
 
 
 connections : Track -> Array ( Int, Int )
 connections track =
     case track of
-        StraightTrack _ _ ->
+        StraightTrack _ ->
             Array.fromList [ ( 0, 1 ) ]
 
-        CurvedTrack _ _ _ ->
+        CurvedTrack _ _ ->
             Array.fromList [ ( 0, 1 ) ]
 
-        Point _ _ _ _ _ ->
+        Point _ _ _ _ ->
             Array.fromList [ ( 0, 1 ), ( 0, 2 ) ]
 
 
@@ -91,10 +85,10 @@ activeConnections _ =
 moveCursor : Cursor -> Track -> Int -> Cursor
 moveCursor cursor track connection =
     case track of
-        StraightTrack _ l ->
+        StraightTrack l ->
             getPositionOnTrack l cursor track connection
 
-        CurvedTrack _ r a ->
+        CurvedTrack r a ->
             let
                 newDir =
                     cursor.dir + a
@@ -110,7 +104,7 @@ moveCursor cursor track connection =
                 (cursor.y + s * sin avgDirRad)
                 newDir
 
-        Point _ hand l r a ->
+        Point hand l r a ->
             if connection == 0 then
                 { cursor | x = cursor.x + l * cos (degrees cursor.dir), y = cursor.y + l * sin (degrees cursor.dir) }
 
@@ -139,13 +133,13 @@ moveCursor cursor track connection =
 getPositionOnTrack : Float -> Cursor -> Track -> Int -> Cursor
 getPositionOnTrack trackPosition cursor track conn =
     case track of
-        StraightTrack _ _ ->
+        StraightTrack _ ->
             Cursor
                 (cursor.x + trackPosition * cos (degrees cursor.dir))
                 (cursor.y + trackPosition * sin (degrees cursor.dir))
                 cursor.dir
 
-        CurvedTrack _ r a ->
+        CurvedTrack r a ->
             let
                 -- Calculate amount of angle covered
                 a2 =
@@ -165,14 +159,14 @@ getPositionOnTrack trackPosition cursor track conn =
                 (cursor.y + s * sin avgDirRad)
                 newDir
 
-        Point _ hand l r a ->
+        Point hand l r a ->
             getPositionOnTrack trackPosition
                 cursor
                 (if conn == 0 then
-                    StraightTrack (TrackId 0) l
+                    StraightTrack l
 
                  else
-                    CurvedTrack (TrackId 0) r a
+                    CurvedTrack r a
                 )
                 0
 
@@ -184,35 +178,27 @@ getPositionOnTrack trackPosition cursor track conn =
 encode : Track -> Encode.Value
 encode track =
     case track of
-        StraightTrack trackId l ->
+        StraightTrack l ->
             Encode.object
-                [ ( "id", Encode.int (trackIdToInt trackId) )
-                , ( "type", Encode.string "straight" )
+                [ ( "type", Encode.string "straight" )
                 , ( "length", Encode.float l )
                 ]
 
-        CurvedTrack trackId r a ->
+        CurvedTrack r a ->
             Encode.object
-                [ ( "id", Encode.int (trackIdToInt trackId) )
-                , ( "type", Encode.string "curved" )
+                [ ( "type", Encode.string "curved" )
                 , ( "radius", Encode.float r )
                 , ( "angle", Encode.float a )
                 ]
 
-        Point trackId hand l r a ->
+        Point hand l r a ->
             Encode.object
-                [ ( "id", Encode.int (trackIdToInt trackId) )
-                , ( "type", Encode.string "point" )
+                [ ( "type", Encode.string "point" )
                 , ( "hand", Encode.string (handToString hand) )
                 , ( "length", Encode.float l )
                 , ( "radius", Encode.float r )
                 , ( "angle", Encode.float a )
                 ]
-
-
-trackIdToInt : TrackId -> Int
-trackIdToInt (TrackId i) =
-    i
 
 
 decoder : Decoder Track
@@ -224,17 +210,15 @@ trackDecoder : String -> Decoder Track
 trackDecoder trackType =
     case trackType of
         "straight" ->
-            Decode.map2 StraightTrack trackIdDecoder (Decode.field "length" Decode.float)
+            Decode.map StraightTrack (Decode.field "length" Decode.float)
 
         "curved" ->
-            Decode.map3 CurvedTrack
-                trackIdDecoder
+            Decode.map2 CurvedTrack
                 (Decode.field "radius" Decode.float)
                 (Decode.field "angle" Decode.float)
 
         "point" ->
-            Decode.map5 Point
-                trackIdDecoder
+            Decode.map4 Point
                 handednessDecoder
                 (Decode.field "length" Decode.float)
                 (Decode.field "radius" Decode.float)
@@ -259,16 +243,3 @@ handednessDecoder =
                     _ ->
                         Decode.fail "Invalid Handedness"
             )
-
-
-trackIdDecoder : Decoder TrackId
-trackIdDecoder =
-    Decode.map TrackId (Decode.field "id" Decode.int)
-
-
-
--- TODO Remove temporary breach of opaque type
-
-
-intToTrackId i =
-    TrackId i

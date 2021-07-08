@@ -158,7 +158,7 @@ viewTrack layout edge =
 
         Just ( c1, c2, track ) ->
             case track of
-                StraightTrack _ s ->
+                StraightTrack s ->
                     Svg.line
                         [ Svg.Attributes.x1 (c1.x |> String.fromFloat)
                         , Svg.Attributes.y1 (c1.y |> String.fromFloat)
@@ -169,7 +169,7 @@ viewTrack layout edge =
                         ]
                         []
 
-                CurvedTrack _ r a ->
+                CurvedTrack r a ->
                     Svg.path
                         [ Svg.Attributes.d
                             ("M "
@@ -206,7 +206,7 @@ viewTrack layout edge =
                         ]
                         []
 
-                Point _ hand l r a ->
+                Point hand l r a ->
                     -- TODO Draw this properly
                     Svg.g [] []
 
@@ -219,11 +219,11 @@ viewTrack layout edge =
 initialLayout : Layout
 initialLayout =
     Graph.empty
-        |> insertEdgeData 0 1 (StraightTrack (Track.intToTrackId 1) 75.0)
-        |> insertEdgeData 1 2 (CurvedTrack (Track.intToTrackId 2) 300.0 15.0)
-        |> insertEdgeData 2 4 (CurvedTrack (Track.intToTrackId 3) 300 -15)
+        |> insertEdgeData 0 1 (StraightTrack 75.0)
+        |> insertEdgeData 1 2 (CurvedTrack 300.0 15.0)
+        |> insertEdgeData 2 4 (CurvedTrack 300 -15)
         -- CCW
-        |> insertEdgeData 1 3 (StraightTrack (Track.intToTrackId 4) 75.0)
+        |> insertEdgeData 1 3 (StraightTrack 75.0)
         |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ] ])
         |> Layout
 
