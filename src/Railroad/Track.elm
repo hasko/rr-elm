@@ -1,8 +1,10 @@
 module Railroad.Track exposing
     ( Track(..)
+    , TrackId
     , decoder
     , encode
     , getPositionOnTrack
+    , intToTrackId
     , length
     , moveCursor
     )
@@ -13,27 +15,31 @@ import Railroad.Util exposing (Cursor)
 
 
 type Track
-    = StraightTrack Float -- length in m
-    | CurvedTrack Float Float -- radius in m, angle in degrees
+    = StraightTrack TrackId Float -- length in m
+    | CurvedTrack TrackId Float Float -- radius in m, angle in degrees
+
+
+type TrackId
+    = TrackId Int
 
 
 length : Track -> Float
 length track =
     case track of
-        StraightTrack l ->
+        StraightTrack _ l ->
             l
 
-        CurvedTrack r a ->
+        CurvedTrack _ r a ->
             pi * r * abs a / 180.0
 
 
 moveCursor : Cursor -> Track -> Cursor
 moveCursor cursor track =
     case track of
-        StraightTrack l ->
+        StraightTrack _ l ->
             getPositionOnTrack l cursor track
 
-        CurvedTrack r a ->
+        CurvedTrack _ r a ->
             let
                 newDir =
                     cursor.dir + a
@@ -53,13 +59,13 @@ moveCursor cursor track =
 getPositionOnTrack : Float -> Cursor -> Track -> Cursor
 getPositionOnTrack trackPosition cursor track =
     case track of
-        StraightTrack _ ->
+        StraightTrack _ _ ->
             Cursor
                 (cursor.x + trackPosition * cos (degrees cursor.dir))
                 (cursor.y + trackPosition * sin (degrees cursor.dir))
                 cursor.dir
 
-        CurvedTrack r a ->
+        CurvedTrack _ r a ->
             let
                 -- Calculate amount of angle covered
                 a2 =
@@ -81,25 +87,31 @@ getPositionOnTrack trackPosition cursor track =
 
 
 
--- Views
--- JSON encode and decode
+-- JSON
 
 
 encode : Track -> Encode.Value
 encode track =
     case track of
-        StraightTrack l ->
+        StraightTrack trackId l ->
             Encode.object
-                [ ( "type", Encode.string "straight" )
+                [ ( "id", Encode.int (trackIdToInt trackId) )
+                , ( "type", Encode.string "straight" )
                 , ( "length", Encode.float l )
                 ]
 
-        CurvedTrack r a ->
+        CurvedTrack trackId r a ->
             Encode.object
-                [ ( "type", Encode.string "curved" )
+                [ ( "id", Encode.int (trackIdToInt trackId) )
+                , ( "type", Encode.string "curved" )
                 , ( "radius", Encode.float r )
                 , ( "angle", Encode.float a )
                 ]
+
+
+trackIdToInt : TrackId -> Int
+trackIdToInt (TrackId i) =
+    i
 
 
 decoder : Decoder Track
@@ -111,12 +123,26 @@ trackDecoder : String -> Decoder Track
 trackDecoder trackType =
     case trackType of
         "straight" ->
-            Decode.map StraightTrack (Decode.field "length" Decode.float)
+            Decode.map2 StraightTrack trackIdDecoder (Decode.field "length" Decode.float)
 
         "curved" ->
-            Decode.map2 CurvedTrack
+            Decode.map3 CurvedTrack
+                trackIdDecoder
                 (Decode.field "radius" Decode.float)
                 (Decode.field "angle" Decode.float)
 
         other ->
             Decode.fail ("Trying to decode a track but " ++ other ++ " is not supported.")
+
+
+trackIdDecoder : Decoder TrackId
+trackIdDecoder =
+    Decode.map TrackId (Decode.field "id" Decode.int)
+
+
+
+-- TODO Remove temporary breach of opaque type
+
+
+intToTrackId i =
+    TrackId i

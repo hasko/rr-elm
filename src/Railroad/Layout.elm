@@ -15,6 +15,8 @@ module Railroad.Layout exposing
 import Dict exposing (Dict)
 import Graph exposing (Graph, insertData, insertEdgeData)
 import Graph.Pair exposing (getEdgeData)
+import Json.Decode as D
+import Json.Encode as E
 import List.Extra exposing (cartesianProduct)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
@@ -155,7 +157,7 @@ viewTrack layout edge =
 
         Just ( c1, c2, track ) ->
             case track of
-                StraightTrack s ->
+                StraightTrack _ s ->
                     Svg.line
                         [ Svg.Attributes.x1 (c1.x |> String.fromFloat)
                         , Svg.Attributes.y1 (c1.y |> String.fromFloat)
@@ -166,7 +168,7 @@ viewTrack layout edge =
                         ]
                         []
 
-                CurvedTrack r a ->
+                CurvedTrack _ r a ->
                     Svg.path
                         [ Svg.Attributes.d
                             ("M "
@@ -205,17 +207,18 @@ viewTrack layout edge =
 
 
 
+-- JSON
 -- Samples
 
 
 initialLayout : Layout
 initialLayout =
     Graph.empty
-        |> insertEdgeData 0 1 (StraightTrack 75.0)
-        |> insertEdgeData 1 2 (CurvedTrack 300.0 15.0)
-        |> insertEdgeData 2 4 (CurvedTrack 300 -15)
+        |> insertEdgeData 0 1 (StraightTrack (Track.intToTrackId 1) 75.0)
+        |> insertEdgeData 1 2 (CurvedTrack (Track.intToTrackId 2) 300.0 15.0)
+        |> insertEdgeData 2 4 (CurvedTrack (Track.intToTrackId 3) 300 -15)
         -- CCW
-        |> insertEdgeData 1 3 (StraightTrack 75.0)
+        |> insertEdgeData 1 3 (StraightTrack (Track.intToTrackId 4) 75.0)
         |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ] ])
         |> Layout
 
