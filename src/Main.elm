@@ -63,45 +63,20 @@ init _ =
     )
 
 
+subscriptions : Model -> Sub Msg
 subscriptions _ =
     Time.every 40 Tick
+
+
+
+-- UPDATE
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick time ->
-            if model.running then
-                case model.lastTick of
-                    Just lastMillis ->
-                        let
-                            newMillis =
-                                Time.posixToMillis time
-
-                            elapsedMillis =
-                                newMillis - lastMillis
-
-                            newTrainState =
-                                Train.move model.layout model.switchState elapsedMillis model.state
-                        in
-                        case newTrainState.location of
-                            Nothing ->
-                                -- Train could not move, stop it.
-                                ( { model | state = Train.stopped model.state }, Cmd.none )
-
-                            Just loc ->
-                                ( { model
-                                    | state = newTrainState
-                                    , lastTick = Just newMillis
-                                  }
-                                , Cmd.none
-                                )
-
-                    Nothing ->
-                        ( { model | lastTick = Just (Time.posixToMillis time) }, Cmd.none )
-
-            else
-                ( { model | lastTick = Just (Time.posixToMillis time) }, Cmd.none )
+            updateTick (Time.posixToMillis time) model
 
         Start ->
             ( { model | running = True }, Cmd.none )
@@ -128,6 +103,44 @@ update msg model =
             in
             -- Construct the new model based on the new switch state.
             ( { model | switchState = newState }, Cmd.none )
+
+
+updateTick : Int -> Model -> ( Model, Cmd Msg )
+updateTick newMillis model =
+    if model.running then
+        case model.lastTick of
+            Just lastMillis ->
+                let
+                    elapsedMillis =
+                        newMillis - lastMillis
+
+                    newTrainState =
+                        Train.move model.layout model.switchState elapsedMillis model.state
+                in
+                case newTrainState.location of
+                    Nothing ->
+                        -- Train could not move, stop it immediately.
+                        ( { model | state = Train.stopped model.state }, Cmd.none )
+
+                    Just loc ->
+                        ( { model
+                            | state = newTrainState
+                            , lastTick = Just newMillis
+                          }
+                        , Cmd.none
+                        )
+
+            Nothing ->
+                -- First tick in the game
+                ( { model | lastTick = Just newMillis }, Cmd.none )
+
+    else
+        -- Not running
+        ( { model | lastTick = Just newMillis }, Cmd.none )
+
+
+
+-- VIEW
 
 
 view : Model -> Html Msg
