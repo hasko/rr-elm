@@ -5841,6 +5841,10 @@ var $author$project$Main$subscriptions = function (_v0) {
 	return A2($elm$time$Time$every, 40, $author$project$Main$Tick);
 };
 var $elm$core$Basics$modBy = _Basics_modBy;
+var $elm$time$Time$posixToMillis = function (_v0) {
+	var millis = _v0;
+	return millis;
+};
 var $elm$core$Basics$abs = function (n) {
 	return (n < 0) ? (-n) : n;
 };
@@ -6149,67 +6153,67 @@ var $author$project$Railroad$Train$move = F4(
 				});
 		}
 	});
-var $elm$time$Time$posixToMillis = function (_v0) {
-	var millis = _v0;
-	return millis;
-};
 var $author$project$Railroad$Train$stopped = function (ts) {
 	return _Utils_update(
 		ts,
 		{aX: 0.0});
 };
+var $author$project$Main$updateTick = F2(
+	function (newMillis, model) {
+		if (model.K) {
+			var _v0 = model.N;
+			if (!_v0.$) {
+				var lastMillis = _v0.a;
+				var elapsedMillis = newMillis - lastMillis;
+				var newTrainState = A4($author$project$Railroad$Train$move, model.G, model.C, elapsedMillis, model.s);
+				var _v1 = newTrainState._;
+				if (_v1.$ === 1) {
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								s: $author$project$Railroad$Train$stopped(model.s)
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					var loc = _v1.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								N: $elm$core$Maybe$Just(newMillis),
+								s: newTrainState
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
+			} else {
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							N: $elm$core$Maybe$Just(newMillis)
+						}),
+					$elm$core$Platform$Cmd$none);
+			}
+		} else {
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						N: $elm$core$Maybe$Just(newMillis)
+					}),
+				$elm$core$Platform$Cmd$none);
+		}
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
 			case 0:
 				var time = msg.a;
-				if (model.K) {
-					var _v1 = model.N;
-					if (!_v1.$) {
-						var lastMillis = _v1.a;
-						var newMillis = $elm$time$Time$posixToMillis(time);
-						var elapsedMillis = newMillis - lastMillis;
-						var newTrainState = A4($author$project$Railroad$Train$move, model.G, model.C, elapsedMillis, model.s);
-						var _v2 = newTrainState._;
-						if (_v2.$ === 1) {
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										s: $author$project$Railroad$Train$stopped(model.s)
-									}),
-								$elm$core$Platform$Cmd$none);
-						} else {
-							var loc = _v2.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										N: $elm$core$Maybe$Just(newMillis),
-										s: newTrainState
-									}),
-								$elm$core$Platform$Cmd$none);
-						}
-					} else {
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									N: $elm$core$Maybe$Just(
-										$elm$time$Time$posixToMillis(time))
-								}),
-							$elm$core$Platform$Cmd$none);
-					}
-				} else {
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								N: $elm$core$Maybe$Just(
-									$elm$time$Time$posixToMillis(time))
-							}),
-						$elm$core$Platform$Cmd$none);
-				}
+				return A2(
+					$author$project$Main$updateTick,
+					$elm$time$Time$posixToMillis(time),
+					model);
 			case 1:
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -6223,9 +6227,9 @@ var $author$project$Main$update = F2(
 						{K: false}),
 					$elm$core$Platform$Cmd$none);
 			case 3:
-				var _v3 = $author$project$Main$init(0);
-				var m = _v3.a;
-				var cmd = _v3.b;
+				var _v1 = $author$project$Main$init(0);
+				var m = _v1.a;
+				var cmd = _v1.b;
 				return _Utils_Tuple2(
 					_Utils_update(
 						m,
