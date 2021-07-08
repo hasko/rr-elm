@@ -75,7 +75,8 @@ move layout switchState millis trainState =
 normalizeLocation : Layout -> Dict Int Int -> TrainLocation -> Maybe TrainLocation
 normalizeLocation layout switchState loc =
     -- If the position is beyond the end of the current track ...
-    if loc.pos > Track.length loc.track then
+    -- TODO Determine and use the appropriate connection nimber instead of 0
+    if loc.pos > Track.length loc.track 0 then
         -- ... get the next track.
         case nextTrack loc.edge layout switchState of
             Nothing ->
@@ -86,7 +87,8 @@ normalizeLocation layout switchState loc =
                 -- Calculate the new position.
                 { nextLoc
                   -- Subtract the current track length from the position.
-                    | pos = loc.pos - Track.length loc.track
+                  -- TODO Determine and use the appropriate connection nimber instead of 0
+                    | pos = loc.pos - Track.length loc.track 0
                 }
                     -- ... and repeat until done.
                     |> normalizeLocation layout switchState
@@ -97,7 +99,8 @@ normalizeLocation layout switchState loc =
                 Nothing
 
             Just nextLoc ->
-                { nextLoc | pos = loc.pos + Track.length nextLoc.track }
+                -- TODO Determine and use the appropriate connection nimber instead of 0
+                { nextLoc | pos = loc.pos + Track.length nextLoc.track 0 }
                     |> normalizeLocation layout switchState
 
     else

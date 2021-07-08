@@ -76,7 +76,8 @@ renderLayout nodeId currentCursor ((Layout g) as layout) knownCursors =
                                 -- Start with the next node id.
                                 nextNodeId
                                 -- Move the cursor along the track.
-                                (moveCursor currentCursor track)
+                                -- TODO determine and use the appropriate connection instead of 0
+                                (moveCursor currentCursor track 0)
                                 -- And the rest.
                                 layout
                                 acc
@@ -97,7 +98,7 @@ coordsFor pos ( fromNode, toNode ) ((Layout g) as layout) =
                     Nothing
 
                 Just cursor ->
-                    Just (getPositionOnTrack pos cursor track)
+                    Just (getPositionOnTrack pos cursor track 0)
 
 
 switches : Layout -> List ( Int, Switch )
@@ -204,6 +205,10 @@ viewTrack layout edge =
                         , Svg.Attributes.strokeWidth "1.435"
                         ]
                         []
+
+                Point _ hand l r a ->
+                    -- TODO Draw this properly
+                    Svg.g [] []
 
 
 
