@@ -16,6 +16,8 @@ import Cursor exposing (Cursor)
 import Dict exposing (Dict)
 import Graph exposing (Graph, insertData, insertEdgeData)
 import Graph.Pair exposing (getEdgeData)
+import Json.Decode as D
+import Json.Encode as E
 import List.Extra exposing (cartesianProduct)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
@@ -37,7 +39,7 @@ type alias Switch =
 cursors : Layout -> Dict Int Cursor
 cursors layout =
     -- Render the layout starting at connection 0 and at the origin, facing east, and return the resulting cursors.
-    renderLayout 0 (Cursor 0 0 0) layout Dict.empty
+    renderLayout 0 (Cursor 0 2.5 0) layout Dict.empty
 
 
 boundingBox : Layout -> Rect
@@ -74,7 +76,8 @@ renderLayout nodeId currentCursor ((Layout g) as layout) knownCursors =
                                 -- Start with the next node id.
                                 nextNodeId
                                 -- Move the cursor along the track.
-                                (moveCursor currentCursor track)
+                                -- TODO determine and use the appropriate connection instead of 0
+                                (moveCursor currentCursor track 0)
                                 -- And the rest.
                                 layout
                                 acc
@@ -95,7 +98,7 @@ coordsFor pos ( fromNode, toNode ) ((Layout g) as layout) =
                     Nothing
 
                 Just cursor ->
-                    Just (getPositionOnTrack pos cursor track)
+                    Just (getPositionOnTrack pos cursor track 0)
 
 
 switches : Layout -> List ( Int, Switch )
@@ -143,68 +146,11 @@ renderInfo ((Layout g) as layout) ( from, to ) =
 toSvg : Layout -> Svg msg
 toSvg ((Layout g) as layout) =
     Svg.g [ Svg.Attributes.id "layout" ]
-        (Graph.edges g |> List.map (viewTrack layout))
-
-
-viewTrack : Layout -> ( Int, Int ) -> Svg msg
-viewTrack layout edge =
-    case renderInfo layout edge of
-        Nothing ->
-            -- Track cannot be rendered.
-            Svg.g [] []
-
-        Just ( c1, c2, track ) ->
-            case track of
-                StraightTrack s ->
-                    Svg.line
-                        [ Svg.Attributes.x1 (c1.x |> String.fromFloat)
-                        , Svg.Attributes.y1 (c1.y |> String.fromFloat)
-                        , Svg.Attributes.x2 (c2.x |> String.fromFloat)
-                        , Svg.Attributes.y2 (c2.y |> String.fromFloat)
-                        , Svg.Attributes.stroke "grey"
-                        , Svg.Attributes.strokeWidth "1.435"
-                        ]
-                        []
-
-                CurvedTrack r a ->
-                    Svg.path
-                        [ Svg.Attributes.d
-                            ("M "
-                                ++ (c1.x |> String.fromFloat)
-                                ++ " "
-                                ++ (c1.y |> String.fromFloat)
-                                ++ " A "
-                                ++ (r |> String.fromFloat)
-                                ++ " "
-                                ++ (r |> String.fromFloat)
-                                -- ellipse rotation
-                                ++ " 0 "
-                                -- large arc flag
-                                ++ (if abs a <= 180.0 then
-                                        " 0"
-
-                                    else
-                                        " 1"
-                                   )
-                                -- sweep flag
-                                ++ (if a >= 0 then
-                                        " 1 "
-
-                                    else
-                                        " 0 "
-                                   )
-                                ++ (c2.x |> String.fromFloat)
-                                ++ " "
-                                ++ (c2.y |> String.fromFloat)
-                            )
-                        , Svg.Attributes.fill "none"
-                        , Svg.Attributes.stroke "green"
-                        , Svg.Attributes.strokeWidth "1.435"
-                        ]
-                        []
+        (Graph.edgesWithData g |> List.filterMap (\( from, _, maybeTrack ) -> maybeTrack) |> List.map Track.toSvg)
 
 
 
+-- JSON
 -- Samples
 
 

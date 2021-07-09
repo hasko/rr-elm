@@ -3,8 +3,8 @@ module Main exposing (Msg(..), main, update, view)
 import Browser
 import Dict exposing (Dict)
 import Graph
-import Html exposing (Html, button, div, li, pre, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, style)
+import Html exposing (Html, br, button, div, li, pre, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, rowspan, style)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
@@ -14,6 +14,7 @@ import Railroad.Layout as Layout exposing (..)
 import Railroad.Track as Track exposing (Track(..))
 import Railroad.Train as Train exposing (..)
 import Rect
+import Round
 import Set exposing (Set)
 import Svg exposing (Svg, g, line, path, rect, svg)
 import Svg.Attributes exposing (d, fill, id, stroke, strokeWidth, viewBox, width, x1, x2, y1, y2)
@@ -63,45 +64,20 @@ init _ =
     )
 
 
+subscriptions : Model -> Sub Msg
 subscriptions _ =
     Time.every 40 Tick
+
+
+
+-- UPDATE
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick time ->
-            if model.running then
-                case model.lastTick of
-                    Just lastMillis ->
-                        let
-                            newMillis =
-                                Time.posixToMillis time
-
-                            elapsedMillis =
-                                newMillis - lastMillis
-
-                            newTrainState =
-                                Train.move model.layout model.switchState elapsedMillis model.state
-                        in
-                        case newTrainState.location of
-                            Nothing ->
-                                -- Train could not move, stop it.
-                                ( { model | state = Train.stopped model.state }, Cmd.none )
-
-                            Just loc ->
-                                ( { model
-                                    | state = newTrainState
-                                    , lastTick = Just newMillis
-                                  }
-                                , Cmd.none
-                                )
-
-                    Nothing ->
-                        ( { model | lastTick = Just (Time.posixToMillis time) }, Cmd.none )
-
-            else
-                ( { model | lastTick = Just (Time.posixToMillis time) }, Cmd.none )
+            updateTick (Time.posixToMillis time) model
 
         Start ->
             ( { model | running = True }, Cmd.none )
@@ -130,6 +106,44 @@ update msg model =
             ( { model | switchState = newState }, Cmd.none )
 
 
+updateTick : Int -> Model -> ( Model, Cmd Msg )
+updateTick newMillis model =
+    if model.running then
+        case model.lastTick of
+            Just lastMillis ->
+                let
+                    elapsedMillis =
+                        newMillis - lastMillis
+
+                    newTrainState =
+                        Train.move model.layout model.switchState elapsedMillis model.state
+                in
+                case newTrainState.location of
+                    Nothing ->
+                        -- Train could not move, stop it immediately.
+                        ( { model | state = Train.stopped model.state }, Cmd.none )
+
+                    Just loc ->
+                        ( { model
+                            | state = newTrainState
+                            , lastTick = Just newMillis
+                          }
+                        , Cmd.none
+                        )
+
+            Nothing ->
+                -- First tick in the game
+                ( { model | lastTick = Just newMillis }, Cmd.none )
+
+    else
+        -- Not running
+        ( { model | lastTick = Just newMillis }, Cmd.none )
+
+
+
+-- VIEW
+
+
 view : Model -> Html Msg
 view model =
     div [ class "container" ]
@@ -151,34 +165,48 @@ view model =
                 , button [ class "btn btn-secondary", onClick Stop, style "margin" "12px 12px 12px 0" ] [ text "Stop" ]
                 , button [ class "btn btn-secondary", onClick Reset, style "margin" "12px 12px 12px 0" ] [ text "Reset" ]
                 ]
-            , div [ class "col" ]
-                [ lazy2 viewSwitches model.layout model.switchState
-                ]
-            ]
-        , pre []
-            [ text
-                ("{ name='"
-                    ++ model.state.name
-                    ++ "'\n, length="
-                    ++ String.fromFloat model.state.length
-                    ++ "\n, speed="
-                    ++ String.fromFloat model.state.speed
-                    ++ "\n, location="
-                    ++ (case model.state.location of
-                            Nothing ->
-                                "Nothing"
+            , div [ class "col" ] [ lazy2 viewSwitches model.layout model.switchState ]
+            , div [ class "col-3" ]
+                [ table [ class "table" ]
+                    [ tr [] [ th [] [ text "Name" ], td [] [ text model.state.name ] ]
+                    , tr [] [ th [] [ text "Length" ], td [] [ text (String.fromFloat model.state.length) ] ]
+                    , tr []
+                        [ th [] [ text "Speed" ]
+                        , td []
+                            [ text
+                                (String.fromFloat model.state.speed
+                                    ++ " m/s ("
+                                    ++ Round.round 1 (model.state.speed * 3.6)
+                                    ++ " km/h)"
+                                )
+                            ]
+                        ]
+                    , tr []
+                        [ th [] [ text "Location" ]
+                        , td []
+                            (case model.state.location of
+                                Nothing ->
+                                    [ text "Nowhere" ]
 
-                            Just loc ->
-                                "Just\n  { edge=("
-                                    ++ String.fromInt (Tuple.first loc.edge)
-                                    ++ ", "
-                                    ++ String.fromInt (Tuple.second loc.edge)
-                                    ++ ")\n  , pos="
-                                    ++ String.fromFloat loc.pos
-                                    ++ "\n  }"
-                       )
-                    ++ "\n}"
-                )
+                                Just loc ->
+                                    [ text
+                                        ("edge ("
+                                            ++ String.fromInt (Tuple.first loc.edge)
+                                            ++ ", "
+                                            ++ String.fromInt (Tuple.second loc.edge)
+                                            ++ ")"
+                                        )
+                                    , br [] []
+                                    , text
+                                        ("pos "
+                                            ++ Round.round 2 loc.pos
+                                            ++ " m"
+                                        )
+                                    ]
+                            )
+                        ]
+                    ]
+                ]
             ]
         ]
 
