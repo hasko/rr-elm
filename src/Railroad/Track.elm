@@ -7,9 +7,9 @@ module Railroad.Track exposing
     , moveCursor
     )
 
+import Cursor exposing (Cursor)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
-import Railroad.Util exposing (Cursor)
 
 
 type Track

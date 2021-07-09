@@ -1,4 +1,4 @@
-module Railroad.Util exposing (Cursor)
+module Cursor exposing (Cursor)
 
 
 type alias Cursor =

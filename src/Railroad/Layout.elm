@@ -12,6 +12,7 @@ module Railroad.Layout exposing
     , tracks
     )
 
+import Cursor exposing (Cursor)
 import Dict exposing (Dict)
 import Graph exposing (Graph, insertData, insertEdgeData)
 import Graph.Pair exposing (getEdgeData)
@@ -19,7 +20,6 @@ import List.Extra exposing (cartesianProduct)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
 import Railroad.Track as Track exposing (Track(..), getPositionOnTrack, moveCursor)
-import Railroad.Util exposing (Cursor)
 import Rect exposing (Rect(..))
 import Set
 import Svg exposing (Svg)
