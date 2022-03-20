@@ -1,6 +1,7 @@
 module Main exposing (Msg(..), main, update, view)
 
 import Browser
+import Browser.Events exposing (onAnimationFrameDelta)
 import Dict exposing (Dict)
 import Graph
 import Html exposing (Html, br, button, div, li, pre, table, tbody, td, text, th, thead, tr, ul)
@@ -36,7 +37,7 @@ type alias Model =
 
 
 type Msg
-    = Tick Time.Posix
+    = Tick Float
     | Start
     | Stop
     | Reset
@@ -65,8 +66,12 @@ init _ =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Time.every 40 Tick
+subscriptions model =
+    if model.running then
+        onAnimationFrameDelta Tick
+
+    else
+        Sub.none
 
 
 
@@ -76,8 +81,8 @@ subscriptions _ =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Tick time ->
-            updateTick (Time.posixToMillis time) model
+        Tick delta ->
+            updateTick delta model
 
         Start ->
             ( { model | running = True }, Cmd.none )
@@ -90,7 +95,7 @@ update msg model =
                 ( m, cmd ) =
                     init ()
             in
-            ( { m | running = model.running }, Cmd.none )
+            ( { m | running = False }, Cmd.none )
 
         ChangeSwitch i switch ->
             let
@@ -106,38 +111,19 @@ update msg model =
             ( { model | switchState = newState }, Cmd.none )
 
 
-updateTick : Int -> Model -> ( Model, Cmd Msg )
-updateTick newMillis model =
-    if model.running then
-        case model.lastTick of
-            Just lastMillis ->
-                let
-                    elapsedMillis =
-                        newMillis - lastMillis
+updateTick : Float -> Model -> ( Model, Cmd Msg )
+updateTick delta model =
+    let
+        newTrainState =
+            Train.move model.layout model.switchState delta model.state
+    in
+    case newTrainState.location of
+        Nothing ->
+            -- Train could not move, stop it immediately.
+            ( { model | state = Train.stopped model.state }, Cmd.none )
 
-                    newTrainState =
-                        Train.move model.layout model.switchState elapsedMillis model.state
-                in
-                case newTrainState.location of
-                    Nothing ->
-                        -- Train could not move, stop it immediately.
-                        ( { model | state = Train.stopped model.state }, Cmd.none )
-
-                    Just loc ->
-                        ( { model
-                            | state = newTrainState
-                            , lastTick = Just newMillis
-                          }
-                        , Cmd.none
-                        )
-
-            Nothing ->
-                -- First tick in the game
-                ( { model | lastTick = Just newMillis }, Cmd.none )
-
-    else
-        -- Not running
-        ( { model | lastTick = Just newMillis }, Cmd.none )
+        Just loc ->
+            ( { model | state = newTrainState }, Cmd.none )
 
 
 

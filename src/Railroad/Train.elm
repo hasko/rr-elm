@@ -39,7 +39,7 @@ type Orientation
     | Reverse
 
 
-move : Layout -> Dict Int Int -> Int -> TrainState -> TrainState
+move : Layout -> Dict Int Int -> Float -> TrainState -> TrainState
 move layout switchState millis trainState =
     case trainState.location of
         Nothing ->
@@ -50,7 +50,7 @@ move layout switchState millis trainState =
             -- Calculate new position, disregarding track transitions.
             let
                 distanceTraveled =
-                    trainState.speed * toFloat millis / 1000.0
+                    trainState.speed * millis / 1000.0
 
                 -- Consider which way the train is traveling on the track.
                 newPos =
