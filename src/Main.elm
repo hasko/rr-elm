@@ -38,8 +38,7 @@ type alias Model =
 
 type Msg
     = Tick Float
-    | Start
-    | Stop
+    | Toggle
     | Reset
     | ChangeSwitch Int Switch
 
@@ -84,11 +83,8 @@ update msg model =
         Tick delta ->
             updateTick delta model
 
-        Start ->
-            ( { model | running = True }, Cmd.none )
-
-        Stop ->
-            ( { model | running = False }, Cmd.none )
+        Toggle ->
+            ( { model | running = not model.running }, Cmd.none )
 
         Reset ->
             let
@@ -146,12 +142,21 @@ view model =
             , viewTrain model.state model.layout model.switchState
             ]
         , div [ class "row" ]
-            [ div [ class "col-3" ]
-                [ button [ class "btn btn-secondary", onClick Start, style "margin" "12px 12px 12px 12px" ] [ text "Start" ]
-                , button [ class "btn btn-secondary", onClick Stop, style "margin" "12px 12px 12px 0" ] [ text "Stop" ]
-                , button [ class "btn btn-secondary", onClick Reset, style "margin" "12px 12px 12px 0" ] [ text "Reset" ]
+            [ div [ class "btn-group", role "group" ]
+                [ button [ class "btn btn-secondary", onClick Toggle ]
+                    [ text
+                        (if model.running then
+                            "Stop"
+
+                         else
+                            "Start"
+                        )
+                    ]
+                , button [ class "btn btn-secondary", onClick Reset ] [ text "Reset" ]
                 ]
-            , div [ class "col" ] [ lazy2 viewSwitches model.layout model.switchState ]
+            ]
+        , div [ class "row" ]
+            [ div [ class "col" ] [ lazy2 viewSwitches model.layout model.switchState ]
             , div [ class "col-3" ]
                 [ table [ class "table" ]
                     [ tr [] [ th [] [ text "Name" ], td [] [ text model.state.name ] ]
@@ -269,3 +274,12 @@ viewSwitchConfig routes =
         |> List.map (\( from, to ) -> String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to)
         |> String.join ", "
         |> text
+
+
+
+--- Utilities ---
+
+
+role : String -> Html.Attribute msg
+role r =
+    Html.Attributes.attribute "role" r
