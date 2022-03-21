@@ -174,7 +174,7 @@ toSvg ((Layout g) as layout) =
                                         ++ ")"
                                     )
                                 ]
-                                [ Track.toSvg track ]
+                                (Track.toSvg track)
 
                         _ ->
                             Svg.g [ id trackId ] []

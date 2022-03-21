@@ -9,7 +9,7 @@ module Railroad.Track exposing
     )
 
 import Array exposing (Array)
-import Cursor exposing (Cursor)
+import Html.Attributes
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
 import Svg exposing (Svg)
@@ -205,13 +205,13 @@ getPositionOnTrack trackPosition cursor track conn =
 -- SVG
 
 
-toSvg : Track -> Svg msg
+toSvg : Track -> List (Svg msg)
 toSvg track =
     let
         cc =
             connectorCursors track
     in
-    case track of
+    [ case track of
         StraightTrack s ->
             Svg.line
                 [ SA.x1 "0"
@@ -259,6 +259,17 @@ toSvg track =
         Point hand l r a ->
             -- TODO Draw this properly
             Svg.g [] []
+    , Svg.line
+        [ SA.x1 "0"
+        , SA.y1 "-1"
+        , SA.x2 "0"
+        , SA.y2 "1"
+        , SA.stroke "black"
+        , SA.strokeWidth "1px"
+        , Html.Attributes.attribute "vector-effect" "non-scaling-stroke"
+        ]
+        []
+    ]
 
 
 
