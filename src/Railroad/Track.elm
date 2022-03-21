@@ -209,19 +209,7 @@ toSvg : Track -> Svg msg
 toSvg track =
     let
         cc =
-            Debug.log "cc" (connectorCursors track)
-
-        cref =
-            Array.get 0 cc
-
-        xref =
-            cref |> Maybe.map .x |> Maybe.withDefault 0
-
-        yref =
-            cref |> Maybe.map .y |> Maybe.withDefault 0
-
-        aref =
-            cref |> Maybe.map .dir |> Maybe.withDefault 0
+            connectorCursors track
     in
     case track of
         StraightTrack s ->
