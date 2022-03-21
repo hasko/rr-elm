@@ -5,7 +5,7 @@ import Browser.Events exposing (onAnimationFrameDelta)
 import Dict exposing (Dict)
 import Graph
 import Html exposing (Html, br, button, div, li, pre, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, rowspan, style)
+import Html.Attributes exposing (class, rowspan, scope, style)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
@@ -155,44 +155,46 @@ view model =
             ]
         , div [ class "row" ]
             [ div [ class "col" ] [ lazy2 viewSwitches model.layout model.switchState ]
-            , div [ class "col-3" ]
+            , div [ class "col" ]
                 [ table [ class "table" ]
-                    [ tr [] [ th [] [ text "Name" ], td [] [ text model.state.name ] ]
-                    , tr [] [ th [] [ text "Length" ], td [] [ text (String.fromFloat model.state.length) ] ]
-                    , tr []
-                        [ th [] [ text "Speed" ]
-                        , td []
-                            [ text
-                                (String.fromFloat model.state.speed
-                                    ++ " m/s ("
-                                    ++ Round.round 1 (model.state.speed * 3.6)
-                                    ++ " km/h)"
+                    [ tbody []
+                        [ tr [] [ th [ scope "row" ] [ text "Name" ], td [] [ text model.state.name ] ]
+                        , tr [] [ th [ scope "row" ] [ text "Length" ], td [] [ text (String.fromFloat model.state.length) ] ]
+                        , tr []
+                            [ th [ scope "row" ] [ text "Speed" ]
+                            , td []
+                                [ text
+                                    (String.fromFloat model.state.speed
+                                        ++ " m/s ("
+                                        ++ Round.round 1 (model.state.speed * 3.6)
+                                        ++ " km/h)"
+                                    )
+                                ]
+                            ]
+                        , tr []
+                            [ th [ scope "row" ] [ text "Location" ]
+                            , td []
+                                (case model.state.location of
+                                    Nothing ->
+                                        [ text "Nowhere" ]
+
+                                    Just loc ->
+                                        [ text
+                                            ("edge ("
+                                                ++ String.fromInt (Tuple.first loc.edge)
+                                                ++ ", "
+                                                ++ String.fromInt (Tuple.second loc.edge)
+                                                ++ ")"
+                                            )
+                                        , br [] []
+                                        , text
+                                            ("pos "
+                                                ++ Round.round 2 loc.pos
+                                                ++ " m"
+                                            )
+                                        ]
                                 )
                             ]
-                        ]
-                    , tr []
-                        [ th [] [ text "Location" ]
-                        , td []
-                            (case model.state.location of
-                                Nothing ->
-                                    [ text "Nowhere" ]
-
-                                Just loc ->
-                                    [ text
-                                        ("edge ("
-                                            ++ String.fromInt (Tuple.first loc.edge)
-                                            ++ ", "
-                                            ++ String.fromInt (Tuple.second loc.edge)
-                                            ++ ")"
-                                        )
-                                    , br [] []
-                                    , text
-                                        ("pos "
-                                            ++ Round.round 2 loc.pos
-                                            ++ " m"
-                                        )
-                                    ]
-                            )
                         ]
                     ]
                 ]
