@@ -31,7 +31,6 @@ type alias Model =
     { state : TrainState
     , layout : Layout
     , switchState : Dict Int Int
-    , lastTick : Maybe Int
     , running : Bool
     }
 
@@ -57,7 +56,6 @@ init _ =
             }
       , layout = l
       , switchState = Dict.empty
-      , lastTick = Nothing
       , running = True
       }
     , Cmd.none
@@ -141,9 +139,9 @@ view model =
             [ lazy Layout.toSvg model.layout
             , viewTrain model.state model.layout model.switchState
             ]
-        , div [ class "row" ]
+        , div [ class "row mb-3" ]
             [ div [ class "btn-group", role "group" ]
-                [ button [ class "btn btn-secondary", onClick Toggle ]
+                [ button [ class "btn btn-secondary me-3", onClick Toggle ]
                     [ text
                         (if model.running then
                             "Stop"
