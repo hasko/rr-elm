@@ -9,8 +9,10 @@ import Html.Attributes exposing (class, rowspan, scope, style)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
+import Length exposing (Length)
 import List.Extra
 import Maybe exposing (andThen, withDefault)
+import Quantity
 import Railroad.Layout as Layout exposing (..)
 import Railroad.Track as Track exposing (Track(..))
 import Railroad.Train as Train exposing (..)
@@ -141,7 +143,7 @@ view model =
             ]
         , div [ class "row mb-3" ]
             [ div [ class "btn-group", role "group" ]
-                [ button [ class "btn btn-secondary me-3", onClick Toggle ]
+                [ button [ class "btn btn-primary me-3", onClick Toggle ]
                     [ text
                         (if model.running then
                             "Stop"
@@ -189,7 +191,7 @@ view model =
                                         , br [] []
                                         , text
                                             ("pos "
-                                                ++ Round.round 2 loc.pos
+                                                ++ Round.round 2 (Length.inMeters loc.pos)
                                                 ++ " m"
                                             )
                                         ]
@@ -216,7 +218,7 @@ viewTrain train layout switchState =
                     g [] []
 
                 Just c1 ->
-                    case { loc | pos = loc.pos - train.length } |> Train.normalizeLocation layout switchState of
+                    case { loc | pos = loc.pos |> Quantity.minus (Length.meters train.length) } |> Train.normalizeLocation layout switchState of
                         Nothing ->
                             -- If the train end fits on no track, draw nothing.
                             g [] []
@@ -264,7 +266,7 @@ viewSwitch i switch state =
                 Just cfg ->
                     viewSwitchConfig cfg
             ]
-        , td [] [ button [ class "btn btn-secondary btn-sm", onClick (ChangeSwitch i switch) ] [ text "Change" ] ]
+        , td [] [ button [ class "btn btn-primary btn-sm", onClick (ChangeSwitch i switch) ] [ text "Change" ] ]
         ]
 
 

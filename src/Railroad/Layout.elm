@@ -18,6 +18,7 @@ import Graph exposing (Graph, insertData, insertEdgeData)
 import Graph.Pair exposing (getEdgeData)
 import Json.Decode as D
 import Json.Encode as E
+import Length exposing (Length)
 import List.Extra exposing (cartesianProduct)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
@@ -86,7 +87,7 @@ renderLayout nodeId currentCursor ((Layout g) as layout) knownCursors =
                 (Dict.insert nodeId currentCursor knownCursors)
 
 
-coordsFor : Float -> ( Int, Int ) -> Layout -> Maybe Cursor
+coordsFor : Length -> ( Int, Int ) -> Layout -> Maybe Cursor
 coordsFor pos ( fromNode, toNode ) ((Layout g) as layout) =
     case Graph.getEdgeData fromNode toNode g of
         Nothing ->
@@ -190,11 +191,11 @@ toSvg ((Layout g) as layout) =
 initialLayout : Layout
 initialLayout =
     Graph.empty
-        |> insertEdgeData 0 1 (StraightTrack 75.0)
+        |> insertEdgeData 0 1 (StraightTrack (Length.meters 75.0))
         |> insertEdgeData 1 2 (CurvedTrack 300.0 15.0)
         |> insertEdgeData 2 4 (CurvedTrack 300 -15)
         -- CCW
-        |> insertEdgeData 1 3 (StraightTrack 75.0)
+        |> insertEdgeData 1 3 (StraightTrack (Length.meters 75.0))
         |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ] ])
         |> Layout
 

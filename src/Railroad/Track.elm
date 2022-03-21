@@ -12,14 +12,17 @@ import Array exposing (Array)
 import Html.Attributes
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
-import Svg exposing (Svg)
+import Length exposing (Length)
+import Quantity
+import Railroad.Util exposing (Cursor)
+import Svg exposing (Svg, g)
 import Svg.Attributes as SA
 
 
 type Track
-    = StraightTrack Float -- length in m
+    = StraightTrack Length
     | CurvedTrack Float Float -- radius in m, angle in degrees
-    | Point Handedness Float Float Float -- length in m, radius in m, angle in degrees
+    | Point Handedness Length Float Float -- length in m, radius in m, angle in degrees
 
 
 type Handedness
@@ -37,21 +40,21 @@ handToString handedness =
             "right"
 
 
-length : Track -> Int -> Float
+length : Track -> Int -> Length
 length track connection =
     case track of
         StraightTrack l ->
             l
 
         CurvedTrack r a ->
-            pi * r * abs a / 180.0
+            Length.meters (pi * r * abs a / 180.0)
 
         Point hand l r a ->
             if connection == 0 then
                 l
 
             else
-                pi * r * abs a / 180.0
+                Length.meters (pi * r * abs a / 180.0)
 
 
 connectors : Track -> Int
@@ -72,7 +75,7 @@ connectorCursors track =
     Array.fromList
         (case track of
             StraightTrack l ->
-                [ Cursor 0 0 0, Cursor l 0 0 ]
+                [ Cursor 0 0 0, Cursor (Length.inMeters l) 0 0 ]
 
             CurvedTrack r a ->
                 [ Cursor 0 0 0, Cursor (r * cos (degrees a)) (r * sin (degrees a)) a ]
@@ -90,7 +93,7 @@ connectorCursors track =
                             LeftHanded ->
                                 -1
                 in
-                [ Cursor 0 0 0, Cursor l 0 0, Cursor (r * cos (degrees a)) (y * f) (a * f) ]
+                [ Cursor 0 0 0, Cursor (Length.inMeters l) 0 0, Cursor (r * cos (degrees a)) (y * f) (a * f) ]
         )
 
 
@@ -136,7 +139,10 @@ moveCursor cursor track connection =
 
         Point hand l r a ->
             if connection == 0 then
-                { cursor | x = cursor.x + l * cos (degrees cursor.dir), y = cursor.y + l * sin (degrees cursor.dir) }
+                { cursor
+                    | x = cursor.x + Length.inMeters l * cos (degrees cursor.dir)
+                    , y = cursor.y + Length.inMeters l * sin (degrees cursor.dir)
+                }
 
             else
                 let
@@ -160,20 +166,20 @@ moveCursor cursor track connection =
                     newDir
 
 
-getPositionOnTrack : Float -> Cursor -> Track -> Int -> Cursor
+getPositionOnTrack : Length -> Cursor -> Track -> Int -> Cursor
 getPositionOnTrack trackPosition cursor track conn =
     case track of
         StraightTrack _ ->
             Cursor
-                (cursor.x + trackPosition * cos (degrees cursor.dir))
-                (cursor.y + trackPosition * sin (degrees cursor.dir))
+                (cursor.x + Length.inMeters trackPosition * cos (degrees cursor.dir))
+                (cursor.y + Length.inMeters trackPosition * sin (degrees cursor.dir))
                 cursor.dir
 
         CurvedTrack r a ->
             let
                 -- Calculate amount of angle covered
                 a2 =
-                    a * trackPosition / length track 0
+                    a * Quantity.ratio trackPosition (length track 0)
 
                 newDir =
                     cursor.dir + a2
@@ -282,7 +288,7 @@ encode track =
         StraightTrack l ->
             Encode.object
                 [ ( "type", Encode.string "straight" )
-                , ( "length", Encode.float l )
+                , ( "length", Encode.float (Length.inMeters l) )
                 ]
 
         CurvedTrack r a ->
@@ -296,7 +302,7 @@ encode track =
             Encode.object
                 [ ( "type", Encode.string "point" )
                 , ( "hand", Encode.string (handToString hand) )
-                , ( "length", Encode.float l )
+                , ( "length", Encode.float (Length.inMeters l) )
                 , ( "radius", Encode.float r )
                 , ( "angle", Encode.float a )
                 ]
@@ -311,7 +317,7 @@ trackDecoder : String -> Decoder Track
 trackDecoder trackType =
     case trackType of
         "straight" ->
-            Decode.map StraightTrack (Decode.field "length" Decode.float)
+            Decode.map StraightTrack (Decode.map Length.meters (Decode.field "length" Decode.float))
 
         "curved" ->
             Decode.map2 CurvedTrack
@@ -321,7 +327,7 @@ trackDecoder trackType =
         "point" ->
             Decode.map4 Point
                 handednessDecoder
-                (Decode.field "length" Decode.float)
+                (Decode.map Length.meters (Decode.field "length" Decode.float))
                 (Decode.field "radius" Decode.float)
                 (Decode.field "angle" Decode.float)
 

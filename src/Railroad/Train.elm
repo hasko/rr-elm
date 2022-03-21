@@ -11,8 +11,10 @@ module Railroad.Train exposing
 import Dict exposing (Dict)
 import Graph
 import Graph.Pair exposing (getEdgeData)
+import Length exposing (Length)
 import List.Extra
 import Maybe exposing (andThen, withDefault)
+import Quantity
 import Railroad.Layout as Layout exposing (Layout)
 import Railroad.Track as Track exposing (Track)
 import Set
@@ -28,7 +30,7 @@ type alias TrainState =
 
 type alias TrainLocation =
     { edge : ( Int, Int ) -- The vertices
-    , pos : Float -- The position on the track
+    , pos : Length -- The position on the track
     , orientation : Orientation
     , track : Track -- The track information for convenience
     }
@@ -56,10 +58,10 @@ move layout switchState millis trainState =
                 newPos =
                     case loc.orientation of
                         Aligned ->
-                            loc.pos + distanceTraveled
+                            loc.pos |> Quantity.plus (Length.meters distanceTraveled)
 
                         Reverse ->
-                            loc.pos - distanceTraveled
+                            loc.pos |> Quantity.minus (Length.meters distanceTraveled)
             in
             -- Create a new train state ...
             { trainState
@@ -76,7 +78,7 @@ normalizeLocation : Layout -> Dict Int Int -> TrainLocation -> Maybe TrainLocati
 normalizeLocation layout switchState loc =
     -- If the position is beyond the end of the current track ...
     -- TODO Determine and use the appropriate connection nimber instead of 0
-    if loc.pos > Track.length loc.track 0 then
+    if loc.pos |> Quantity.greaterThan (Track.length loc.track 0) then
         -- ... get the next track.
         case nextTrack loc.edge layout switchState of
             Nothing ->
@@ -87,20 +89,20 @@ normalizeLocation layout switchState loc =
                 -- Calculate the new position.
                 { nextLoc
                   -- Subtract the current track length from the position.
-                  -- TODO Determine and use the appropriate connection nimber instead of 0
-                    | pos = loc.pos - Track.length loc.track 0
+                  -- TODO Determine and use the appropriate connection number instead of 0
+                    | pos = loc.pos |> Quantity.minus (Track.length loc.track 0)
                 }
                     -- ... and repeat until done.
                     |> normalizeLocation layout switchState
 
-    else if loc.pos < 0 then
+    else if Quantity.lessThanZero loc.pos then
         case previousTrack loc.edge layout switchState of
             Nothing ->
                 Nothing
 
             Just nextLoc ->
                 -- TODO Determine and use the appropriate connection nimber instead of 0
-                { nextLoc | pos = loc.pos + Track.length nextLoc.track 0 }
+                { nextLoc | pos = loc.pos |> Quantity.plus (Track.length nextLoc.track 0) }
                     |> normalizeLocation layout switchState
 
     else
@@ -126,7 +128,7 @@ previousTrack ( fromId, toId ) layout switchState =
                         Graph.Pair.getEdgeData edge g
                             |> andThen
                                 (\track ->
-                                    Just { edge = edge, pos = 0.0, orientation = Aligned, track = track }
+                                    Just { edge = edge, pos = Quantity.zero, orientation = Aligned, track = track }
                                 )
                     )
 
@@ -146,7 +148,7 @@ previousTrack ( fromId, toId ) layout switchState =
                         getEdgeData edge g
                             |> andThen
                                 (\track ->
-                                    Just { edge = edge, pos = 0.0, orientation = Aligned, track = track }
+                                    Just { edge = edge, pos = Quantity.zero, orientation = Aligned, track = track }
                                 )
                     )
 
@@ -168,7 +170,7 @@ nextTrack ( fromId, toId ) layout switchState =
                         Graph.Pair.getEdgeData edge g
                             |> Maybe.map
                                 (\track ->
-                                    { edge = edge, pos = 0.0, orientation = Aligned, track = track }
+                                    { edge = edge, pos = Quantity.zero, orientation = Aligned, track = track }
                                 )
                     )
 
@@ -184,7 +186,7 @@ nextTrack ( fromId, toId ) layout switchState =
                         getEdgeData edge g
                             |> Maybe.map
                                 (\track ->
-                                    { edge = edge, pos = 0.0, orientation = Aligned, track = track }
+                                    { edge = edge, pos = Quantity.zero, orientation = Aligned, track = track }
                                 )
                     )
 
@@ -204,7 +206,7 @@ initialLocation layout =
         |> Maybe.map
             (\track ->
                 { edge = ( 0, 1 )
-                , pos = 40.0
+                , pos = Length.meters 40.0
                 , orientation = Aligned
                 , track = track
                 }
