@@ -137,7 +137,7 @@ view model =
                 )
             ]
             [ lazy Layout.toSvg model.layout
-            , viewTrain model.state model.layout model.switchState
+            , g [ id "trains" ] [ viewTrain model.state model.layout model.switchState ]
             ]
         , div [ class "row mb-3" ]
             [ div [ class "btn-group", role "group" ]

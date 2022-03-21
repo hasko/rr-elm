@@ -25,7 +25,7 @@ import Railroad.Track as Track exposing (Track(..), getPositionOnTrack, moveCurs
 import Rect exposing (Rect(..))
 import Set
 import Svg exposing (Svg)
-import Svg.Attributes
+import Svg.Attributes exposing (id)
 
 
 type Layout
@@ -145,8 +145,41 @@ renderInfo ((Layout g) as layout) ( from, to ) =
 
 toSvg : Layout -> Svg msg
 toSvg ((Layout g) as layout) =
+    let
+        allCursors =
+            cursors layout
+    in
     Svg.g [ Svg.Attributes.id "layout" ]
-        (Graph.edgesWithData g |> List.filterMap (\( from, _, maybeTrack ) -> maybeTrack) |> List.map Track.toSvg)
+        (Graph.edgesWithData g
+            |> List.map
+                (\( from, to, maybeTrack ) ->
+                    let
+                        trackId =
+                            "track-" ++ String.fromInt from ++ "-" ++ String.fromInt to
+
+                        maybeRef =
+                            Dict.get from allCursors
+                    in
+                    case ( maybeTrack, maybeRef ) of
+                        ( Just track, Just ref ) ->
+                            Svg.g
+                                [ id trackId
+                                , Svg.Attributes.transform
+                                    ("translate("
+                                        ++ String.fromFloat ref.x
+                                        ++ ","
+                                        ++ String.fromFloat ref.y
+                                        ++ ") rotate("
+                                        ++ String.fromFloat ref.dir
+                                        ++ ")"
+                                    )
+                                ]
+                                [ Track.toSvg track ]
+
+                        _ ->
+                            Svg.g [ id trackId ] []
+                )
+        )
 
 
 
