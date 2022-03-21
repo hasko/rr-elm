@@ -17,6 +17,8 @@
             "elm-community/list-extra": "8.2.4",
             "elm-community/maybe-extra": "5.2.0",
             "folkertdev/one-true-path-experiment": "6.0.0",
+            "ianmackenzie/elm-geometry": "3.9.0",
+            "ianmackenzie/elm-geometry-svg": "3.0.0",
             "ianmackenzie/elm-units": "2.9.0",
             "joshforisha/elm-html-entities": "1.0.0",
             "myrho/elm-round": "1.0.4"
@@ -33,7 +35,6 @@
             "folkertdev/svg-path-lowlevel": "4.0.1",
             "ianmackenzie/elm-1d-parameter": "1.0.1",
             "ianmackenzie/elm-float-extra": "1.1.0",
-            "ianmackenzie/elm-geometry": "3.9.0",
             "ianmackenzie/elm-interval": "2.0.0",
             "ianmackenzie/elm-triangular-mesh": "1.1.0",
             "ianmackenzie/elm-units-interval": "2.3.0",

@@ -8,11 +8,15 @@ module Railroad.Track exposing
     , toSvg
     )
 
+import Angle
+import Arc2d
 import Array exposing (Array)
+import Geometry.Svg as Gsvg
 import Html.Attributes
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode
 import Length exposing (Length)
+import Point2d
 import Quantity
 import Railroad.Util exposing (Cursor)
 import Svg exposing (Svg, g)
@@ -230,37 +234,26 @@ toSvg track =
                 []
 
         CurvedTrack r a ->
-            Svg.path
-                [ SA.d
-                    ("M 0,0 A "
-                        ++ (r |> String.fromFloat)
-                        ++ " "
-                        ++ (r |> String.fromFloat)
-                        -- ellipse rotation
-                        ++ " 0 "
-                        -- large arc flag
-                        ++ (if abs a <= 180.0 then
-                                " 0"
+            let
+                arc =
+                    Point2d.origin
+                        |> Arc2d.sweptAround
+                            (Point2d.meters 0
+                                (if a >= 0 then
+                                    r
 
-                            else
-                                " 1"
-                           )
-                        -- sweep flag
-                        ++ (if a >= 0 then
-                                " 1 "
-
-                            else
-                                " 0 "
-                           )
-                        ++ (Array.get 1 cc |> Maybe.map .x |> Maybe.withDefault 0 |> String.fromFloat)
-                        ++ " "
-                        ++ (Array.get 1 cc |> Maybe.map .y |> Maybe.withDefault 0 |> String.fromFloat)
-                    )
-                , SA.fill "none"
+                                 else
+                                    -r
+                                )
+                            )
+                            (Angle.degrees a)
+            in
+            Gsvg.arc2d
+                [ SA.fill "none"
                 , SA.stroke "green"
                 , SA.strokeWidth "1.435"
                 ]
-                []
+                arc
 
         Point hand l r a ->
             -- TODO Draw this properly
