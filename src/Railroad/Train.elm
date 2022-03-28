@@ -78,7 +78,7 @@ normalizeLocation : Layout -> Dict Int Int -> TrainLocation -> Maybe TrainLocati
 normalizeLocation layout switchState loc =
     -- If the position is beyond the end of the current track ...
     -- TODO Determine and use the appropriate connection nimber instead of 0
-    if loc.pos |> Quantity.greaterThan (Track.length loc.track 0) then
+    if loc.pos |> Quantity.greaterThan (Track.length loc.track) then
         -- ... get the next track.
         case nextTrack loc.edge layout switchState of
             Nothing ->
@@ -90,7 +90,7 @@ normalizeLocation layout switchState loc =
                 { nextLoc
                   -- Subtract the current track length from the position.
                   -- TODO Determine and use the appropriate connection number instead of 0
-                    | pos = loc.pos |> Quantity.minus (Track.length loc.track 0)
+                    | pos = loc.pos |> Quantity.minus (Track.length loc.track)
                 }
                     -- ... and repeat until done.
                     |> normalizeLocation layout switchState
@@ -102,7 +102,7 @@ normalizeLocation layout switchState loc =
 
             Just nextLoc ->
                 -- TODO Determine and use the appropriate connection nimber instead of 0
-                { nextLoc | pos = loc.pos |> Quantity.plus (Track.length nextLoc.track 0) }
+                { nextLoc | pos = loc.pos |> Quantity.plus (Track.length nextLoc.track) }
                     |> normalizeLocation layout switchState
 
     else

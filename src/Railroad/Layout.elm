@@ -78,7 +78,7 @@ renderLayout nodeId currentCursor ((Layout g) as layout) knownCursors =
                                 nextNodeId
                                 -- Move the cursor along the track.
                                 -- TODO determine and use the appropriate connection instead of 0
-                                (moveCursor currentCursor track 0)
+                                (moveCursor currentCursor track)
                                 -- And the rest.
                                 layout
                                 acc
@@ -99,7 +99,7 @@ coordsFor pos ( fromNode, toNode ) ((Layout g) as layout) =
                     Nothing
 
                 Just cursor ->
-                    Just (getPositionOnTrack pos cursor track 0)
+                    Just (getPositionOnTrack pos cursor track)
 
 
 switches : Layout -> List ( Int, Switch )
