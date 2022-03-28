@@ -8,9 +8,10 @@ module Railroad.Track exposing
     , toSvg
     )
 
-import Angle
-import Arc2d
+import Angle exposing (Angle)
+import Arc2d exposing (Arc2d)
 import Array exposing (Array)
+import Frame2d
 import Geometry.Svg as Gsvg
 import Html.Attributes
 import Json.Decode as Decode exposing (Decoder)
@@ -25,7 +26,7 @@ import Svg.Attributes as SA
 
 type Track
     = StraightTrack Length
-    | CurvedTrack Float Float -- radius in m, angle in degrees
+    | CurvedTrack Length Angle -- radius in m, angle in degrees
 
 
 length : Track -> Length
@@ -35,7 +36,7 @@ length track =
             l
 
         CurvedTrack r a ->
-            Length.meters (pi * r * abs a / 180.0)
+            (Length.inMeters r * Angle.inRadians a) |> abs |> Length.meters
 
 
 connectorCursors : Track -> ( Cursor, Cursor )
@@ -45,7 +46,7 @@ connectorCursors track =
             ( Cursor 0 0 0, Cursor (Length.inMeters l) 0 0 )
 
         CurvedTrack r a ->
-            ( Cursor 0 0 0, Cursor (r * cos (degrees a)) (r * sin (degrees a)) a )
+            ( Cursor 0 0 0, Cursor (Length.inMeters r * Angle.cos a) (Length.inMeters r * Angle.sin a) (Angle.inDegrees a) )
 
 
 moveCursor : Cursor -> Track -> Cursor
@@ -57,13 +58,13 @@ moveCursor cursor track =
         CurvedTrack r a ->
             let
                 newDir =
-                    cursor.dir + a
+                    cursor.dir + Angle.inDegrees a
 
                 avgDirRad =
                     degrees ((cursor.dir + newDir) / 2.0)
 
                 s =
-                    2 * r * sin (degrees (abs a) / 2)
+                    2 * Length.inMeters r * sin (degrees (abs (Angle.inDegrees a)) / 2)
             in
             Cursor
                 (cursor.x + s * cos avgDirRad)
@@ -84,21 +85,34 @@ getPositionOnTrack trackPosition cursor track =
             let
                 -- Calculate amount of angle covered
                 a2 =
-                    a * Quantity.ratio trackPosition (length track)
+                    Quantity.multiplyBy (Quantity.ratio trackPosition (length track)) a
 
-                newDir =
-                    cursor.dir + a2
+                arc =
+                    curveToArc r a2
+                        |> Arc2d.placeIn
+                            (Frame2d.withAngle (Angle.degrees cursor.dir)
+                                (Point2d.meters cursor.x cursor.y)
+                            )
 
-                avgDirRad =
-                    degrees ((cursor.dir + newDir) / 2.0)
-
-                s =
-                    2 * r * sin (degrees (abs a2) / 2)
+                p =
+                    Arc2d.endPoint arc |> Point2d.toRecord Length.inMeters
             in
-            Cursor
-                (cursor.x + s * cos avgDirRad)
-                (cursor.y + s * sin avgDirRad)
-                newDir
+            Cursor p.x p.y (cursor.dir + Angle.inDegrees a2)
+
+
+curveToArc : Length -> Angle -> Arc2d Length.Meters coords
+curveToArc r a =
+    Point2d.origin
+        |> Arc2d.sweptAround
+            (Point2d.meters 0
+                (if Quantity.greaterThanOrEqualToZero a then
+                    Length.inMeters r
+
+                 else
+                    -(Length.inMeters r)
+                )
+            )
+            a
 
 
 
@@ -126,17 +140,7 @@ toSvg track =
         CurvedTrack r a ->
             let
                 arc =
-                    Point2d.origin
-                        |> Arc2d.sweptAround
-                            (Point2d.meters 0
-                                (if a >= 0 then
-                                    r
-
-                                 else
-                                    -r
-                                )
-                            )
-                            (Angle.degrees a)
+                    curveToArc r a
             in
             Gsvg.arc2d
                 [ SA.fill "none"
@@ -173,8 +177,8 @@ encode track =
         CurvedTrack r a ->
             Encode.object
                 [ ( "type", Encode.string "curved" )
-                , ( "radius", Encode.float r )
-                , ( "angle", Encode.float a )
+                , ( "radius", Encode.float (Length.inMeters r) )
+                , ( "angle", Encode.float (Angle.inDegrees a) )
                 ]
 
 
@@ -191,8 +195,8 @@ trackDecoder trackType =
 
         "curved" ->
             Decode.map2 CurvedTrack
-                (Decode.field "radius" Decode.float)
-                (Decode.field "angle" Decode.float)
+                (Decode.map Length.meters (Decode.field "radius" Decode.float))
+                (Decode.map Angle.degrees (Decode.field "angle" Decode.float))
 
         other ->
             Decode.fail ("Trying to decode a track but " ++ other ++ " is not supported.")

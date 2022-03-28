@@ -12,7 +12,7 @@ module Railroad.Layout exposing
     , tracks
     )
 
-import Cursor exposing (Cursor)
+import Angle
 import Dict exposing (Dict)
 import Graph exposing (Graph, insertData, insertEdgeData)
 import Graph.Pair exposing (getEdgeData)
@@ -192,8 +192,8 @@ initialLayout : Layout
 initialLayout =
     Graph.empty
         |> insertEdgeData 0 1 (StraightTrack (Length.meters 75.0))
-        |> insertEdgeData 1 2 (CurvedTrack 300.0 15.0)
-        |> insertEdgeData 2 4 (CurvedTrack 300 -15)
+        |> insertEdgeData 1 2 (CurvedTrack (Length.meters 300.0) (Angle.degrees 15.0))
+        |> insertEdgeData 2 4 (CurvedTrack (Length.meters 300) (Angle.degrees -15))
         -- CCW
         |> insertEdgeData 1 3 (StraightTrack (Length.meters 75.0))
         |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ] ])
