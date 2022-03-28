@@ -217,58 +217,59 @@ getPositionOnTrack trackPosition cursor track conn =
 
 toSvg : Track -> List (Svg msg)
 toSvg track =
-    let
-        cc =
-            connectorCursors track
-    in
-    [ case track of
-        StraightTrack s ->
-            Svg.line
+    case connectorCursors track |> Array.get 1 of
+        Nothing ->
+            []
+
+        Just cc1 ->
+            [ case track of
+                StraightTrack s ->
+                    Svg.line
+                        [ SA.x1 "0"
+                        , SA.y1 "0"
+                        , cc1.x |> String.fromFloat |> SA.x2
+                        , cc1.y |> String.fromFloat |> SA.y2
+                        , SA.stroke "grey"
+                        , SA.strokeWidth "1.435"
+                        ]
+                        []
+
+                CurvedTrack r a ->
+                    let
+                        arc =
+                            Point2d.origin
+                                |> Arc2d.sweptAround
+                                    (Point2d.meters 0
+                                        (if a >= 0 then
+                                            r
+
+                                         else
+                                            -r
+                                        )
+                                    )
+                                    (Angle.degrees a)
+                    in
+                    Gsvg.arc2d
+                        [ SA.fill "none"
+                        , SA.stroke "grey"
+                        , SA.strokeWidth "1.435"
+                        ]
+                        arc
+
+                Point hand l r a ->
+                    -- TODO Draw this properly
+                    Svg.g [] []
+            , Svg.line
                 [ SA.x1 "0"
-                , SA.y1 "0"
-                , Array.get 1 cc |> Maybe.map .x |> Maybe.withDefault 0 |> String.fromFloat |> SA.x2
-                , Array.get 1 cc |> Maybe.map .y |> Maybe.withDefault 0 |> String.fromFloat |> SA.y2
-                , SA.stroke "grey"
-                , SA.strokeWidth "1.435"
+                , SA.y1 "-1"
+                , SA.x2 "0"
+                , SA.y2 "1"
+                , SA.stroke "black"
+                , SA.strokeWidth "1px"
+                , Html.Attributes.attribute "vector-effect" "non-scaling-stroke"
                 ]
                 []
-
-        CurvedTrack r a ->
-            let
-                arc =
-                    Point2d.origin
-                        |> Arc2d.sweptAround
-                            (Point2d.meters 0
-                                (if a >= 0 then
-                                    r
-
-                                 else
-                                    -r
-                                )
-                            )
-                            (Angle.degrees a)
-            in
-            Gsvg.arc2d
-                [ SA.fill "none"
-                , SA.stroke "green"
-                , SA.strokeWidth "1.435"
-                ]
-                arc
-
-        Point hand l r a ->
-            -- TODO Draw this properly
-            Svg.g [] []
-    , Svg.line
-        [ SA.x1 "0"
-        , SA.y1 "-1"
-        , SA.x2 "0"
-        , SA.y2 "1"
-        , SA.stroke "black"
-        , SA.strokeWidth "1px"
-        , Html.Attributes.attribute "vector-effect" "non-scaling-stroke"
-        ]
-        []
-    ]
+            ]
 
 
 
