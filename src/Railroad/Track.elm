@@ -22,6 +22,7 @@ import Quantity
 import Railroad.Util exposing (Frame)
 import Svg exposing (Svg, g)
 import Svg.Attributes as SA
+import Vector2d
 
 
 type Track
@@ -57,11 +58,14 @@ moveFrame cursor track =
 
         CurvedTrack r a ->
             let
+                cursorDir =
+                    Frame2d.xDirection cursor |> Direction2d.toAngle |> Angle.inDegrees
+
                 newDir =
-                    cursor.dir + Angle.inDegrees a
+                    cursorDir + Angle.inDegrees a
 
                 avgDirRad =
-                    degrees ((cursor.dir + newDir) / 2.0)
+                    degrees ((cursorDir + newDir) / 2.0)
 
                 s =
                     2 * Length.inMeters r * sin (degrees (abs (Angle.inDegrees a)) / 2)
@@ -78,12 +82,7 @@ getPositionOnTrack : Length -> Frame -> Track -> Frame
 getPositionOnTrack trackPosition cursor track =
     case track of
         StraightTrack _ ->
-            Frame2d.withAngle
-                (Angle.degrees cursor.dir)
-                (Point2d.meters
-                    (cursor.x + Length.inMeters trackPosition * cos (degrees cursor.dir))
-                    (cursor.y + Length.inMeters trackPosition * sin (degrees cursor.dir))
-                )
+            Frame2d.translateBy (Vector2d.xy trackPosition Quantity.zero) cursor
 
         CurvedTrack r a ->
             let
@@ -93,10 +92,7 @@ getPositionOnTrack trackPosition cursor track =
 
                 arc =
                     curveToArc r a2
-                        |> Arc2d.placeIn
-                            (Frame2d.withAngle (Angle.degrees cursor.dir)
-                                (Point2d.meters cursor.x cursor.y)
-                            )
+                        |> Arc2d.placeIn cursor
 
                 p =
                     Arc2d.endPoint arc |> Point2d.toRecord Length.inMeters
