@@ -118,7 +118,7 @@ updateTick delta model =
     case newTrainState.location of
         Nothing ->
             -- Train could not move, stop it immediately.
-            ( { model | state = Train.stopped model.state }, Cmd.none )
+            ( { model | state = Train.stopped model.state, running = False }, Cmd.none )
 
         Just loc ->
             ( { model | state = newTrainState }, Cmd.none )
