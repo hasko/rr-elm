@@ -16,13 +16,12 @@ import Angle
 import Dict exposing (Dict)
 import Graph exposing (Graph, insertData, insertEdgeData)
 import Graph.Pair exposing (getEdgeData)
-import Json.Decode as D
-import Json.Encode as E
 import Length exposing (Length)
 import List.Extra exposing (cartesianProduct)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
-import Railroad.Track as Track exposing (Track(..), getPositionOnTrack, moveCursor)
+import Railroad.Track as Track exposing (Track(..), getPositionOnTrack, moveFrame)
+import Railroad.Util exposing (Frame)
 import Rect exposing (Rect(..))
 import Set
 import Svg exposing (Svg)
@@ -37,10 +36,10 @@ type alias Switch =
     { configs : List (List ( Int, Int )) }
 
 
-cursors : Layout -> Dict Int Cursor
+cursors : Layout -> Dict Int Frame
 cursors layout =
     -- Render the layout starting at connection 0 and at the origin, facing east, and return the resulting cursors.
-    renderLayout 0 (Cursor 0 2.5 0) layout Dict.empty
+    renderLayout 0 (Frame 0 2.5 0) layout Dict.empty
 
 
 boundingBox : Layout -> Rect
@@ -51,12 +50,12 @@ boundingBox layout =
         (cursors layout |> Dict.values)
 
 
-renderLayout : Int -> Cursor -> Layout -> Dict Int Cursor -> Dict Int Cursor
-renderLayout nodeId currentCursor ((Layout g) as layout) knownCursors =
+renderLayout : Int -> Frame -> Layout -> Dict Int Frame -> Dict Int Frame
+renderLayout nodeId currentFrame ((Layout g) as layout) knownFrames =
     -- If the node cursor is already calculated ...
-    if Dict.member nodeId knownCursors then
+    if Dict.member nodeId knownFrames then
         -- ... then we are done.
-        knownCursors
+        knownFrames
 
     else
         -- Get all the outoing tracks from this node.
@@ -78,16 +77,16 @@ renderLayout nodeId currentCursor ((Layout g) as layout) knownCursors =
                                 nextNodeId
                                 -- Move the cursor along the track.
                                 -- TODO determine and use the appropriate connection instead of 0
-                                (moveCursor currentCursor track)
+                                (moveFrame currentFrame track)
                                 -- And the rest.
                                 layout
                                 acc
                 )
                 -- Begin with the list of known cursors plus the current one.
-                (Dict.insert nodeId currentCursor knownCursors)
+                (Dict.insert nodeId currentFrame knownFrames)
 
 
-coordsFor : Length -> ( Int, Int ) -> Layout -> Maybe Cursor
+coordsFor : Length -> ( Int, Int ) -> Layout -> Maybe Frame
 coordsFor pos ( fromNode, toNode ) ((Layout g) as layout) =
     case Graph.getEdgeData fromNode toNode g of
         Nothing ->
@@ -118,7 +117,7 @@ tracks (Layout g) =
         |> Maybe.Extra.values
 
 
-renderInfo : Layout -> ( Int, Int ) -> Maybe ( Cursor, Cursor, Track )
+renderInfo : Layout -> ( Int, Int ) -> Maybe ( Frame, Frame, Track )
 renderInfo ((Layout g) as layout) ( from, to ) =
     case Graph.getEdgeData from to g of
         Nothing ->
@@ -147,7 +146,7 @@ renderInfo ((Layout g) as layout) ( from, to ) =
 toSvg : Layout -> Svg msg
 toSvg ((Layout g) as layout) =
     let
-        allCursors =
+        allFrames =
             cursors layout
     in
     Svg.g [ Svg.Attributes.id "layout" ]
@@ -159,7 +158,7 @@ toSvg ((Layout g) as layout) =
                             "track-" ++ String.fromInt from ++ "-" ++ String.fromInt to
 
                         maybeRef =
-                            Dict.get from allCursors
+                            Dict.get from allFrames
                     in
                     case ( maybeTrack, maybeRef ) of
                         ( Just track, Just ref ) ->

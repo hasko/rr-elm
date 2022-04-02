@@ -4,14 +4,14 @@ module Railroad.Track exposing
     , encode
     , getPositionOnTrack
     , length
-    , moveCursor
+    , moveFrame
     , toSvg
     )
 
 import Angle exposing (Angle)
 import Arc2d exposing (Arc2d)
 import Array exposing (Array)
-import Frame2d
+import Frame2d exposing (Frame2d)
 import Geometry.Svg as Gsvg
 import Html.Attributes
 import Json.Decode as Decode exposing (Decoder)
@@ -19,7 +19,7 @@ import Json.Encode as Encode
 import Length exposing (Length)
 import Point2d
 import Quantity
-import Railroad.Util exposing (Cursor)
+import Railroad.Util exposing (Frame)
 import Svg exposing (Svg, g)
 import Svg.Attributes as SA
 
@@ -36,21 +36,21 @@ length track =
             l
 
         CurvedTrack r a ->
-            (Length.inMeters r * Angle.inRadians a) |> abs |> Length.meters
+            Quantity.multiplyBy (Angle.inRadians a) r |> Quantity.abs
 
 
-connectorCursors : Track -> ( Cursor, Cursor )
-connectorCursors track =
+connectorFrames : Track -> ( Frame, Frame )
+connectorFrames track =
     case track of
         StraightTrack l ->
-            ( Cursor 0 0 0, Cursor (Length.inMeters l) 0 0 )
+            ( Frame2d.atOrigin, Frame2d.atPoint (Point2d.xy (Length.inMeters l) Quantity.zero) )
 
         CurvedTrack r a ->
-            ( Cursor 0 0 0, Cursor (Length.inMeters r * Angle.cos a) (Length.inMeters r * Angle.sin a) (Angle.inDegrees a) )
+            ( Frame2d.atOrigin, Frame2d.withAngle a (Point2d.xy (Quantity.multiplyBy (Angle.cos a) r) (Length.inMeters r * Angle.sin a)) )
 
 
-moveCursor : Cursor -> Track -> Cursor
-moveCursor cursor track =
+moveFrame : Frame -> Track -> Frame
+moveFrame cursor track =
     case track of
         StraightTrack l ->
             getPositionOnTrack l cursor track
@@ -66,20 +66,24 @@ moveCursor cursor track =
                 s =
                     2 * Length.inMeters r * sin (degrees (abs (Angle.inDegrees a)) / 2)
             in
-            Cursor
-                (cursor.x + s * cos avgDirRad)
-                (cursor.y + s * sin avgDirRad)
-                newDir
+            Frame2d.withAngle
+                (Angle.inDegrees newDir)
+                (Point2d.meters
+                    (cursor.x + s * cos avgDirRad)
+                    (cursor.y + s * sin avgDirRad)
+                )
 
 
-getPositionOnTrack : Length -> Cursor -> Track -> Cursor
+getPositionOnTrack : Length -> Frame -> Track -> Frame
 getPositionOnTrack trackPosition cursor track =
     case track of
         StraightTrack _ ->
-            Cursor
-                (cursor.x + Length.inMeters trackPosition * cos (degrees cursor.dir))
-                (cursor.y + Length.inMeters trackPosition * sin (degrees cursor.dir))
-                cursor.dir
+            Frame2d.withAngle
+                (Angle.degrees cursor.dir)
+                (Point2d.meters
+                    (cursor.x + Length.inMeters trackPosition * cos (degrees cursor.dir))
+                    (cursor.y + Length.inMeters trackPosition * sin (degrees cursor.dir))
+                )
 
         CurvedTrack r a ->
             let
@@ -97,7 +101,7 @@ getPositionOnTrack trackPosition cursor track =
                 p =
                     Arc2d.endPoint arc |> Point2d.toRecord Length.inMeters
             in
-            Cursor p.x p.y (cursor.dir + Angle.inDegrees a2)
+            Frame2d.withAngle (Angle.degrees (cursor.dir + Angle.inDegrees a2)) (Point2d.meters p.x p.y)
 
 
 curveToArc : Length -> Angle -> Arc2d Length.Meters coords
@@ -123,7 +127,7 @@ toSvg : Track -> List (Svg msg)
 toSvg track =
     let
         cc1 =
-            connectorCursors track |> Tuple.second
+            connectorFrames track |> Tuple.second
     in
     [ case track of
         StraightTrack s ->
@@ -200,23 +204,3 @@ trackDecoder trackType =
 
         other ->
             Decode.fail ("Trying to decode a track but " ++ other ++ " is not supported.")
-
-
-
-{-
-   handednessDecoder : Decoder Handedness
-   handednessDecoder =
-       Decode.string
-           |> Decode.andThen
-               (\string ->
-                   case string of
-                       "right" ->
-                           Decode.succeed RightHanded
-
-                       "left" ->
-                           Decode.succeed LeftHanded
-
-                       _ ->
-                           Decode.fail "Invalid Handedness"
-               )
--}

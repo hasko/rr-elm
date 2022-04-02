@@ -161,7 +161,7 @@ view model =
                 [ table [ class "table" ]
                     [ tbody []
                         [ tr [] [ th [ scope "row" ] [ text "Name" ], td [] [ text model.state.name ] ]
-                        , tr [] [ th [ scope "row" ] [ text "Length" ], td [] [ text (String.fromFloat model.state.length) ] ]
+                        , tr [] [ th [ scope "row" ] [ text "Length" ], td [] [ text (String.fromFloat model.state.length ++ " m") ] ]
                         , tr []
                             [ th [ scope "row" ] [ text "Speed" ]
                             , td []
