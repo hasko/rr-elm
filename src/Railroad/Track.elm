@@ -11,6 +11,7 @@ module Railroad.Track exposing
 import Angle exposing (Angle)
 import Arc2d exposing (Arc2d)
 import Array exposing (Array)
+import Direction2d
 import Frame2d exposing (Frame2d)
 import Geometry.Svg as Gsvg
 import Html.Attributes
@@ -44,10 +45,16 @@ connectorFrames : Track -> ( Frame, Frame )
 connectorFrames track =
     case track of
         StraightTrack l ->
-            ( Frame2d.atOrigin, Frame2d.atPoint (Point2d.xy (Length.inMeters l) Quantity.zero) )
+            ( Frame2d.atOrigin, Frame2d.atPoint (Point2d.xy l Quantity.zero) )
 
         CurvedTrack r a ->
-            ( Frame2d.atOrigin, Frame2d.withAngle a (Point2d.xy (Quantity.multiplyBy (Angle.cos a) r) (Length.inMeters r * Angle.sin a)) )
+            ( Frame2d.atOrigin
+            , Frame2d.withAngle a
+                (Point2d.xy
+                    (Quantity.multiplyBy (Angle.cos a) r)
+                    (Quantity.multiplyBy (Angle.sin a) r)
+                )
+            )
 
 
 moveFrame : Frame -> Track -> Frame
@@ -70,12 +77,9 @@ moveFrame cursor track =
                 s =
                     2 * Length.inMeters r * sin (degrees (abs (Angle.inDegrees a)) / 2)
             in
-            Frame2d.withAngle
-                (Angle.inDegrees newDir)
-                (Point2d.meters
-                    (cursor.x + s * cos avgDirRad)
-                    (cursor.y + s * sin avgDirRad)
-                )
+            cursor
+                |> Frame2d.translateBy (Vector2d.meters (s * cos avgDirRad) (s * sin avgDirRad))
+                |> Frame2d.rotateBy a
 
 
 getPositionOnTrack : Length -> Frame -> Track -> Frame
@@ -95,9 +99,9 @@ getPositionOnTrack trackPosition cursor track =
                         |> Arc2d.placeIn cursor
 
                 p =
-                    Arc2d.endPoint arc |> Point2d.toRecord Length.inMeters
+                    Arc2d.endPoint arc
             in
-            Frame2d.withAngle (Angle.degrees (cursor.dir + Angle.inDegrees a2)) (Point2d.meters p.x p.y)
+            cursor |> Frame2d.moveTo p |> Frame2d.rotateBy a2
 
 
 curveToArc : Length -> Angle -> Arc2d Length.Meters coords
@@ -123,7 +127,10 @@ toSvg : Track -> List (Svg msg)
 toSvg track =
     let
         cc1 =
-            connectorFrames track |> Tuple.second
+            connectorFrames track
+                |> Tuple.second
+                |> Frame2d.originPoint
+                |> Point2d.toRecord Length.inMeters
     in
     [ case track of
         StraightTrack s ->

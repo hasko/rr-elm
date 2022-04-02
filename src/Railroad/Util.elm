@@ -1,12 +1,16 @@
-module Railroad.Util exposing (Frame, World)
+module Railroad.Util exposing (Frame, WorldCoords)
 
 import Frame2d exposing (Frame2d)
 import Length exposing (Meters)
 
 
-type World
-    = World
+type WorldCoords
+    = WorldCoords
+
+
+type LocalCoords
+    = LocalCoords
 
 
 type alias Frame =
-    Frame2d Meters World {}
+    Frame2d Meters WorldCoords { defines : LocalCoords }

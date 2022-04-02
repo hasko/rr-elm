@@ -14,12 +14,15 @@ module Railroad.Layout exposing
 
 import Angle
 import Dict exposing (Dict)
+import Direction2d
+import Frame2d
 import Graph exposing (Graph, insertData, insertEdgeData)
 import Graph.Pair exposing (getEdgeData)
 import Length exposing (Length)
 import List.Extra exposing (cartesianProduct)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
+import Point2d
 import Railroad.Track as Track exposing (Track(..), getPositionOnTrack, moveFrame)
 import Railroad.Util exposing (Frame)
 import Rect exposing (Rect(..))
@@ -39,7 +42,7 @@ type alias Switch =
 cursors : Layout -> Dict Int Frame
 cursors layout =
     -- Render the layout starting at connection 0 and at the origin, facing east, and return the resulting cursors.
-    renderLayout 0 (Frame 0 2.5 0) layout Dict.empty
+    renderLayout 0 (Frame2d.atPoint (Point2d.meters 0 2.5)) layout Dict.empty
 
 
 boundingBox : Layout -> Rect
@@ -47,7 +50,7 @@ boundingBox layout =
     List.foldl
         (\c (Rect x1 y1 x2 y2) -> Rect (min x1 c.x) (min y1 c.y) (max x2 c.x) (max y2 c.y))
         (Rect 0 0 0 0)
-        (cursors layout |> Dict.values)
+        (cursors layout |> Dict.values |> List.map (Frame2d.originPoint >> Point2d.toRecord Length.inMeters))
 
 
 renderLayout : Int -> Frame -> Layout -> Dict Int Frame -> Dict Int Frame
@@ -162,15 +165,22 @@ toSvg ((Layout g) as layout) =
                     in
                     case ( maybeTrack, maybeRef ) of
                         ( Just track, Just ref ) ->
+                            let
+                                refP =
+                                    ref |> Frame2d.originPoint |> Point2d.toRecord Length.inMeters
+
+                                refA =
+                                    ref |> Frame2d.xDirection |> Direction2d.toAngle |> Angle.inDegrees
+                            in
                             Svg.g
                                 [ id trackId
                                 , Svg.Attributes.transform
                                     ("translate("
-                                        ++ String.fromFloat ref.x
+                                        ++ String.fromFloat refP.x
                                         ++ ","
-                                        ++ String.fromFloat ref.y
+                                        ++ String.fromFloat refP.y
                                         ++ ") rotate("
-                                        ++ String.fromFloat ref.dir
+                                        ++ String.fromFloat refA
                                         ++ ")"
                                     )
                                 ]

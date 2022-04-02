@@ -3,6 +3,7 @@ module Main exposing (Msg(..), main, update, view)
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
 import Dict exposing (Dict)
+import Frame2d
 import Graph
 import Html exposing (Html, br, button, div, li, pre, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (class, rowspan, scope, style)
@@ -12,6 +13,7 @@ import Html.Lazy exposing (lazy, lazy2)
 import Length exposing (Length)
 import List.Extra
 import Maybe exposing (andThen, withDefault)
+import Point2d
 import Quantity
 import Railroad.Layout as Layout exposing (..)
 import Railroad.Track as Track exposing (Track(..))
@@ -230,12 +232,19 @@ viewTrain train layout switchState =
                                     g [] []
 
                                 Just c2 ->
+                                    let
+                                        p1 =
+                                            c1 |> Frame2d.originPoint |> Point2d.toRecord Length.inMeters
+
+                                        p2 =
+                                            c2 |> Frame2d.originPoint |> Point2d.toRecord Length.inMeters
+                                    in
                                     line
                                         [ Svg.Attributes.id "train"
-                                        , x1 (c1.x |> String.fromFloat)
-                                        , y1 (c1.y |> String.fromFloat)
-                                        , x2 (c2.x |> String.fromFloat)
-                                        , y2 (c2.y |> String.fromFloat)
+                                        , x1 (p1.x |> String.fromFloat)
+                                        , y1 (p1.y |> String.fromFloat)
+                                        , x2 (p2.x |> String.fromFloat)
+                                        , y2 (p2.y |> String.fromFloat)
                                         , stroke "#3B3332"
                                         , strokeWidth "2.990"
                                         ]
