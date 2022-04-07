@@ -38,7 +38,6 @@ type alias TrainLocation =
 
 type Orientation
     = Aligned
-    | Reverse
 
 
 move : Layout -> Dict Int Int -> Float -> TrainState -> TrainState
@@ -59,9 +58,6 @@ move layout switchState millis trainState =
                     case loc.orientation of
                         Aligned ->
                             loc.pos |> Quantity.plus (Length.meters distanceTraveled)
-
-                        Reverse ->
-                            loc.pos |> Quantity.minus (Length.meters distanceTraveled)
             in
             -- Create a new train state ...
             { trainState
@@ -178,9 +174,9 @@ nextTrack ( fromId, toId ) layout switchState =
             Dict.get toId switchState
                 |> withDefault 0
                 |> (\i -> List.Extra.getAt i switch.configs)
-                |> Maybe.map (\cfg -> List.filter (\( from, to ) -> from == fromId) cfg)
+                |> Maybe.map (\cfg -> List.filter (\( from, _ ) -> from == fromId) cfg)
                 |> andThen List.head
-                |> Maybe.map (\( from, to ) -> ( toId, to ))
+                |> Maybe.map (\( _, to ) -> ( toId, to ))
                 |> andThen
                     (\edge ->
                         getEdgeData edge g

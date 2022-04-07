@@ -1,29 +1,25 @@
-module Main exposing (Msg(..), main, update, view)
+module Main exposing (Msg(..), main)
 
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
 import Dict exposing (Dict)
 import Frame2d
-import Graph
-import Html exposing (Html, br, button, div, li, pre, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, rowspan, scope, style)
+import Html exposing (Html, br, button, div, li, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, scope)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
-import Length exposing (Length)
+import Length
 import List.Extra
-import Maybe exposing (andThen, withDefault)
+import Maybe exposing (withDefault)
 import Point2d
 import Quantity
 import Railroad.Layout as Layout exposing (..)
-import Railroad.Track as Track exposing (Track(..))
 import Railroad.Train as Train exposing (..)
 import Rect
 import Round
-import Set exposing (Set)
-import Svg exposing (Svg, g, line, path, rect, svg)
-import Svg.Attributes exposing (d, fill, id, stroke, strokeWidth, viewBox, width, x1, x2, y1, y2)
-import Time
+import Svg exposing (Svg, g, line, svg)
+import Svg.Attributes exposing (id, stroke, strokeWidth, viewBox, width, x1, x2, y1, y2)
 import Tuple
 
 
@@ -90,7 +86,7 @@ update msg model =
 
         Reset ->
             let
-                ( m, cmd ) =
+                ( m, _ ) =
                     init ()
             in
             ( { m | running = False }, Cmd.none )
@@ -120,7 +116,7 @@ updateTick delta model =
             -- Train could not move, stop it immediately.
             ( { model | state = Train.stopped model.state, running = False }, Cmd.none )
 
-        Just loc ->
+        Just _ ->
             ( { model | state = newTrainState }, Cmd.none )
 
 

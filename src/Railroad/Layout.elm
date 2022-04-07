@@ -3,13 +3,10 @@ module Railroad.Layout exposing
     , Switch
     , boundingBox
     , coordsFor
-    , cursors
     , initialLayout
-    , renderInfo
     , switches
     , toGraph
     , toSvg
-    , tracks
     )
 
 import Angle
@@ -17,9 +14,7 @@ import Dict exposing (Dict)
 import Direction2d
 import Frame2d
 import Graph exposing (Graph, insertData, insertEdgeData)
-import Graph.Pair exposing (getEdgeData)
 import Length exposing (Length)
-import List.Extra exposing (cartesianProduct)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
 import Point2d
@@ -111,35 +106,6 @@ switches (Layout g) =
         |> List.map (\( vertex, data ) -> Maybe.map (\switch -> ( vertex, switch )) data)
         -- Filter out the Nothings
         |> Maybe.Extra.values
-
-
-tracks : Layout -> List Track
-tracks (Layout g) =
-    Graph.edgesWithData g
-        |> List.map (\( from, to, maybeTrack ) -> maybeTrack)
-        |> Maybe.Extra.values
-
-
-renderInfo : Layout -> ( Int, Int ) -> Maybe ( Frame, Frame, Track )
-renderInfo ((Layout g) as layout) ( from, to ) =
-    case Graph.getEdgeData from to g of
-        Nothing ->
-            -- Should never happen but this edge has no track data.
-            Nothing
-
-        Just track ->
-            case Dict.get from (cursors layout) of
-                Nothing ->
-                    -- The position of the from connection cannot be calculated.
-                    Nothing
-
-                Just c1 ->
-                    case Dict.get to (cursors layout) of
-                        Nothing ->
-                            Nothing
-
-                        Just c2 ->
-                            Just ( c1, c2, track )
 
 
 

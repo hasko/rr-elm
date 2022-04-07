@@ -1,7 +1,5 @@
 module Railroad.Track exposing
     ( Track(..)
-    , decoder
-    , encode
     , getPositionOnTrack
     , length
     , moveFrame
@@ -10,18 +8,15 @@ module Railroad.Track exposing
 
 import Angle exposing (Angle)
 import Arc2d exposing (Arc2d)
-import Array exposing (Array)
 import Direction2d
-import Frame2d exposing (Frame2d)
+import Frame2d
 import Geometry.Svg as Gsvg
 import Html.Attributes
-import Json.Decode as Decode exposing (Decoder)
-import Json.Encode as Encode
 import Length exposing (Length)
 import Point2d
 import Quantity
 import Railroad.Util exposing (Frame)
-import Svg exposing (Svg, g)
+import Svg exposing (Svg)
 import Svg.Attributes as SA
 import Vector2d
 
@@ -133,7 +128,7 @@ toSvg track =
                 |> Point2d.toRecord Length.inMeters
     in
     [ case track of
-        StraightTrack s ->
+        StraightTrack _ ->
             Svg.line
                 [ SA.x1 "0"
                 , SA.y1 "0"
@@ -170,40 +165,3 @@ toSvg track =
 
 
 -- JSON
-
-
-encode : Track -> Encode.Value
-encode track =
-    case track of
-        StraightTrack l ->
-            Encode.object
-                [ ( "type", Encode.string "straight" )
-                , ( "length", Encode.float (Length.inMeters l) )
-                ]
-
-        CurvedTrack r a ->
-            Encode.object
-                [ ( "type", Encode.string "curved" )
-                , ( "radius", Encode.float (Length.inMeters r) )
-                , ( "angle", Encode.float (Angle.inDegrees a) )
-                ]
-
-
-decoder : Decoder Track
-decoder =
-    Decode.field "type" Decode.string |> Decode.andThen trackDecoder
-
-
-trackDecoder : String -> Decoder Track
-trackDecoder trackType =
-    case trackType of
-        "straight" ->
-            Decode.map StraightTrack (Decode.map Length.meters (Decode.field "length" Decode.float))
-
-        "curved" ->
-            Decode.map2 CurvedTrack
-                (Decode.map Length.meters (Decode.field "radius" Decode.float))
-                (Decode.map Angle.degrees (Decode.field "angle" Decode.float))
-
-        other ->
-            Decode.fail ("Trying to decode a track but " ++ other ++ " is not supported.")
