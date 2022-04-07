@@ -1,5 +1,11 @@
 {
   "devDependencies": {
-    "elm-review": "^2.7.0"
-  }
+    "elm-review": "^2.7.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hasko/rr-elm"
+  },
+  "private": true,
+  "license": "UNLICENSED"
 }
