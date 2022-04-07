@@ -784,11 +784,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.b7.a5 === region.cp.a5)
+	if (region.bJ.aR === region.bZ.aR)
 	{
-		return 'on line ' + region.b7.a5;
+		return 'on line ' + region.bJ.aR;
 	}
-	return 'on lines ' + region.b7.a5 + ' through ' + region.cp.a5;
+	return 'on lines ' + region.bJ.aR + ' through ' + region.bZ.aR;
 }
 
 
@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.dI,
-		impl.ed,
-		impl.d8,
+		impl.c1,
+		impl.dt,
+		impl.dp,
 		function() { return function() {} }
 	);
 });
@@ -2704,9 +2704,9 @@ var _VirtualDom_mapEventTuple = F2(function(func, tuple)
 var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
-		am: func(record.am),
-		b8: record.b8,
-		b1: record.b1
+		aa: func(record.aa),
+		bK: record.bK,
+		bE: record.bE
 	}
 });
 
@@ -2974,11 +2974,11 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 		// 3 = Custom
 
 		var value = result.a;
-		var message = !tag ? value : tag < 3 ? value.a : value.am;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.b8;
+		var message = !tag ? value : tag < 3 ? value.a : value.aa;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.bK;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.b1) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.bE) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3928,11 +3928,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.dI,
-		impl.ed,
-		impl.d8,
+		impl.c1,
+		impl.dt,
+		impl.dp,
 		function(sendToApp, initialModel) {
-			var view = impl.ee;
+			var view = impl.du;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3964,12 +3964,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.dI,
-		impl.ed,
-		impl.d8,
+		impl.c1,
+		impl.dt,
+		impl.dp,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.b5 && impl.b5(sendToApp)
-			var view = impl.ee;
+			var divertHrefToApp = impl.bH && impl.bH(sendToApp)
+			var view = impl.du;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3977,12 +3977,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.dp);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.cN);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.ec) && (_VirtualDom_doc.title = title = doc.ec);
+				(title !== doc.ds) && (_VirtualDom_doc.title = title = doc.ds);
 			});
 		}
 	);
@@ -4038,12 +4038,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.d_;
-	var onUrlRequest = impl.d$;
+	var onUrlChange = impl.dh;
+	var onUrlRequest = impl.di;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		b5: function(sendToApp)
+		bH: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4059,9 +4059,9 @@ function _Browser_application(impl)
 					var next = $elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.cX === next.cX
-							&& curr.cz === next.cz
-							&& curr.cT.a === next.cT.a
+							&& curr.co === next.co
+							&& curr.b4 === next.b4
+							&& curr.cl.a === next.cl.a
 						)
 							? $elm$browser$Browser$Internal(next)
 							: $elm$browser$Browser$External(href)
@@ -4069,13 +4069,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		dI: function(flags)
+		c1: function(flags)
 		{
-			return A3(impl.dI, flags, _Browser_getUrl(), key);
+			return A3(impl.c1, flags, _Browser_getUrl(), key);
 		},
-		ee: impl.ee,
-		ed: impl.ed,
-		d8: impl.d8
+		du: impl.du,
+		dt: impl.dt,
+		dp: impl.dp
 	});
 }
 
@@ -4141,17 +4141,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { dG: 'hidden', ds: 'visibilitychange' }
+		? { c$: 'hidden', cP: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { dG: 'mozHidden', ds: 'mozvisibilitychange' }
+		? { c$: 'mozHidden', cP: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { dG: 'msHidden', ds: 'msvisibilitychange' }
+		? { c$: 'msHidden', cP: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { dG: 'webkitHidden', ds: 'webkitvisibilitychange' }
-		: { dG: 'hidden', ds: 'visibilitychange' };
+		? { c$: 'webkitHidden', cP: 'webkitvisibilitychange' }
+		: { c$: 'hidden', cP: 'visibilitychange' };
 }
 
 
@@ -4232,12 +4232,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		c4: _Browser_getScene(),
-		dh: {
-			dj: _Browser_window.pageXOffset,
-			dk: _Browser_window.pageYOffset,
-			di: _Browser_doc.documentElement.clientWidth,
-			cx: _Browser_doc.documentElement.clientHeight
+		cv: _Browser_getScene(),
+		cF: {
+			cH: _Browser_window.pageXOffset,
+			cI: _Browser_window.pageYOffset,
+			cG: _Browser_doc.documentElement.clientWidth,
+			b3: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4247,8 +4247,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		di: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		cx: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		cG: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		b3: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4271,15 +4271,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			c4: {
-				di: node.scrollWidth,
-				cx: node.scrollHeight
+			cv: {
+				cG: node.scrollWidth,
+				b3: node.scrollHeight
 			},
-			dh: {
-				dj: node.scrollLeft,
-				dk: node.scrollTop,
-				di: node.clientWidth,
-				cx: node.clientHeight
+			cF: {
+				cH: node.scrollLeft,
+				cI: node.scrollTop,
+				cG: node.clientWidth,
+				b3: node.clientHeight
 			}
 		};
 	});
@@ -4309,18 +4309,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			c4: _Browser_getScene(),
-			dh: {
-				dj: x,
-				dk: y,
-				di: _Browser_doc.documentElement.clientWidth,
-				cx: _Browser_doc.documentElement.clientHeight
+			cv: _Browser_getScene(),
+			cF: {
+				cH: x,
+				cI: y,
+				cG: _Browser_doc.documentElement.clientWidth,
+				b3: _Browser_doc.documentElement.clientHeight
 			},
-			dz: {
-				dj: x + rect.left,
-				dk: y + rect.top,
-				di: rect.width,
-				cx: rect.height
+			cU: {
+				cH: x + rect.left,
+				cI: y + rect.top,
+				cG: rect.width,
+				b3: rect.height
 			}
 		};
 	});
@@ -4798,25 +4798,25 @@ var $elm$core$Array$treeFromBuilder = F2(
 	});
 var $elm$core$Array$builderToArray = F2(
 	function (reverseNodeList, builder) {
-		if (!builder.r) {
+		if (!builder.o) {
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.t),
+				$elm$core$Elm$JsArray$length(builder.q),
 				$elm$core$Array$shiftStep,
 				$elm$core$Elm$JsArray$empty,
-				builder.t);
+				builder.q);
 		} else {
-			var treeLen = builder.r * $elm$core$Array$branchFactor;
+			var treeLen = builder.o * $elm$core$Array$branchFactor;
 			var depth = $elm$core$Basics$floor(
 				A2($elm$core$Basics$logBase, $elm$core$Array$branchFactor, treeLen - 1));
-			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.u) : builder.u;
-			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.r);
+			var correctNodeList = reverseNodeList ? $elm$core$List$reverse(builder.r) : builder.r;
+			var tree = A2($elm$core$Array$treeFromBuilder, correctNodeList, builder.o);
 			return A4(
 				$elm$core$Array$Array_elm_builtin,
-				$elm$core$Elm$JsArray$length(builder.t) + treeLen,
+				$elm$core$Elm$JsArray$length(builder.q) + treeLen,
 				A2($elm$core$Basics$max, 5, depth * $elm$core$Array$shiftStep),
 				tree,
-				builder.t);
+				builder.q);
 		}
 	});
 var $elm$core$Basics$idiv = _Basics_idiv;
@@ -4829,7 +4829,7 @@ var $elm$core$Array$initializeHelp = F5(
 				return A2(
 					$elm$core$Array$builderToArray,
 					false,
-					{u: nodeList, r: (len / $elm$core$Array$branchFactor) | 0, t: tail});
+					{r: nodeList, o: (len / $elm$core$Array$branchFactor) | 0, q: tail});
 			} else {
 				var leaf = $elm$core$Array$Leaf(
 					A3($elm$core$Elm$JsArray$initialize, $elm$core$Array$branchFactor, fromIndex, fn));
@@ -4896,7 +4896,7 @@ var $elm$url$Url$Http = 0;
 var $elm$url$Url$Https = 1;
 var $elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {cu: fragment, cz: host, cR: path, cT: port_, cX: protocol, cY: query};
+		return {b0: fragment, b4: host, cj: path, cl: port_, co: protocol, cp: query};
 	});
 var $elm$core$String$contains = _String_contains;
 var $elm$core$String$length = _String_length;
@@ -5186,7 +5186,7 @@ var $author$project$Railroad$Track$StraightTrack = function (a) {
 	return {$: 0, a: a};
 };
 var $author$project$Railroad$Layout$Switch = function (configs) {
-	return {bC: configs};
+	return {bf: configs};
 };
 var $elm$core$Basics$pi = _Basics_pi;
 var $ianmackenzie$elm_units$Quantity$Quantity = $elm$core$Basics$identity;
@@ -5197,11 +5197,11 @@ var $ianmackenzie$elm_units$Angle$degrees = function (numDegrees) {
 	return $ianmackenzie$elm_units$Angle$radians($elm$core$Basics$pi * (numDegrees / 180));
 };
 var $drathier$elm_graph$Graph$Graph = $elm$core$Basics$identity;
-var $drathier$elm_graph$Graph$empty = {d: $elm$core$Dict$empty};
+var $drathier$elm_graph$Graph$empty = {b: $elm$core$Dict$empty};
 var $drathier$elm_graph$Graph$Node = $elm$core$Basics$identity;
 var $elm$core$Set$Set_elm_builtin = $elm$core$Basics$identity;
 var $elm$core$Set$empty = $elm$core$Dict$empty;
-var $drathier$elm_graph$Graph$emptyNode = {q: $elm$core$Maybe$Nothing, o: $elm$core$Set$empty, m: $elm$core$Dict$empty, aq: $elm$core$Set$empty};
+var $drathier$elm_graph$Graph$emptyNode = {n: $elm$core$Maybe$Nothing, l: $elm$core$Set$empty, j: $elm$core$Dict$empty, ad: $elm$core$Set$empty};
 var $elm$core$Basics$compare = _Utils_compare;
 var $elm$core$Dict$get = F2(
 	function (targetKey, dict) {
@@ -5237,7 +5237,7 @@ var $elm$core$Dict$get = F2(
 var $drathier$elm_graph$Graph$get = F2(
 	function (key, _v0) {
 		var graph = _v0;
-		return A2($elm$core$Dict$get, key, graph.d);
+		return A2($elm$core$Dict$get, key, graph.b);
 	});
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
@@ -5371,15 +5371,15 @@ var $drathier$elm_graph$Graph$insertData = F3(
 		return _Utils_update(
 			graph,
 			{
-				d: A3(
+				b: A3(
 					$elm$core$Dict$insert,
 					key,
 					_Utils_update(
 						node,
 						{
-							q: $elm$core$Maybe$Just(data)
+							n: $elm$core$Maybe$Just(data)
 						}),
-					graph.d)
+					graph.b)
 			});
 	});
 var $elm$core$Set$insert = F2(
@@ -5393,7 +5393,7 @@ var $drathier$elm_graph$Graph$insertRawNode = F3(
 		return _Utils_update(
 			graph,
 			{
-				d: A3($elm$core$Dict$insert, key, node, graph.d)
+				b: A3($elm$core$Dict$insert, key, node, graph.b)
 			});
 	});
 var $drathier$elm_graph$Graph$insertEdgeDataHelper = F4(
@@ -5408,8 +5408,8 @@ var $drathier$elm_graph$Graph$insertEdgeDataHelper = F4(
 			_Utils_update(
 				fromNode,
 				{
-					o: A2($elm$core$Set$insert, from, fromNode.o),
-					m: A3($elm$core$Dict$insert, from, wrappedEdgeData, fromNode.m)
+					l: A2($elm$core$Set$insert, from, fromNode.l),
+					j: A3($elm$core$Dict$insert, from, wrappedEdgeData, fromNode.j)
 				}),
 			graph) : A3(
 			$drathier$elm_graph$Graph$insertRawNode,
@@ -5417,7 +5417,7 @@ var $drathier$elm_graph$Graph$insertEdgeDataHelper = F4(
 			_Utils_update(
 				fromNode,
 				{
-					m: A3($elm$core$Dict$insert, to, wrappedEdgeData, fromNode.m)
+					j: A3($elm$core$Dict$insert, to, wrappedEdgeData, fromNode.j)
 				}),
 			A3(
 				$drathier$elm_graph$Graph$insertRawNode,
@@ -5425,7 +5425,7 @@ var $drathier$elm_graph$Graph$insertEdgeDataHelper = F4(
 				_Utils_update(
 					toNode,
 					{
-						o: A2($elm$core$Set$insert, from, toNode.o)
+						l: A2($elm$core$Set$insert, from, toNode.l)
 					}),
 				graph));
 	});
@@ -5513,7 +5513,7 @@ var $drathier$elm_graph$Graph$getEdgeData = F3(
 				$elm$core$Maybe$andThen,
 				function (_v0) {
 					var node = _v0;
-					return A2($elm$core$Dict$get, to, node.m);
+					return A2($elm$core$Dict$get, to, node.j);
 				},
 				A2($drathier$elm_graph$Graph$get, from, graph)));
 	});
@@ -5543,10 +5543,10 @@ var $author$project$Railroad$Train$initialLocation = function (layout) {
 		$elm$core$Maybe$map,
 		function (track) {
 			return {
-				bn: _Utils_Tuple2(0, 1),
-				aB: 0,
-				a9: $ianmackenzie$elm_units$Length$meters(40.0),
-				ad: track
+				a5: _Utils_Tuple2(0, 1),
+				ao: 0,
+				aV: $ianmackenzie$elm_units$Length$meters(40.0),
+				T: track
 			};
 		},
 		A2(
@@ -5560,15 +5560,15 @@ var $author$project$Main$init = function (_v0) {
 	var l = $author$project$Railroad$Layout$initialLayout;
 	return _Utils_Tuple2(
 		{
-			az: l,
-			ar: true,
-			Q: {
-				bH: 30,
-				bq: $author$project$Railroad$Train$initialLocation(l),
-				cN: 'Happy Train',
-				b6: 10.0
+			am: l,
+			ae: true,
+			I: {
+				bj: 30,
+				a8: $author$project$Railroad$Train$initialLocation(l),
+				cf: 'Happy Train',
+				bI: 10.0
 			},
-			as: $elm$core$Dict$empty
+			af: $elm$core$Dict$empty
 		},
 		$elm$core$Platform$Cmd$none);
 };
@@ -5582,7 +5582,7 @@ var $elm$browser$Browser$AnimationManager$Delta = function (a) {
 };
 var $elm$browser$Browser$AnimationManager$State = F3(
 	function (subs, request, oldTime) {
-		return {bU: oldTime, c$: request, dc: subs};
+		return {bv: oldTime, cs: request, cB: subs};
 	});
 var $elm$browser$Browser$AnimationManager$init = $elm$core$Task$succeed(
 	A3($elm$browser$Browser$AnimationManager$State, _List_Nil, $elm$core$Maybe$Nothing, 0));
@@ -5593,8 +5593,8 @@ var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
 var $elm$core$Process$spawn = _Scheduler_spawn;
 var $elm$browser$Browser$AnimationManager$onEffects = F3(
 	function (router, subs, _v0) {
-		var request = _v0.c$;
-		var oldTime = _v0.bU;
+		var request = _v0.cs;
+		var oldTime = _v0.bv;
 		var _v1 = _Utils_Tuple2(request, subs);
 		if (_v1.a.$ === 1) {
 			if (!_v1.b.b) {
@@ -5642,8 +5642,8 @@ var $elm$time$Time$Posix = $elm$core$Basics$identity;
 var $elm$time$Time$millisToPosix = $elm$core$Basics$identity;
 var $elm$browser$Browser$AnimationManager$onSelfMsg = F3(
 	function (router, newTime, _v0) {
-		var subs = _v0.dc;
-		var oldTime = _v0.bU;
+		var subs = _v0.cB;
+		var oldTime = _v0.bv;
 		var send = function (sub) {
 			if (!sub.$) {
 				var tagger = sub.a;
@@ -5710,16 +5710,10 @@ var $elm$browser$Browser$AnimationManager$onAnimationFrameDelta = function (tagg
 };
 var $elm$browser$Browser$Events$onAnimationFrameDelta = $elm$browser$Browser$AnimationManager$onAnimationFrameDelta;
 var $author$project$Main$subscriptions = function (model) {
-	return model.ar ? $elm$browser$Browser$Events$onAnimationFrameDelta($author$project$Main$Tick) : $elm$core$Platform$Sub$none;
+	return model.ae ? $elm$browser$Browser$Events$onAnimationFrameDelta($author$project$Main$Tick) : $elm$core$Platform$Sub$none;
 };
 var $elm$core$Basics$modBy = _Basics_modBy;
 var $elm$core$Basics$not = _Basics_not;
-var $ianmackenzie$elm_units$Quantity$minus = F2(
-	function (_v0, _v1) {
-		var y = _v0;
-		var x = _v1;
-		return x - y;
-	});
 var $ianmackenzie$elm_units$Quantity$greaterThan = F2(
 	function (_v0, _v1) {
 		var y = _v0;
@@ -5760,6 +5754,12 @@ var $ianmackenzie$elm_units$Quantity$lessThanZero = function (_v0) {
 	var x = _v0;
 	return x < 0;
 };
+var $ianmackenzie$elm_units$Quantity$minus = F2(
+	function (_v0, _v1) {
+		var y = _v0;
+		var x = _v1;
+		return x - y;
+	});
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -5812,7 +5812,7 @@ var $drathier$elm_graph$Graph$getData = F2(
 			$elm$core$Maybe$andThen,
 			function (_v0) {
 				var node = _v0;
-				return node.q;
+				return node.n;
 			},
 			A2($drathier$elm_graph$Graph$get, key, graph));
 	});
@@ -5829,7 +5829,7 @@ var $drathier$elm_graph$Graph$outgoing = F2(
 				function (_v0) {
 					var node = _v0;
 					return $elm$core$Set$fromList(
-						$elm$core$Dict$keys(node.m));
+						$elm$core$Dict$keys(node.j));
 				},
 				A2($drathier$elm_graph$Graph$get, key, graph)));
 	});
@@ -5847,7 +5847,7 @@ var $author$project$Railroad$Train$nextTrack = F3(
 					return A2(
 						$elm$core$Maybe$map,
 						function (track) {
-							return {bn: edge, aB: 0, a9: $ianmackenzie$elm_units$Quantity$zero, ad: track};
+							return {a5: edge, ao: 0, aV: $ianmackenzie$elm_units$Quantity$zero, T: track};
 						},
 						A2($drathier$elm_graph$Graph$Pair$getEdgeData, edge, g));
 				},
@@ -5868,14 +5868,13 @@ var $author$project$Railroad$Train$nextTrack = F3(
 					return A2(
 						$elm$core$Maybe$map,
 						function (track) {
-							return {bn: edge, aB: 0, a9: $ianmackenzie$elm_units$Quantity$zero, ad: track};
+							return {a5: edge, ao: 0, aV: $ianmackenzie$elm_units$Quantity$zero, T: track};
 						},
 						A2($drathier$elm_graph$Graph$Pair$getEdgeData, edge, g));
 				},
 				A2(
 					$elm$core$Maybe$map,
 					function (_v3) {
-						var from = _v3.a;
 						var to = _v3.b;
 						return _Utils_Tuple2(toId, to);
 					},
@@ -5889,13 +5888,12 @@ var $author$project$Railroad$Train$nextTrack = F3(
 									$elm$core$List$filter,
 									function (_v2) {
 										var from = _v2.a;
-										var to = _v2.b;
 										return _Utils_eq(from, fromId);
 									},
 									cfg);
 							},
 							function (i) {
-								return A2($elm_community$list_extra$List$Extra$getAt, i, _switch.bC);
+								return A2($elm_community$list_extra$List$Extra$getAt, i, _switch.bf);
 							}(
 								A2(
 									$elm$core$Maybe$withDefault,
@@ -5918,7 +5916,7 @@ var $drathier$elm_graph$Graph$incoming = F2(
 				$elm$core$Maybe$map,
 				function (_v0) {
 					var node = _v0;
-					return node.o;
+					return node.l;
 				},
 				A2($drathier$elm_graph$Graph$get, key, graph)));
 	});
@@ -5936,7 +5934,7 @@ var $author$project$Railroad$Train$previousTrack = F3(
 						$elm$core$Maybe$andThen,
 						function (track) {
 							return $elm$core$Maybe$Just(
-								{bn: edge, aB: 0, a9: $ianmackenzie$elm_units$Quantity$zero, ad: track});
+								{a5: edge, ao: 0, aV: $ianmackenzie$elm_units$Quantity$zero, T: track});
 						},
 						A2($drathier$elm_graph$Graph$Pair$getEdgeData, edge, g));
 				},
@@ -5957,7 +5955,7 @@ var $author$project$Railroad$Train$previousTrack = F3(
 						$elm$core$Maybe$andThen,
 						function (track) {
 							return $elm$core$Maybe$Just(
-								{bn: edge, aB: 0, a9: $ianmackenzie$elm_units$Quantity$zero, ad: track});
+								{a5: edge, ao: 0, aV: $ianmackenzie$elm_units$Quantity$zero, T: track});
 						},
 						A2($drathier$elm_graph$Graph$Pair$getEdgeData, edge, g));
 				},
@@ -5982,7 +5980,7 @@ var $author$project$Railroad$Train$previousTrack = F3(
 									cfg);
 							},
 							function (i) {
-								return A2($elm_community$list_extra$List$Extra$getAt, i, _switch.bC);
+								return A2($elm_community$list_extra$List$Extra$getAt, i, _switch.bf);
 							}(
 								A2(
 									$elm$core$Maybe$withDefault,
@@ -5994,9 +5992,9 @@ var $author$project$Railroad$Train$normalizeLocation = F3(
 	function (layout, switchState, loc) {
 		if (A2(
 			$ianmackenzie$elm_units$Quantity$greaterThan,
-			$author$project$Railroad$Track$length(loc.ad),
-			loc.a9)) {
-			var _v0 = A3($author$project$Railroad$Train$nextTrack, loc.bn, layout, switchState);
+			$author$project$Railroad$Track$length(loc.T),
+			loc.aV)) {
+			var _v0 = A3($author$project$Railroad$Train$nextTrack, loc.a5, layout, switchState);
 			if (_v0.$ === 1) {
 				return $elm$core$Maybe$Nothing;
 			} else {
@@ -6008,15 +6006,15 @@ var $author$project$Railroad$Train$normalizeLocation = F3(
 					_Utils_update(
 						nextLoc,
 						{
-							a9: A2(
+							aV: A2(
 								$ianmackenzie$elm_units$Quantity$minus,
-								$author$project$Railroad$Track$length(loc.ad),
-								loc.a9)
+								$author$project$Railroad$Track$length(loc.T),
+								loc.aV)
 						}));
 			}
 		} else {
-			if ($ianmackenzie$elm_units$Quantity$lessThanZero(loc.a9)) {
-				var _v1 = A3($author$project$Railroad$Train$previousTrack, loc.bn, layout, switchState);
+			if ($ianmackenzie$elm_units$Quantity$lessThanZero(loc.aV)) {
+				var _v1 = A3($author$project$Railroad$Train$previousTrack, loc.a5, layout, switchState);
 				if (_v1.$ === 1) {
 					return $elm$core$Maybe$Nothing;
 				} else {
@@ -6028,10 +6026,10 @@ var $author$project$Railroad$Train$normalizeLocation = F3(
 						_Utils_update(
 							nextLoc,
 							{
-								a9: A2(
+								aV: A2(
 									$ianmackenzie$elm_units$Quantity$plus,
-									$author$project$Railroad$Track$length(nextLoc.ad),
-									loc.a9)
+									$author$project$Railroad$Track$length(nextLoc.T),
+									loc.aV)
 							}));
 				}
 			} else {
@@ -6041,63 +6039,55 @@ var $author$project$Railroad$Train$normalizeLocation = F3(
 	});
 var $author$project$Railroad$Train$move = F4(
 	function (layout, switchState, millis, trainState) {
-		var _v0 = trainState.bq;
+		var _v0 = trainState.a8;
 		if (_v0.$ === 1) {
 			return trainState;
 		} else {
 			var loc = _v0.a;
-			var distanceTraveled = (trainState.b6 * millis) / 1000.0;
+			var distanceTraveled = (trainState.bI * millis) / 1000.0;
 			var newPos = function () {
-				var _v1 = loc.aB;
-				if (!_v1) {
-					return A2(
-						$ianmackenzie$elm_units$Quantity$plus,
-						$ianmackenzie$elm_units$Length$meters(distanceTraveled),
-						loc.a9);
-				} else {
-					return A2(
-						$ianmackenzie$elm_units$Quantity$minus,
-						$ianmackenzie$elm_units$Length$meters(distanceTraveled),
-						loc.a9);
-				}
+				var _v1 = loc.ao;
+				return A2(
+					$ianmackenzie$elm_units$Quantity$plus,
+					$ianmackenzie$elm_units$Length$meters(distanceTraveled),
+					loc.aV);
 			}();
 			return _Utils_update(
 				trainState,
 				{
-					bq: A3(
+					a8: A3(
 						$author$project$Railroad$Train$normalizeLocation,
 						layout,
 						switchState,
 						_Utils_update(
 							loc,
-							{a9: newPos}))
+							{aV: newPos}))
 				});
 		}
 	});
 var $author$project$Railroad$Train$stopped = function (ts) {
 	return _Utils_update(
 		ts,
-		{b6: 0.0});
+		{bI: 0.0});
 };
 var $author$project$Main$updateTick = F2(
 	function (delta, model) {
-		var newTrainState = A4($author$project$Railroad$Train$move, model.az, model.as, delta, model.Q);
-		var _v0 = newTrainState.bq;
+		var newTrainState = A4($author$project$Railroad$Train$move, model.am, model.af, delta, model.I);
+		var _v0 = newTrainState.a8;
 		if (_v0.$ === 1) {
 			return _Utils_Tuple2(
 				_Utils_update(
 					model,
 					{
-						ar: false,
-						Q: $author$project$Railroad$Train$stopped(model.Q)
+						ae: false,
+						I: $author$project$Railroad$Train$stopped(model.I)
 					}),
 				$elm$core$Platform$Cmd$none);
 		} else {
-			var loc = _v0.a;
 			return _Utils_Tuple2(
 				_Utils_update(
 					model,
-					{Q: newTrainState}),
+					{I: newTrainState}),
 				$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -6111,32 +6101,31 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{ar: !model.ar}),
+						{ae: !model.ae}),
 					$elm$core$Platform$Cmd$none);
 			case 2:
 				var _v1 = $author$project$Main$init(0);
 				var m = _v1.a;
-				var cmd = _v1.b;
 				return _Utils_Tuple2(
 					_Utils_update(
 						m,
-						{ar: false}),
+						{ae: false}),
 					$elm$core$Platform$Cmd$none);
 			default:
 				var i = msg.a;
 				var _switch = msg.b;
 				var newCfg = A2(
 					$elm$core$Basics$modBy,
-					$elm$core$List$length(_switch.bC),
+					$elm$core$List$length(_switch.bf),
 					A2(
 						$elm$core$Maybe$withDefault,
 						0,
-						A2($elm$core$Dict$get, i, model.as)) + 1);
-				var newState = A3($elm$core$Dict$insert, i, newCfg, model.as);
+						A2($elm$core$Dict$get, i, model.af)) + 1);
+				var newState = A3($elm$core$Dict$insert, i, newCfg, model.af);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{as: newState}),
+						{af: newState}),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -6156,18 +6145,18 @@ var $ianmackenzie$elm_geometry$Frame2d$unsafe = function (properties) {
 	return properties;
 };
 var $ianmackenzie$elm_geometry$Geometry$Types$Direction2d = $elm$core$Basics$identity;
-var $ianmackenzie$elm_geometry$Direction2d$positiveX = {dj: 1, dk: 0};
+var $ianmackenzie$elm_geometry$Direction2d$positiveX = {cH: 1, cI: 0};
 var $ianmackenzie$elm_geometry$Direction2d$x = $ianmackenzie$elm_geometry$Direction2d$positiveX;
-var $ianmackenzie$elm_geometry$Direction2d$positiveY = {dj: 0, dk: 1};
+var $ianmackenzie$elm_geometry$Direction2d$positiveY = {cH: 0, cI: 1};
 var $ianmackenzie$elm_geometry$Direction2d$y = $ianmackenzie$elm_geometry$Direction2d$positiveY;
 var $ianmackenzie$elm_geometry$Frame2d$atPoint = function (point) {
 	return $ianmackenzie$elm_geometry$Frame2d$unsafe(
-		{T: point, ei: $ianmackenzie$elm_geometry$Direction2d$x, c: $ianmackenzie$elm_geometry$Direction2d$y});
+		{M: point, d: $ianmackenzie$elm_geometry$Direction2d$x, a: $ianmackenzie$elm_geometry$Direction2d$y});
 };
 var $ianmackenzie$elm_geometry$Geometry$Types$Point2d = $elm$core$Basics$identity;
 var $ianmackenzie$elm_geometry$Point2d$meters = F2(
 	function (x, y) {
-		return {dj: x, dk: y};
+		return {cH: x, cI: y};
 	});
 var $elm$core$Dict$foldl = F3(
 	function (func, acc, dict) {
@@ -6228,23 +6217,23 @@ var $ianmackenzie$elm_units$Length$inMeters = function (_v0) {
 	var numMeters = _v0;
 	return numMeters;
 };
-var $ianmackenzie$elm_geometry$Point2d$origin = {dj: 0, dk: 0};
+var $ianmackenzie$elm_geometry$Point2d$origin = {cH: 0, cI: 0};
 var $ianmackenzie$elm_geometry$Geometry$Types$Arc2d = $elm$core$Basics$identity;
 var $elm$core$Basics$sqrt = _Basics_sqrt;
 var $ianmackenzie$elm_geometry$Vector2d$direction = function (_v0) {
 	var v = _v0;
 	var largestComponent = A2(
 		$elm$core$Basics$max,
-		$elm$core$Basics$abs(v.dj),
-		$elm$core$Basics$abs(v.dk));
+		$elm$core$Basics$abs(v.cH),
+		$elm$core$Basics$abs(v.cI));
 	if (!largestComponent) {
 		return $elm$core$Maybe$Nothing;
 	} else {
-		var scaledY = v.dk / largestComponent;
-		var scaledX = v.dj / largestComponent;
+		var scaledY = v.cI / largestComponent;
+		var scaledX = v.cH / largestComponent;
 		var scaledLength = $elm$core$Basics$sqrt((scaledX * scaledX) + (scaledY * scaledY));
 		return $elm$core$Maybe$Just(
-			{dj: scaledX / scaledLength, dk: scaledY / scaledLength});
+			{cH: scaledX / scaledLength, cI: scaledY / scaledLength});
 	}
 };
 var $ianmackenzie$elm_geometry$Geometry$Types$Vector2d = $elm$core$Basics$identity;
@@ -6252,19 +6241,19 @@ var $ianmackenzie$elm_geometry$Vector2d$from = F2(
 	function (_v0, _v1) {
 		var p1 = _v0;
 		var p2 = _v1;
-		return {dj: p2.dj - p1.dj, dk: p2.dk - p1.dk};
+		return {cH: p2.cH - p1.cH, cI: p2.cI - p1.cI};
 	});
 var $ianmackenzie$elm_geometry$Vector2d$length = function (_v0) {
 	var v = _v0;
 	var largestComponent = A2(
 		$elm$core$Basics$max,
-		$elm$core$Basics$abs(v.dj),
-		$elm$core$Basics$abs(v.dk));
+		$elm$core$Basics$abs(v.cH),
+		$elm$core$Basics$abs(v.cI));
 	if (!largestComponent) {
 		return $ianmackenzie$elm_units$Quantity$zero;
 	} else {
-		var scaledY = v.dk / largestComponent;
-		var scaledX = v.dj / largestComponent;
+		var scaledY = v.cI / largestComponent;
+		var scaledX = v.cH / largestComponent;
 		var scaledLength = $elm$core$Basics$sqrt((scaledX * scaledX) + (scaledY * scaledY));
 		return scaledLength * largestComponent;
 	}
@@ -6277,7 +6266,7 @@ var $ianmackenzie$elm_geometry$Quantity$Extra$rTheta = F2(
 	});
 var $ianmackenzie$elm_geometry$Direction2d$rotateClockwise = function (_v0) {
 	var d = _v0;
-	return {dj: d.dk, dk: -d.dj};
+	return {cH: d.cI, cI: -d.cH};
 };
 var $ianmackenzie$elm_geometry$Arc2d$sweptAround = F3(
 	function (givenCenterPoint, givenSweptAngle, givenStartPoint) {
@@ -6287,13 +6276,13 @@ var $ianmackenzie$elm_geometry$Arc2d$sweptAround = F3(
 			var yDirection = _v0.a;
 			var computedRadius = $ianmackenzie$elm_geometry$Vector2d$length(displacement);
 			return {
-				g: A2($ianmackenzie$elm_geometry$Quantity$Extra$rTheta, computedRadius, givenSweptAngle),
-				h: givenStartPoint,
-				d9: givenSweptAngle,
-				ei: $ianmackenzie$elm_geometry$Direction2d$rotateClockwise(yDirection)
+				f: A2($ianmackenzie$elm_geometry$Quantity$Extra$rTheta, computedRadius, givenSweptAngle),
+				g: givenStartPoint,
+				c: givenSweptAngle,
+				d: $ianmackenzie$elm_geometry$Direction2d$rotateClockwise(yDirection)
 			};
 		} else {
-			return {g: $ianmackenzie$elm_units$Quantity$zero, h: givenStartPoint, d9: givenSweptAngle, ei: $ianmackenzie$elm_geometry$Direction2d$x};
+			return {f: $ianmackenzie$elm_units$Quantity$zero, g: givenStartPoint, c: givenSweptAngle, d: $ianmackenzie$elm_geometry$Direction2d$x};
 		}
 	});
 var $author$project$Railroad$Track$curveToArc = F2(
@@ -6348,35 +6337,35 @@ var $ianmackenzie$elm_units$Angle$tan = function (_v0) {
 };
 var $ianmackenzie$elm_geometry$Direction2d$xComponent = function (_v0) {
 	var d = _v0;
-	return d.dj;
+	return d.cH;
 };
 var $ianmackenzie$elm_geometry$Point2d$xCoordinate = function (_v0) {
 	var p = _v0;
-	return p.dj;
+	return p.cH;
 };
 var $ianmackenzie$elm_geometry$Point2d$xy = F2(
 	function (_v0, _v1) {
 		var x = _v0;
 		var y = _v1;
-		return {dj: x, dk: y};
+		return {cH: x, cI: y};
 	});
 var $ianmackenzie$elm_geometry$Direction2d$yComponent = function (_v0) {
 	var d = _v0;
-	return d.dk;
+	return d.cI;
 };
 var $ianmackenzie$elm_geometry$Point2d$yCoordinate = function (_v0) {
 	var p = _v0;
-	return p.dk;
+	return p.cI;
 };
 var $ianmackenzie$elm_geometry$Arc2d$pointOn = F2(
 	function (_v0, parameterValue) {
 		var arc = _v0;
-		var y0 = $ianmackenzie$elm_geometry$Point2d$yCoordinate(arc.h);
-		var x0 = $ianmackenzie$elm_geometry$Point2d$xCoordinate(arc.h);
-		var dy = $ianmackenzie$elm_geometry$Direction2d$yComponent(arc.ei);
-		var dx = $ianmackenzie$elm_geometry$Direction2d$xComponent(arc.ei);
-		var arcSweptAngle = arc.d9;
-		var arcSignedLength = arc.g;
+		var y0 = $ianmackenzie$elm_geometry$Point2d$yCoordinate(arc.g);
+		var x0 = $ianmackenzie$elm_geometry$Point2d$xCoordinate(arc.g);
+		var dy = $ianmackenzie$elm_geometry$Direction2d$yComponent(arc.d);
+		var dx = $ianmackenzie$elm_geometry$Direction2d$xComponent(arc.d);
+		var arcSweptAngle = arc.c;
+		var arcSignedLength = arc.f;
 		if (_Utils_eq(arcSweptAngle, $ianmackenzie$elm_units$Quantity$zero)) {
 			var distance = A2($ianmackenzie$elm_units$Quantity$multiplyBy, parameterValue, arcSignedLength);
 			var px = A2(
@@ -6419,27 +6408,27 @@ var $ianmackenzie$elm_geometry$Arc2d$endPoint = function (arc) {
 };
 var $ianmackenzie$elm_geometry$Frame2d$xDirection = function (_v0) {
 	var frame = _v0;
-	return frame.ei;
+	return frame.d;
 };
 var $ianmackenzie$elm_geometry$Frame2d$yDirection = function (_v0) {
 	var frame = _v0;
-	return frame.c;
+	return frame.a;
 };
 var $ianmackenzie$elm_geometry$Frame2d$moveTo = F2(
 	function (newOrigin, frame) {
 		return $ianmackenzie$elm_geometry$Frame2d$unsafe(
 			{
-				T: newOrigin,
-				ei: $ianmackenzie$elm_geometry$Frame2d$xDirection(frame),
-				c: $ianmackenzie$elm_geometry$Frame2d$yDirection(frame)
+				M: newOrigin,
+				d: $ianmackenzie$elm_geometry$Frame2d$xDirection(frame),
+				a: $ianmackenzie$elm_geometry$Frame2d$yDirection(frame)
 			});
 	});
 var $ianmackenzie$elm_geometry$Frame2d$isRightHanded = function (_v0) {
 	var frame = _v0;
-	var y2 = $ianmackenzie$elm_geometry$Direction2d$yComponent(frame.c);
-	var y1 = $ianmackenzie$elm_geometry$Direction2d$yComponent(frame.ei);
-	var x2 = $ianmackenzie$elm_geometry$Direction2d$xComponent(frame.c);
-	var x1 = $ianmackenzie$elm_geometry$Direction2d$xComponent(frame.ei);
+	var y2 = $ianmackenzie$elm_geometry$Direction2d$yComponent(frame.a);
+	var y1 = $ianmackenzie$elm_geometry$Direction2d$yComponent(frame.d);
+	var x2 = $ianmackenzie$elm_geometry$Direction2d$xComponent(frame.a);
+	var x1 = $ianmackenzie$elm_geometry$Direction2d$xComponent(frame.d);
 	return ((x1 * y2) - (y1 * x2)) > 0;
 };
 var $ianmackenzie$elm_units$Quantity$negate = function (_v0) {
@@ -6450,42 +6439,42 @@ var $ianmackenzie$elm_geometry$Direction2d$placeIn = F2(
 	function (_v0, _v1) {
 		var frame = _v0;
 		var d = _v1;
-		var _v2 = frame.c;
+		var _v2 = frame.a;
 		var dy = _v2;
-		var _v3 = frame.ei;
+		var _v3 = frame.d;
 		var dx = _v3;
-		return {dj: (d.dj * dx.dj) + (d.dk * dy.dj), dk: (d.dj * dx.dk) + (d.dk * dy.dk)};
+		return {cH: (d.cH * dx.cH) + (d.cI * dy.cH), cI: (d.cH * dx.cI) + (d.cI * dy.cI)};
 	});
 var $ianmackenzie$elm_geometry$Point2d$placeIn = F2(
 	function (_v0, _v1) {
 		var frame = _v0;
 		var p = _v1;
-		var _v2 = frame.T;
+		var _v2 = frame.M;
 		var p0 = _v2;
-		var _v3 = frame.c;
+		var _v3 = frame.a;
 		var j = _v3;
-		var _v4 = frame.ei;
+		var _v4 = frame.d;
 		var i = _v4;
-		return {dj: (p0.dj + (p.dj * i.dj)) + (p.dk * j.dj), dk: (p0.dk + (p.dj * i.dk)) + (p.dk * j.dk)};
+		return {cH: (p0.cH + (p.cH * i.cH)) + (p.cI * j.cH), cI: (p0.cI + (p.cH * i.cI)) + (p.cI * j.cI)};
 	});
 var $ianmackenzie$elm_geometry$Direction2d$reverse = function (_v0) {
 	var d = _v0;
-	return {dj: -d.dj, dk: -d.dk};
+	return {cH: -d.cH, cI: -d.cI};
 };
 var $ianmackenzie$elm_geometry$Arc2d$placeIn = F2(
 	function (frame, _v0) {
 		var arc = _v0;
 		return $ianmackenzie$elm_geometry$Frame2d$isRightHanded(frame) ? {
-			g: arc.g,
-			h: A2($ianmackenzie$elm_geometry$Point2d$placeIn, frame, arc.h),
-			d9: arc.d9,
-			ei: A2($ianmackenzie$elm_geometry$Direction2d$placeIn, frame, arc.ei)
+			f: arc.f,
+			g: A2($ianmackenzie$elm_geometry$Point2d$placeIn, frame, arc.g),
+			c: arc.c,
+			d: A2($ianmackenzie$elm_geometry$Direction2d$placeIn, frame, arc.d)
 		} : {
-			g: $ianmackenzie$elm_units$Quantity$negate(arc.g),
-			h: A2($ianmackenzie$elm_geometry$Point2d$placeIn, frame, arc.h),
-			d9: $ianmackenzie$elm_units$Quantity$negate(arc.d9),
-			ei: $ianmackenzie$elm_geometry$Direction2d$reverse(
-				A2($ianmackenzie$elm_geometry$Direction2d$placeIn, frame, arc.ei))
+			f: $ianmackenzie$elm_units$Quantity$negate(arc.f),
+			g: A2($ianmackenzie$elm_geometry$Point2d$placeIn, frame, arc.g),
+			c: $ianmackenzie$elm_units$Quantity$negate(arc.c),
+			d: $ianmackenzie$elm_geometry$Direction2d$reverse(
+				A2($ianmackenzie$elm_geometry$Direction2d$placeIn, frame, arc.d))
 		};
 	});
 var $ianmackenzie$elm_units$Quantity$ratio = F2(
@@ -6496,7 +6485,7 @@ var $ianmackenzie$elm_units$Quantity$ratio = F2(
 	});
 var $ianmackenzie$elm_geometry$Frame2d$originPoint = function (_v0) {
 	var frame = _v0;
-	return frame.T;
+	return frame.M;
 };
 var $ianmackenzie$elm_geometry$Direction2d$rotateBy = F2(
 	function (_v0, _v1) {
@@ -6504,17 +6493,17 @@ var $ianmackenzie$elm_geometry$Direction2d$rotateBy = F2(
 		var d = _v1;
 		var s = $elm$core$Basics$sin(angle);
 		var c = $elm$core$Basics$cos(angle);
-		return {dj: (c * d.dj) - (s * d.dk), dk: (s * d.dj) + (c * d.dk)};
+		return {cH: (c * d.cH) - (s * d.cI), cI: (s * d.cH) + (c * d.cI)};
 	});
 var $ianmackenzie$elm_geometry$Frame2d$rotateBy = F2(
 	function (angle, frame) {
 		var rotateDirection = $ianmackenzie$elm_geometry$Direction2d$rotateBy(angle);
 		return $ianmackenzie$elm_geometry$Frame2d$unsafe(
 			{
-				T: $ianmackenzie$elm_geometry$Frame2d$originPoint(frame),
-				ei: rotateDirection(
+				M: $ianmackenzie$elm_geometry$Frame2d$originPoint(frame),
+				d: rotateDirection(
 					$ianmackenzie$elm_geometry$Frame2d$xDirection(frame)),
-				c: rotateDirection(
+				a: rotateDirection(
 					$ianmackenzie$elm_geometry$Frame2d$yDirection(frame))
 			});
 	});
@@ -6522,25 +6511,25 @@ var $ianmackenzie$elm_geometry$Point2d$translateBy = F2(
 	function (_v0, _v1) {
 		var v = _v0;
 		var p = _v1;
-		return {dj: p.dj + v.dj, dk: p.dk + v.dk};
+		return {cH: p.cH + v.cH, cI: p.cI + v.cI};
 	});
 var $ianmackenzie$elm_geometry$Frame2d$translateBy = F2(
 	function (vector, frame) {
 		return $ianmackenzie$elm_geometry$Frame2d$unsafe(
 			{
-				T: A2(
+				M: A2(
 					$ianmackenzie$elm_geometry$Point2d$translateBy,
 					vector,
 					$ianmackenzie$elm_geometry$Frame2d$originPoint(frame)),
-				ei: $ianmackenzie$elm_geometry$Frame2d$xDirection(frame),
-				c: $ianmackenzie$elm_geometry$Frame2d$yDirection(frame)
+				d: $ianmackenzie$elm_geometry$Frame2d$xDirection(frame),
+				a: $ianmackenzie$elm_geometry$Frame2d$yDirection(frame)
 			});
 	});
 var $ianmackenzie$elm_geometry$Vector2d$xy = F2(
 	function (_v0, _v1) {
 		var x = _v0;
 		var y = _v1;
-		return {dj: x, dk: y};
+		return {cH: x, cI: y};
 	});
 var $author$project$Railroad$Track$getPositionOnTrack = F3(
 	function (trackPosition, cursor, track) {
@@ -6575,12 +6564,12 @@ var $ianmackenzie$elm_units$Angle$inDegrees = function (angle) {
 };
 var $ianmackenzie$elm_geometry$Vector2d$meters = F2(
 	function (x, y) {
-		return {dj: x, dk: y};
+		return {cH: x, cI: y};
 	});
 var $elm$core$Basics$atan2 = _Basics_atan2;
 var $ianmackenzie$elm_geometry$Direction2d$toAngle = function (_v0) {
 	var d = _v0;
-	return A2($elm$core$Basics$atan2, d.dk, d.dj);
+	return A2($elm$core$Basics$atan2, d.cI, d.cH);
 };
 var $author$project$Railroad$Track$moveFrame = F2(
 	function (cursor, track) {
@@ -6650,9 +6639,9 @@ var $elm$core$Basics$min = F2(
 var $ianmackenzie$elm_geometry$Point2d$toRecord = F2(
 	function (fromQuantity, point) {
 		return {
-			dj: fromQuantity(
+			cH: fromQuantity(
 				$ianmackenzie$elm_geometry$Point2d$xCoordinate(point)),
-			dk: fromQuantity(
+			cI: fromQuantity(
 				$ianmackenzie$elm_geometry$Point2d$yCoordinate(point))
 		};
 	});
@@ -6677,10 +6666,10 @@ var $author$project$Railroad$Layout$boundingBox = function (layout) {
 				var y2 = _v0.d;
 				return A4(
 					$author$project$Rect$Rect,
-					A2($elm$core$Basics$min, x1, c.dj),
-					A2($elm$core$Basics$min, y1, c.dk),
-					A2($elm$core$Basics$max, x2, c.dj),
-					A2($elm$core$Basics$max, y2, c.dk));
+					A2($elm$core$Basics$min, x1, c.cH),
+					A2($elm$core$Basics$min, y1, c.cI),
+					A2($elm$core$Basics$max, x2, c.cH),
+					A2($elm$core$Basics$max, y2, c.cI));
 			}),
 		A4($author$project$Rect$Rect, 0, 0, 0, 0),
 		A2(
@@ -7043,10 +7032,10 @@ var $drathier$elm_graph$Graph$foldl = F3(
 			F2(
 				function (key, _v1) {
 					var node = _v1;
-					return A2(func, key, node.q);
+					return A2(func, key, node.n);
 				}),
 			acc,
-			graph.d);
+			graph.b);
 	});
 var $drathier$elm_graph$Graph$edgesWithData = function (graph) {
 	return A3(
@@ -7069,7 +7058,7 @@ var $drathier$elm_graph$Graph$edgesWithData = function (graph) {
 									$elm$core$Maybe$map,
 									function (_v1) {
 										var node = _v1;
-										return node.m;
+										return node.j;
 									},
 									A2($drathier$elm_graph$Graph$get, key, graph))))),
 					list);
@@ -7098,15 +7087,15 @@ var $ianmackenzie$elm_units$Quantity$greaterThanOrEqualTo = F2(
 var $elm$svg$Svg$path = $elm$svg$Svg$trustedNode('path');
 var $ianmackenzie$elm_geometry$Arc2d$radius = function (_v0) {
 	var arc = _v0;
-	return A2($ianmackenzie$elm_geometry$Quantity$Extra$lOverTheta, arc.g, arc.d9);
+	return A2($ianmackenzie$elm_geometry$Quantity$Extra$lOverTheta, arc.f, arc.c);
 };
 var $ianmackenzie$elm_geometry$Arc2d$startPoint = function (_v0) {
 	var properties = _v0;
-	return properties.h;
+	return properties.g;
 };
 var $ianmackenzie$elm_geometry$Arc2d$sweptAngle = function (_v0) {
 	var properties = _v0;
-	return properties.d9;
+	return properties.c;
 };
 var $ianmackenzie$elm_geometry_svg$Geometry$Svg$toString = function (_v0) {
 	var quantity = _v0;
@@ -7157,8 +7146,8 @@ var $ianmackenzie$elm_geometry_svg$Geometry$Svg$arc2d = F2(
 		var moveCommand = _List_fromArray(
 			[
 				'M',
-				$elm$core$String$fromFloat(p0.dj),
-				$elm$core$String$fromFloat(p0.dk)
+				$elm$core$String$fromFloat(p0.cH),
+				$elm$core$String$fromFloat(p0.cI)
 			]);
 		var maxSegmentAngle = $ianmackenzie$elm_units$Angle$turns(1 / 3);
 		var numSegments = 1 + $elm$core$Basics$floor(
@@ -7167,8 +7156,8 @@ var $ianmackenzie$elm_geometry_svg$Geometry$Svg$arc2d = F2(
 		var arcSegment = function (parameterValue) {
 			var _v0 = $ianmackenzie$elm_geometry$Point2d$unwrap(
 				A2($ianmackenzie$elm_geometry$Arc2d$pointOn, arc, parameterValue));
-			var x = _v0.dj;
-			var y = _v0.dk;
+			var x = _v0.cH;
+			var y = _v0.cI;
 			return _List_fromArray(
 				[
 					'A',
@@ -7192,25 +7181,25 @@ var $ianmackenzie$elm_geometry_svg$Geometry$Svg$arc2d = F2(
 			A2($elm$core$List$cons, pathAttribute, attributes),
 			_List_Nil);
 	});
-var $ianmackenzie$elm_geometry$Frame2d$atOrigin = {T: $ianmackenzie$elm_geometry$Point2d$origin, ei: $ianmackenzie$elm_geometry$Direction2d$x, c: $ianmackenzie$elm_geometry$Direction2d$y};
+var $ianmackenzie$elm_geometry$Frame2d$atOrigin = {M: $ianmackenzie$elm_geometry$Point2d$origin, d: $ianmackenzie$elm_geometry$Direction2d$x, a: $ianmackenzie$elm_geometry$Direction2d$y};
 var $ianmackenzie$elm_geometry$Direction2d$fromAngle = function (_v0) {
 	var angle = _v0;
 	return {
-		dj: $elm$core$Basics$cos(angle),
-		dk: $elm$core$Basics$sin(angle)
+		cH: $elm$core$Basics$cos(angle),
+		cI: $elm$core$Basics$sin(angle)
 	};
 };
 var $ianmackenzie$elm_geometry$Direction2d$rotateCounterclockwise = function (_v0) {
 	var d = _v0;
-	return {dj: -d.dk, dk: d.dj};
+	return {cH: -d.cI, cI: d.cH};
 };
 var $ianmackenzie$elm_geometry$Frame2d$withXDirection = F2(
 	function (givenDirection, givenOrigin) {
 		return $ianmackenzie$elm_geometry$Frame2d$unsafe(
 			{
-				T: givenOrigin,
-				ei: givenDirection,
-				c: $ianmackenzie$elm_geometry$Direction2d$rotateCounterclockwise(givenDirection)
+				M: givenOrigin,
+				d: givenDirection,
+				a: $ianmackenzie$elm_geometry$Direction2d$rotateCounterclockwise(givenDirection)
 			});
 	});
 var $ianmackenzie$elm_geometry$Frame2d$withAngle = F2(
@@ -7265,7 +7254,6 @@ var $author$project$Railroad$Track$toSvg = function (track) {
 		[
 			function () {
 			if (!track.$) {
-				var s = track.a;
 				return A2(
 					$elm$svg$Svg$line,
 					_List_fromArray(
@@ -7273,9 +7261,9 @@ var $author$project$Railroad$Track$toSvg = function (track) {
 							$elm$svg$Svg$Attributes$x1('0'),
 							$elm$svg$Svg$Attributes$y1('0'),
 							$elm$svg$Svg$Attributes$x2(
-							$elm$core$String$fromFloat(cc1.dj)),
+							$elm$core$String$fromFloat(cc1.cH)),
 							$elm$svg$Svg$Attributes$y2(
-							$elm$core$String$fromFloat(cc1.dk)),
+							$elm$core$String$fromFloat(cc1.cI)),
 							$elm$svg$Svg$Attributes$stroke('grey'),
 							$elm$svg$Svg$Attributes$strokeWidth('1.435')
 						]),
@@ -7345,7 +7333,7 @@ var $author$project$Railroad$Layout$toSvg = function (layout) {
 							[
 								$elm$svg$Svg$Attributes$id(trackId),
 								$elm$svg$Svg$Attributes$transform(
-								'translate(' + ($elm$core$String$fromFloat(refP.dj) + (',' + ($elm$core$String$fromFloat(refP.dk) + (') rotate(' + ($elm$core$String$fromFloat(refA) + ')'))))))
+								'translate(' + ($elm$core$String$fromFloat(refP.cH) + (',' + ($elm$core$String$fromFloat(refP.cI) + (') rotate(' + ($elm$core$String$fromFloat(refA) + ')'))))))
 							]),
 						$author$project$Railroad$Track$toSvg(track));
 				} else {
@@ -7468,7 +7456,7 @@ var $author$project$Main$viewSwitch = F3(
 										_List_fromArray(
 											[t]));
 								},
-								A2($elm$core$List$map, $author$project$Main$viewSwitchConfig, _switch.bC)))
+								A2($elm$core$List$map, $author$project$Main$viewSwitchConfig, _switch.bf)))
 						])),
 					A2(
 					$elm$html$Html$td,
@@ -7476,7 +7464,7 @@ var $author$project$Main$viewSwitch = F3(
 					_List_fromArray(
 						[
 							function () {
-							var _v0 = A2($elm_community$list_extra$List$Extra$getAt, state, _switch.bC);
+							var _v0 = A2($elm_community$list_extra$List$Extra$getAt, state, _switch.bf);
 							if (_v0.$ === 1) {
 								return $elm$html$Html$text('inconsistent');
 							} else {
@@ -7594,12 +7582,12 @@ var $author$project$Railroad$Layout$coordsFor = F3(
 	});
 var $author$project$Main$viewTrain = F3(
 	function (train, layout, switchState) {
-		var _v0 = train.bq;
+		var _v0 = train.a8;
 		if (_v0.$ === 1) {
 			return A2($elm$svg$Svg$g, _List_Nil, _List_Nil);
 		} else {
 			var loc = _v0.a;
-			var _v1 = A3($author$project$Railroad$Layout$coordsFor, loc.a9, loc.bn, layout);
+			var _v1 = A3($author$project$Railroad$Layout$coordsFor, loc.aV, loc.a5, layout);
 			if (_v1.$ === 1) {
 				return A2($elm$svg$Svg$g, _List_Nil, _List_Nil);
 			} else {
@@ -7611,16 +7599,16 @@ var $author$project$Main$viewTrain = F3(
 					_Utils_update(
 						loc,
 						{
-							a9: A2(
+							aV: A2(
 								$ianmackenzie$elm_units$Quantity$minus,
-								$ianmackenzie$elm_units$Length$meters(train.bH),
-								loc.a9)
+								$ianmackenzie$elm_units$Length$meters(train.bj),
+								loc.aV)
 						}));
 				if (_v2.$ === 1) {
 					return A2($elm$svg$Svg$g, _List_Nil, _List_Nil);
 				} else {
 					var trainEndLocation = _v2.a;
-					var _v3 = A3($author$project$Railroad$Layout$coordsFor, trainEndLocation.a9, trainEndLocation.bn, layout);
+					var _v3 = A3($author$project$Railroad$Layout$coordsFor, trainEndLocation.aV, trainEndLocation.a5, layout);
 					if (_v3.$ === 1) {
 						return A2($elm$svg$Svg$g, _List_Nil, _List_Nil);
 					} else {
@@ -7639,13 +7627,13 @@ var $author$project$Main$viewTrain = F3(
 								[
 									$elm$svg$Svg$Attributes$id('train'),
 									$elm$svg$Svg$Attributes$x1(
-									$elm$core$String$fromFloat(p1.dj)),
+									$elm$core$String$fromFloat(p1.cH)),
 									$elm$svg$Svg$Attributes$y1(
-									$elm$core$String$fromFloat(p1.dk)),
+									$elm$core$String$fromFloat(p1.cI)),
 									$elm$svg$Svg$Attributes$x2(
-									$elm$core$String$fromFloat(p2.dj)),
+									$elm$core$String$fromFloat(p2.cH)),
 									$elm$svg$Svg$Attributes$y2(
-									$elm$core$String$fromFloat(p2.dk)),
+									$elm$core$String$fromFloat(p2.cI)),
 									$elm$svg$Svg$Attributes$stroke('#3B3332'),
 									$elm$svg$Svg$Attributes$strokeWidth('2.990')
 								]),
@@ -7675,11 +7663,11 @@ var $author$project$Main$view = function (model) {
 							A2(
 								$author$project$Rect$expand,
 								5,
-								$author$project$Railroad$Layout$boundingBox(model.az))))
+								$author$project$Railroad$Layout$boundingBox(model.am))))
 					]),
 				_List_fromArray(
 					[
-						A2($elm$html$Html$Lazy$lazy, $author$project$Railroad$Layout$toSvg, model.az),
+						A2($elm$html$Html$Lazy$lazy, $author$project$Railroad$Layout$toSvg, model.am),
 						A2(
 						$elm$svg$Svg$g,
 						_List_fromArray(
@@ -7688,7 +7676,7 @@ var $author$project$Main$view = function (model) {
 							]),
 						_List_fromArray(
 							[
-								A3($author$project$Main$viewTrain, model.Q, model.az, model.as)
+								A3($author$project$Main$viewTrain, model.I, model.am, model.af)
 							]))
 					])),
 				A2(
@@ -7718,7 +7706,7 @@ var $author$project$Main$view = function (model) {
 								_List_fromArray(
 									[
 										$elm$html$Html$text(
-										model.ar ? 'Stop' : 'Start')
+										model.ae ? 'Stop' : 'Start')
 									])),
 								A2(
 								$elm$html$Html$button,
@@ -7749,7 +7737,7 @@ var $author$project$Main$view = function (model) {
 							]),
 						_List_fromArray(
 							[
-								A3($elm$html$Html$Lazy$lazy2, $author$project$Main$viewSwitches, model.az, model.as)
+								A3($elm$html$Html$Lazy$lazy2, $author$project$Main$viewSwitches, model.am, model.af)
 							])),
 						A2(
 						$elm$html$Html$div,
@@ -7792,7 +7780,7 @@ var $author$project$Main$view = function (model) {
 														_List_Nil,
 														_List_fromArray(
 															[
-																$elm$html$Html$text(model.Q.cN)
+																$elm$html$Html$text(model.I.cf)
 															]))
 													])),
 												A2(
@@ -7816,7 +7804,7 @@ var $author$project$Main$view = function (model) {
 														_List_fromArray(
 															[
 																$elm$html$Html$text(
-																$elm$core$String$fromFloat(model.Q.bH) + ' m')
+																$elm$core$String$fromFloat(model.I.bj) + ' m')
 															]))
 													])),
 												A2(
@@ -7840,7 +7828,7 @@ var $author$project$Main$view = function (model) {
 														_List_fromArray(
 															[
 																$elm$html$Html$text(
-																$elm$core$String$fromFloat(model.Q.b6) + (' m/s (' + (A2($myrho$elm_round$Round$round, 1, model.Q.b6 * 3.6) + ' km/h)')))
+																$elm$core$String$fromFloat(model.I.bI) + (' m/s (' + (A2($myrho$elm_round$Round$round, 1, model.I.bI * 3.6) + ' km/h)')))
 															]))
 													])),
 												A2(
@@ -7862,7 +7850,7 @@ var $author$project$Main$view = function (model) {
 														$elm$html$Html$td,
 														_List_Nil,
 														function () {
-															var _v0 = model.Q.bq;
+															var _v0 = model.I.a8;
 															if (_v0.$ === 1) {
 																return _List_fromArray(
 																	[
@@ -7873,13 +7861,13 @@ var $author$project$Main$view = function (model) {
 																return _List_fromArray(
 																	[
 																		$elm$html$Html$text(
-																		'edge (' + ($elm$core$String$fromInt(loc.bn.a) + (', ' + ($elm$core$String$fromInt(loc.bn.b) + ')')))),
+																		'edge (' + ($elm$core$String$fromInt(loc.a5.a) + (', ' + ($elm$core$String$fromInt(loc.a5.b) + ')')))),
 																		A2($elm$html$Html$br, _List_Nil, _List_Nil),
 																		$elm$html$Html$text(
 																		'pos ' + (A2(
 																			$myrho$elm_round$Round$round,
 																			2,
-																			$ianmackenzie$elm_units$Length$inMeters(loc.a9)) + ' m'))
+																			$ianmackenzie$elm_units$Length$inMeters(loc.aV)) + ' m'))
 																	]);
 															}
 														}())
@@ -7891,6 +7879,6 @@ var $author$project$Main$view = function (model) {
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
-	{dI: $author$project$Main$init, d8: $author$project$Main$subscriptions, ed: $author$project$Main$update, ee: $author$project$Main$view});
+	{c1: $author$project$Main$init, dp: $author$project$Main$subscriptions, dt: $author$project$Main$update, du: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	$elm$json$Json$Decode$succeed(0))(0)}});}(this));
