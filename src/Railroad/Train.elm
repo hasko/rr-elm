@@ -3,6 +3,7 @@ module Railroad.Train exposing
     , TrainLocation
     , TrainState
     , initialLocation
+    , length
     , move
     , normalizeLocation
     , stopped
@@ -22,10 +23,14 @@ import Set
 
 type alias TrainState =
     { name : String
-    , length : Float -- in m
+    , composition : List RollingStock
     , speed : Float -- in m/s
     , location : Maybe TrainLocation
     }
+
+
+type alias RollingStock =
+    { length : Length }
 
 
 type alias TrainLocation =
@@ -38,6 +43,11 @@ type alias TrainLocation =
 
 type Orientation
     = Aligned
+
+
+length : TrainState -> Length
+length train =
+    List.map .length train.composition |> Quantity.sum
 
 
 move : Float -> TrainState -> Layout -> Dict Int Int -> TrainState

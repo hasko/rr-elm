@@ -50,7 +50,7 @@ init _ =
     in
     ( { trainState =
             { name = "Happy Train"
-            , length = 30
+            , composition = [ { length = Length.meters 10 }, { length = Length.meters 10 }, { length = Length.meters 10 } ]
             , speed = 10.0
             , location = Train.initialLocation l
             }
@@ -159,7 +159,7 @@ view model =
                 [ table [ class "table" ]
                     [ tbody []
                         [ tr [] [ th [ scope "row" ] [ text "Name" ], td [] [ text model.trainState.name ] ]
-                        , tr [] [ th [ scope "row" ] [ text "Length" ], td [] [ text (String.fromFloat model.trainState.length ++ " m") ] ]
+                        , tr [] [ th [ scope "row" ] [ text "Length" ], td [] [ text (String.fromFloat (Length.inMeters (Train.length model.trainState)) ++ " m") ] ]
                         , tr []
                             [ th [ scope "row" ] [ text "Speed" ]
                             , td []
@@ -216,7 +216,7 @@ viewTrain train layout switchState =
                     g [] []
 
                 Just c1 ->
-                    case { loc | pos = loc.pos |> Quantity.minus (Length.meters train.length) } |> Train.normalizeLocation layout switchState of
+                    case { loc | pos = loc.pos |> Quantity.minus (Train.length train) } |> Train.normalizeLocation layout switchState of
                         Nothing ->
                             -- If the train end fits on no track, draw nothing.
                             g [] []
