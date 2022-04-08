@@ -1857,9 +1857,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.c2,
-		impl.du,
-		impl.dq,
+		impl.c3,
+		impl.dv,
+		impl.dr,
 		function() { return function() {} }
 	);
 });
@@ -3928,11 +3928,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.c2,
-		impl.du,
-		impl.dq,
+		impl.c3,
+		impl.dv,
+		impl.dr,
 		function(sendToApp, initialModel) {
-			var view = impl.dv;
+			var view = impl.dw;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -3964,12 +3964,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.c2,
-		impl.du,
-		impl.dq,
+		impl.c3,
+		impl.dv,
+		impl.dr,
 		function(sendToApp, initialModel) {
 			var divertHrefToApp = impl.bI && impl.bI(sendToApp)
-			var view = impl.dv;
+			var view = impl.dw;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -3982,7 +3982,7 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.dt) && (_VirtualDom_doc.title = title = doc.dt);
+				(title !== doc.du) && (_VirtualDom_doc.title = title = doc.du);
 			});
 		}
 	);
@@ -4038,8 +4038,8 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.di;
-	var onUrlRequest = impl.dj;
+	var onUrlChange = impl.dj;
+	var onUrlRequest = impl.dk;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
@@ -4069,13 +4069,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		c2: function(flags)
+		c3: function(flags)
 		{
-			return A3(impl.c2, flags, _Browser_getUrl(), key);
+			return A3(impl.c3, flags, _Browser_getUrl(), key);
 		},
+		dw: impl.dw,
 		dv: impl.dv,
-		du: impl.du,
-		dq: impl.dq
+		dr: impl.dr
 	});
 }
 
@@ -4141,17 +4141,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { c0: 'hidden', cQ: 'visibilitychange' }
+		? { c1: 'hidden', cQ: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { c0: 'mozHidden', cQ: 'mozvisibilitychange' }
+		? { c1: 'mozHidden', cQ: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { c0: 'msHidden', cQ: 'msvisibilitychange' }
+		? { c1: 'msHidden', cQ: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { c0: 'webkitHidden', cQ: 'webkitvisibilitychange' }
-		: { c0: 'hidden', cQ: 'visibilitychange' };
+		? { c1: 'webkitHidden', cQ: 'webkitvisibilitychange' }
+		: { c1: 'hidden', cQ: 'visibilitychange' };
 }
 
 
@@ -4316,7 +4316,7 @@ function _Browser_getElement(id)
 				cH: _Browser_doc.documentElement.clientWidth,
 				b4: _Browser_doc.documentElement.clientHeight
 			},
-			cV: {
+			cW: {
 				cI: x + rect.left,
 				cJ: y + rect.top,
 				cH: rect.width,
@@ -5564,7 +5564,18 @@ var $author$project$Main$init = function (_v0) {
 			af: true,
 			ag: $elm$core$Dict$empty,
 			J: {
-				bk: 30,
+				cS: _List_fromArray(
+					[
+						{
+						bk: $ianmackenzie$elm_units$Length$meters(10)
+					},
+						{
+						bk: $ianmackenzie$elm_units$Length$meters(10)
+					},
+						{
+						bk: $ianmackenzie$elm_units$Length$meters(10)
+					}
+					]),
 				a9: $author$project$Railroad$Train$initialLocation(l),
 				cg: 'Happy Train',
 				bJ: 10.0
@@ -6709,6 +6720,18 @@ var $elm$virtual_dom$VirtualDom$lazy = _VirtualDom_lazy;
 var $elm$html$Html$Lazy$lazy = $elm$virtual_dom$VirtualDom$lazy;
 var $elm$virtual_dom$VirtualDom$lazy2 = _VirtualDom_lazy2;
 var $elm$html$Html$Lazy$lazy2 = $elm$virtual_dom$VirtualDom$lazy2;
+var $ianmackenzie$elm_units$Quantity$sum = function (quantities) {
+	return A3($elm$core$List$foldl, $ianmackenzie$elm_units$Quantity$plus, $ianmackenzie$elm_units$Quantity$zero, quantities);
+};
+var $author$project$Railroad$Train$length = function (train) {
+	return $ianmackenzie$elm_units$Quantity$sum(
+		A2(
+			$elm$core$List$map,
+			function ($) {
+				return $.bk;
+			},
+			train.cS));
+};
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 0, a: a};
 };
@@ -7601,7 +7624,7 @@ var $author$project$Main$viewTrain = F3(
 						{
 							aW: A2(
 								$ianmackenzie$elm_units$Quantity$minus,
-								$ianmackenzie$elm_units$Length$meters(train.bk),
+								$author$project$Railroad$Train$length(train),
 								loc.aW)
 						}));
 				if (_v2.$ === 1) {
@@ -7804,7 +7827,9 @@ var $author$project$Main$view = function (model) {
 														_List_fromArray(
 															[
 																$elm$html$Html$text(
-																$elm$core$String$fromFloat(model.J.bk) + ' m')
+																$elm$core$String$fromFloat(
+																	$ianmackenzie$elm_units$Length$inMeters(
+																		$author$project$Railroad$Train$length(model.J))) + ' m')
 															]))
 													])),
 												A2(
@@ -7879,6 +7904,6 @@ var $author$project$Main$view = function (model) {
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
-	{c2: $author$project$Main$init, dq: $author$project$Main$subscriptions, du: $author$project$Main$update, dv: $author$project$Main$view});
+	{c3: $author$project$Main$init, dr: $author$project$Main$subscriptions, dv: $author$project$Main$update, dw: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	$elm$json$Json$Decode$succeed(0))(0)}});}(this));
