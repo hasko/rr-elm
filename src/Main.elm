@@ -218,16 +218,14 @@ viewTrain train layout switchState =
             g [] []
 
         Just loc ->
-            case Layout.coordsFor loc.pos loc.edge layout of
-                -- If the coordinates are unknown ...
-                Nothing ->
-                    -- ... draw nothing.
-                    g [] []
+            g [ Svg.Attributes.id "train" ]
+                (List.foldl
+                    (\car ( currentLoc, svg ) ->
+                        case Layout.coordsFor currentLoc.pos currentLoc.edge layout of
+                            Nothing ->
+                                ( currentLoc, svg )
 
-                Just c1 ->
-                    g [ Svg.Attributes.id "train" ]
-                        (List.foldl
-                            (\car ( currentLoc, svg ) ->
+                            Just c1 ->
                                 case Train.endLocation car.length layout switchState currentLoc of
                                     Nothing ->
                                         -- If the train end fits on no track, draw nothing.
@@ -259,11 +257,11 @@ viewTrain train layout switchState =
                                                     []
                                                     :: svg
                                                 )
-                            )
-                            ( loc, [] )
-                            train.composition
-                            |> Tuple.second
-                        )
+                    )
+                    ( loc, [] )
+                    train.composition
+                    |> Tuple.second
+                )
 
 
 viewSwitches : Layout -> Dict Int Int -> Html Msg

@@ -78,12 +78,20 @@ endLocationRec l correction layout switchState startLoc =
                             let
                                 d =
                                     Point2d.distanceFrom p1 p2
+
+                                {-
+                                   err =
+                                       l |> Quantity.minus d
+
+                                   _ =
+                                       Debug.log "Calculation" { length = Length.inMeters l, d = Length.inMeters d, err = Length.inMeters err }
+                                -}
                             in
-                            if Quantity.equalWithin (Length.centimeters 1) d l then
+                            if Quantity.equalWithin (Length.centimeters 5) d l then
                                 Just loc
 
                             else
-                                endLocationRec l (Debug.log "recurse" (Quantity.plus correction (l |> Quantity.minus d))) layout switchState startLoc
+                                endLocationRec l (Quantity.plus correction (l |> Quantity.minus d)) layout switchState startLoc
 
 
 move : Float -> TrainState -> Layout -> Dict Int Int -> TrainState
