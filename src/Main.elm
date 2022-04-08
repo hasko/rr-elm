@@ -158,7 +158,7 @@ view model =
                             "Start"
                         )
                     ]
-                , button [ class "btn btn-secondary me-3", onClick Step, disabled (not model.running) ] [ text "Step (1&thinsp;s)" ]
+                , button [ class "btn btn-secondary me-3", onClick Step, disabled (not model.running) ] [ text "Step (1s)" ]
                 , button [ class "btn btn-secondary", onClick Reset ] [ text "Reset" ]
                 ]
             ]
