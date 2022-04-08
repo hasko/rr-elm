@@ -5,7 +5,7 @@ import Browser.Events exposing (onAnimationFrameDelta)
 import Dict exposing (Dict)
 import Frame2d
 import Html exposing (Html, br, button, div, li, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, scope)
+import Html.Attributes exposing (class, disabled, scope)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
@@ -38,6 +38,7 @@ type alias Model =
 type Msg
     = Tick Float
     | Toggle
+    | Step
     | Reset
     | ChangeSwitch Int Switch
 
@@ -56,7 +57,7 @@ init _ =
             }
       , layout = l
       , switchState = Dict.empty
-      , running = True
+      , running = False
       }
     , Cmd.none
     )
@@ -83,6 +84,13 @@ update msg model =
 
         Toggle ->
             ( { model | running = not model.running }, Cmd.none )
+
+        Step ->
+            if model.running then
+                ( model, Cmd.none )
+
+            else
+                updateTick 1000.0 model
 
         Reset ->
             let
@@ -150,6 +158,7 @@ view model =
                             "Start"
                         )
                     ]
+                , button [ class "btn btn-secondary", onClick Step, disabled (not model.running) ] [ text "Step (1&thinsp;s)" ]
                 , button [ class "btn btn-secondary", onClick Reset ] [ text "Reset" ]
                 ]
             ]
@@ -219,7 +228,7 @@ viewTrain train layout switchState =
                     g [ Svg.Attributes.id "train" ]
                         (List.foldl
                             (\car ( currentLoc, svg ) ->
-                                case { currentLoc | pos = currentLoc.pos |> Quantity.minus car.length } |> Train.normalizeLocation layout switchState of
+                                case Train.endLocation car.length layout switchState currentLoc of
                                     Nothing ->
                                         -- If the train end fits on no track, draw nothing.
                                         ( currentLoc, svg )

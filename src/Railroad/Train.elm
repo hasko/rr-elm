@@ -2,6 +2,7 @@ module Railroad.Train exposing
     ( Orientation(..)
     , TrainLocation
     , TrainState
+    , endLocation
     , initialLocation
     , length
     , move
@@ -10,11 +11,13 @@ module Railroad.Train exposing
     )
 
 import Dict exposing (Dict)
+import Frame2d
 import Graph
 import Graph.Pair exposing (getEdgeData)
 import Length exposing (Length)
 import List.Extra
 import Maybe exposing (andThen, withDefault)
+import Point2d
 import Quantity
 import Railroad.Layout as Layout exposing (Layout)
 import Railroad.Track as Track exposing (Track)
@@ -48,6 +51,39 @@ type Orientation
 length : TrainState -> Length
 length train =
     List.map .length train.composition |> Quantity.sum
+
+
+endLocation : Length -> Layout -> Dict Int Int -> TrainLocation -> Maybe TrainLocation
+endLocation l layout switchState startLoc =
+    endLocationRec l Quantity.zero layout switchState startLoc
+
+
+endLocationRec : Length -> Length -> Layout -> Dict Int Int -> TrainLocation -> Maybe TrainLocation
+endLocationRec l correction layout switchState startLoc =
+    case Layout.coordsFor startLoc.pos startLoc.edge layout |> Maybe.map Frame2d.originPoint of
+        Nothing ->
+            Nothing
+
+        Just p1 ->
+            case { startLoc | pos = startLoc.pos |> Quantity.minus l |> Quantity.minus correction } |> normalizeLocation layout switchState of
+                Nothing ->
+                    Nothing
+
+                Just loc ->
+                    case Layout.coordsFor loc.pos loc.edge layout |> Maybe.map Frame2d.originPoint of
+                        Nothing ->
+                            Nothing
+
+                        Just p2 ->
+                            let
+                                d =
+                                    Point2d.distanceFrom p1 p2
+                            in
+                            if Quantity.equalWithin (Length.centimeters 1) d l then
+                                Just loc
+
+                            else
+                                endLocationRec l (Debug.log "recurse" (Quantity.plus correction (l |> Quantity.minus d))) layout switchState startLoc
 
 
 move : Float -> TrainState -> Layout -> Dict Int Int -> TrainState

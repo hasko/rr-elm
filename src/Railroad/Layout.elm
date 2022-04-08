@@ -159,7 +159,6 @@ toSvg ((Layout g) as layout) =
 
 
 
--- JSON
 -- Samples
 
 
