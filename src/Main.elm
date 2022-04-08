@@ -28,7 +28,7 @@ main =
 
 
 type alias Model =
-    { state : TrainState
+    { trainState : TrainState
     , layout : Layout
     , switchState : Dict Int Int
     , running : Bool
@@ -48,7 +48,7 @@ init _ =
         l =
             Layout.initialLayout
     in
-    ( { state =
+    ( { trainState =
             { name = "Happy Train"
             , length = 30
             , speed = 10.0
@@ -109,15 +109,15 @@ updateTick : Float -> Model -> ( Model, Cmd Msg )
 updateTick delta model =
     let
         newTrainState =
-            Train.move model.layout model.switchState delta model.state
+            Train.move delta model.trainState model.layout model.switchState
     in
     case newTrainState.location of
         Nothing ->
             -- Train could not move, stop it immediately.
-            ( { model | state = Train.stopped model.state, running = False }, Cmd.none )
+            ( { model | trainState = Train.stopped model.trainState, running = False }, Cmd.none )
 
         Just _ ->
-            ( { model | state = newTrainState }, Cmd.none )
+            ( { model | trainState = newTrainState }, Cmd.none )
 
 
 
@@ -137,7 +137,7 @@ view model =
                 )
             ]
             [ lazy Layout.toSvg model.layout
-            , g [ id "trains" ] [ viewTrain model.state model.layout model.switchState ]
+            , g [ id "trains" ] [ viewTrain model.trainState model.layout model.switchState ]
             ]
         , div [ class "row mb-3" ]
             [ div [ class "btn-group", role "group" ]
@@ -158,15 +158,15 @@ view model =
             , div [ class "col" ]
                 [ table [ class "table" ]
                     [ tbody []
-                        [ tr [] [ th [ scope "row" ] [ text "Name" ], td [] [ text model.state.name ] ]
-                        , tr [] [ th [ scope "row" ] [ text "Length" ], td [] [ text (String.fromFloat model.state.length ++ " m") ] ]
+                        [ tr [] [ th [ scope "row" ] [ text "Name" ], td [] [ text model.trainState.name ] ]
+                        , tr [] [ th [ scope "row" ] [ text "Length" ], td [] [ text (String.fromFloat model.trainState.length ++ " m") ] ]
                         , tr []
                             [ th [ scope "row" ] [ text "Speed" ]
                             , td []
                                 [ text
-                                    (String.fromFloat model.state.speed
+                                    (String.fromFloat model.trainState.speed
                                         ++ " m/s ("
-                                        ++ Round.round 1 (model.state.speed * 3.6)
+                                        ++ Round.round 1 (model.trainState.speed * 3.6)
                                         ++ " km/h)"
                                     )
                                 ]
@@ -174,7 +174,7 @@ view model =
                         , tr []
                             [ th [ scope "row" ] [ text "Location" ]
                             , td []
-                                (case model.state.location of
+                                (case model.trainState.location of
                                     Nothing ->
                                         [ text "Nowhere" ]
 

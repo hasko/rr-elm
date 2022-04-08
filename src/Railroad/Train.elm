@@ -40,8 +40,8 @@ type Orientation
     = Aligned
 
 
-move : Layout -> Dict Int Int -> Float -> TrainState -> TrainState
-move layout switchState millis trainState =
+move : Float -> TrainState -> Layout -> Dict Int Int -> TrainState
+move millis trainState layout switchState =
     case trainState.location of
         Nothing ->
             -- If the train has no location, no need to move.
