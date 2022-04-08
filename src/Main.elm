@@ -216,35 +216,45 @@ viewTrain train layout switchState =
                     g [] []
 
                 Just c1 ->
-                    case { loc | pos = loc.pos |> Quantity.minus (Train.length train) } |> Train.normalizeLocation layout switchState of
-                        Nothing ->
-                            -- If the train end fits on no track, draw nothing.
-                            g [] []
+                    g [ Svg.Attributes.id "train" ]
+                        (List.foldl
+                            (\car ( currentLoc, svg ) ->
+                                case { currentLoc | pos = currentLoc.pos |> Quantity.minus car.length } |> Train.normalizeLocation layout switchState of
+                                    Nothing ->
+                                        -- If the train end fits on no track, draw nothing.
+                                        ( currentLoc, svg )
 
-                        Just trainEndLocation ->
-                            case Layout.coordsFor trainEndLocation.pos trainEndLocation.edge layout of
-                                -- Train end is not on any track.
-                                Nothing ->
-                                    g [] []
+                                    Just trainEndLocation ->
+                                        case Layout.coordsFor trainEndLocation.pos trainEndLocation.edge layout of
+                                            -- Train end is not on any track.
+                                            Nothing ->
+                                                ( currentLoc, svg )
 
-                                Just c2 ->
-                                    let
-                                        p1 =
-                                            c1 |> Frame2d.originPoint |> Point2d.toRecord Length.inMeters
+                                            Just c2 ->
+                                                let
+                                                    p1 =
+                                                        c1 |> Frame2d.originPoint |> Point2d.toRecord Length.inMeters
 
-                                        p2 =
-                                            c2 |> Frame2d.originPoint |> Point2d.toRecord Length.inMeters
-                                    in
-                                    line
-                                        [ Svg.Attributes.id "train"
-                                        , x1 (p1.x |> String.fromFloat)
-                                        , y1 (p1.y |> String.fromFloat)
-                                        , x2 (p2.x |> String.fromFloat)
-                                        , y2 (p2.y |> String.fromFloat)
-                                        , stroke "#3B3332"
-                                        , strokeWidth "2.990"
-                                        ]
-                                        []
+                                                    p2 =
+                                                        c2 |> Frame2d.originPoint |> Point2d.toRecord Length.inMeters
+                                                in
+                                                ( trainEndLocation
+                                                , line
+                                                    [ x1 (p1.x |> String.fromFloat)
+                                                    , y1 (p1.y |> String.fromFloat)
+                                                    , x2 (p2.x |> String.fromFloat)
+                                                    , y2 (p2.y |> String.fromFloat)
+                                                    , stroke "#3B3332"
+                                                    , strokeWidth "2.990"
+                                                    ]
+                                                    []
+                                                    :: svg
+                                                )
+                            )
+                            ( loc, [] )
+                            train.composition
+                            |> Tuple.second
+                        )
 
 
 viewSwitches : Layout -> Dict Int Int -> Html Msg
