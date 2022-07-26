@@ -86,17 +86,9 @@ renderLayout nodeId currentFrame ((Layout g) as layout) knownFrames =
 
 coordsFor : Length -> ( Int, Int ) -> Layout -> Maybe Frame
 coordsFor pos ( fromNode, toNode ) ((Layout g) as layout) =
-    case Graph.getEdgeData fromNode toNode g of
-        Nothing ->
-            Nothing
-
-        Just track ->
-            case cursors layout |> Dict.get fromNode of
-                Nothing ->
-                    Nothing
-
-                Just cursor ->
-                    Just (getPositionOnTrack pos cursor track)
+     Graph.getEdgeData fromNode toNode g |> Maybe.andThen (\track -> 
+            cursors layout |> Dict.get fromNode |> Maybe.map (\cursor -> getPositionOnTrack pos cursor track))
+            
 
 
 switches : Layout -> List ( Int, Switch )

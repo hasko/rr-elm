@@ -70,11 +70,9 @@ endLocationRec l correction layout switchState startLoc =
                     Nothing
 
                 Just loc ->
-                    case Layout.coordsFor loc.pos loc.edge layout |> Maybe.map Frame2d.originPoint of
-                        Nothing ->
-                            Nothing
-
-                        Just p2 ->
+                    Layout.coordsFor loc.pos loc.edge layout 
+                        |> Maybe.map Frame2d.originPoint 
+                        |> Maybe.andThen (\p2 ->
                             let
                                 d =
                                     Point2d.distanceFrom p1 p2
@@ -92,6 +90,7 @@ endLocationRec l correction layout switchState startLoc =
 
                             else
                                 endLocationRec l (Quantity.plus correction (l |> Quantity.minus d)) layout switchState startLoc
+                        )
 
 
 move : Float -> TrainState -> Layout -> Dict Int Int -> TrainState

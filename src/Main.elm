@@ -13,7 +13,6 @@ import Length
 import List.Extra
 import Maybe exposing (withDefault)
 import Point2d
-import Quantity
 import Railroad.Layout as Layout exposing (..)
 import Railroad.Train as Train exposing (..)
 import Rect
