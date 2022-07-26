@@ -145,14 +145,12 @@ normalizeLocation layout switchState loc =
                     |> normalizeLocation layout switchState
 
     else if Quantity.lessThanZero loc.pos then
-        case previousTrack loc.edge layout switchState of
-            Nothing ->
-                Nothing
-
-            Just nextLoc ->
-                -- TODO Determine and use the appropriate connection nimber instead of 0
+        previousTrack loc.edge layout switchState 
+            |> Maybe.map (\nextLoc
+                -- TODO Determine and use the appropriate connection number instead of 0
                 { nextLoc | pos = loc.pos |> Quantity.plus (Track.length nextLoc.track) }
                     |> normalizeLocation layout switchState
+                )
 
     else
         -- We are within the track bounds, so return.
