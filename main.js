@@ -6762,24 +6762,24 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		$elm$json$Json$Decode$succeed(msg));
 };
 var $author$project$Rect$height = function (_v0) {
-	var x1 = _v0.a;
 	var y1 = _v0.b;
-	var x2 = _v0.c;
 	var y2 = _v0.d;
 	return y2 - y1;
 };
-var $author$project$Rect$width = function (_v0) {
+var $author$project$Rect$origin = function (_v0) {
 	var x1 = _v0.a;
 	var y1 = _v0.b;
+	return _Utils_Tuple2(x1, y1);
+};
+var $author$project$Rect$width = function (_v0) {
+	var x1 = _v0.a;
 	var x2 = _v0.c;
-	var y2 = _v0.d;
 	return x2 - x1;
 };
 var $author$project$Rect$rectToString = function (r) {
-	var x1 = r.a;
-	var y1 = r.b;
-	var x2 = r.c;
-	var y2 = r.d;
+	var _v0 = $author$project$Rect$origin(r);
+	var x = _v0.a;
+	var y = _v0.b;
 	return A2(
 		$elm$core$String$join,
 		' ',
@@ -6788,8 +6788,8 @@ var $author$project$Rect$rectToString = function (r) {
 			$elm$core$String$fromFloat,
 			_List_fromArray(
 				[
-					x1,
-					y1,
+					x,
+					y,
 					$author$project$Rect$width(r),
 					$author$project$Rect$height(r)
 				])));
@@ -7597,23 +7597,20 @@ var $author$project$Railroad$Layout$coordsFor = F3(
 		var fromNode = _v0.a;
 		var toNode = _v0.b;
 		var g = layout;
-		var _v1 = A3($drathier$elm_graph$Graph$getEdgeData, fromNode, toNode, g);
-		if (_v1.$ === 1) {
-			return $elm$core$Maybe$Nothing;
-		} else {
-			var track = _v1.a;
-			var _v2 = A2(
-				$elm$core$Dict$get,
-				fromNode,
-				$author$project$Railroad$Layout$cursors(layout));
-			if (_v2.$ === 1) {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var cursor = _v2.a;
-				return $elm$core$Maybe$Just(
-					A3($author$project$Railroad$Track$getPositionOnTrack, pos, cursor, track));
-			}
-		}
+		return A2(
+			$elm$core$Maybe$andThen,
+			function (track) {
+				return A2(
+					$elm$core$Maybe$map,
+					function (cursor) {
+						return A3($author$project$Railroad$Track$getPositionOnTrack, pos, cursor, track);
+					},
+					A2(
+						$elm$core$Dict$get,
+						fromNode,
+						$author$project$Railroad$Layout$cursors(layout)));
+			},
+			A3($drathier$elm_graph$Graph$getEdgeData, fromNode, toNode, g));
 	});
 var $ianmackenzie$elm_units$Length$centimeters = function (numCentimeters) {
 	return $ianmackenzie$elm_units$Length$meters(0.01 * numCentimeters);
@@ -7648,65 +7645,53 @@ var $ianmackenzie$elm_units$Quantity$equalWithin = F3(
 	});
 var $author$project$Railroad$Train$endLocationRec = F5(
 	function (l, correction, layout, switchState, startLoc) {
-		endLocationRec:
-		while (true) {
-			var _v0 = A2(
-				$elm$core$Maybe$map,
-				$ianmackenzie$elm_geometry$Frame2d$originPoint,
-				A3($author$project$Railroad$Layout$coordsFor, startLoc.bE, startLoc.a5, layout));
-			if (_v0.$ === 1) {
+		var _v0 = A2(
+			$elm$core$Maybe$map,
+			$ianmackenzie$elm_geometry$Frame2d$originPoint,
+			A3($author$project$Railroad$Layout$coordsFor, startLoc.bE, startLoc.a5, layout));
+		if (_v0.$ === 1) {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var p1 = _v0.a;
+			var _v1 = A3(
+				$author$project$Railroad$Train$normalizeLocation,
+				layout,
+				switchState,
+				_Utils_update(
+					startLoc,
+					{
+						bE: A2(
+							$ianmackenzie$elm_units$Quantity$minus,
+							correction,
+							A2($ianmackenzie$elm_units$Quantity$minus, l, startLoc.bE))
+					}));
+			if (_v1.$ === 1) {
 				return $elm$core$Maybe$Nothing;
 			} else {
-				var p1 = _v0.a;
-				var _v1 = A3(
-					$author$project$Railroad$Train$normalizeLocation,
-					layout,
-					switchState,
-					_Utils_update(
-						startLoc,
-						{
-							bE: A2(
-								$ianmackenzie$elm_units$Quantity$minus,
-								correction,
-								A2($ianmackenzie$elm_units$Quantity$minus, l, startLoc.bE))
-						}));
-				if (_v1.$ === 1) {
-					return $elm$core$Maybe$Nothing;
-				} else {
-					var loc = _v1.a;
-					var _v2 = A2(
-						$elm$core$Maybe$map,
-						$ianmackenzie$elm_geometry$Frame2d$originPoint,
-						A3($author$project$Railroad$Layout$coordsFor, loc.bE, loc.a5, layout));
-					if (_v2.$ === 1) {
-						return $elm$core$Maybe$Nothing;
-					} else {
-						var p2 = _v2.a;
+				var loc = _v1.a;
+				return A2(
+					$elm$core$Maybe$andThen,
+					function (p2) {
 						var d = A2($ianmackenzie$elm_geometry$Point2d$distanceFrom, p1, p2);
-						if (A3(
+						return A3(
 							$ianmackenzie$elm_units$Quantity$equalWithin,
 							$ianmackenzie$elm_units$Length$centimeters(5),
 							d,
-							l)) {
-							return $elm$core$Maybe$Just(loc);
-						} else {
-							var $temp$l = l,
-								$temp$correction = A2(
+							l) ? $elm$core$Maybe$Just(loc) : A5(
+							$author$project$Railroad$Train$endLocationRec,
+							l,
+							A2(
 								$ianmackenzie$elm_units$Quantity$plus,
 								correction,
 								A2($ianmackenzie$elm_units$Quantity$minus, d, l)),
-								$temp$layout = layout,
-								$temp$switchState = switchState,
-								$temp$startLoc = startLoc;
-							l = $temp$l;
-							correction = $temp$correction;
-							layout = $temp$layout;
-							switchState = $temp$switchState;
-							startLoc = $temp$startLoc;
-							continue endLocationRec;
-						}
-					}
-				}
+							layout,
+							switchState,
+							startLoc);
+					},
+					A2(
+						$elm$core$Maybe$map,
+						$ianmackenzie$elm_geometry$Frame2d$originPoint,
+						A3($author$project$Railroad$Layout$coordsFor, loc.bE, loc.a5, layout)));
 			}
 		}
 	});
