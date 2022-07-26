@@ -6025,24 +6025,23 @@ var $author$project$Railroad$Train$normalizeLocation = F3(
 			}
 		} else {
 			if ($ianmackenzie$elm_units$Quantity$lessThanZero(loc.bE)) {
-				var _v1 = A3($author$project$Railroad$Train$previousTrack, loc.a5, layout, switchState);
-				if (_v1.$ === 1) {
-					return $elm$core$Maybe$Nothing;
-				} else {
-					var nextLoc = _v1.a;
-					return A3(
-						$author$project$Railroad$Train$normalizeLocation,
-						layout,
-						switchState,
-						_Utils_update(
-							nextLoc,
-							{
-								bE: A2(
-									$ianmackenzie$elm_units$Quantity$plus,
-									$author$project$Railroad$Track$length(nextLoc.V),
-									loc.bE)
-							}));
-				}
+				return A2(
+					$elm$core$Maybe$andThen,
+					function (nextLoc) {
+						return A3(
+							$author$project$Railroad$Train$normalizeLocation,
+							layout,
+							switchState,
+							_Utils_update(
+								nextLoc,
+								{
+									bE: A2(
+										$ianmackenzie$elm_units$Quantity$plus,
+										$author$project$Railroad$Track$length(nextLoc.V),
+										loc.bE)
+								}));
+					},
+					A3($author$project$Railroad$Train$previousTrack, loc.a5, layout, switchState));
 			} else {
 				return $elm$core$Maybe$Just(loc);
 			}
