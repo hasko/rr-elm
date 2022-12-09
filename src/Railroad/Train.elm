@@ -6,7 +6,6 @@ module Railroad.Train exposing
     , initialLocation
     , length
     , move
-    , normalizeLocation
     , stopped
     )
 
@@ -70,27 +69,28 @@ endLocationRec l correction layout switchState startLoc =
                     Nothing
 
                 Just loc ->
-                    Layout.coordsFor loc.pos loc.edge layout 
-                        |> Maybe.map Frame2d.originPoint 
-                        |> Maybe.andThen (\p2 ->
-                            let
-                                d =
-                                    Point2d.distanceFrom p1 p2
+                    Layout.coordsFor loc.pos loc.edge layout
+                        |> Maybe.map Frame2d.originPoint
+                        |> Maybe.andThen
+                            (\p2 ->
+                                let
+                                    d =
+                                        Point2d.distanceFrom p1 p2
 
-                                {-
-                                   err =
-                                       l |> Quantity.minus d
+                                    {-
+                                       err =
+                                           l |> Quantity.minus d
 
-                                   _ =
-                                       Debug.log "Calculation" { length = Length.inMeters l, d = Length.inMeters d, err = Length.inMeters err }
-                                -}
-                            in
-                            if Quantity.equalWithin (Length.centimeters 5) d l then
-                                Just loc
+                                       _ =
+                                           Debug.log "Calculation" { length = Length.inMeters l, d = Length.inMeters d, err = Length.inMeters err }
+                                    -}
+                                in
+                                if Quantity.equalWithin (Length.centimeters 5) d l then
+                                    Just loc
 
-                            else
-                                endLocationRec l (Quantity.plus correction (l |> Quantity.minus d)) layout switchState startLoc
-                        )
+                                else
+                                    endLocationRec l (Quantity.plus correction (l |> Quantity.minus d)) layout switchState startLoc
+                            )
 
 
 move : Float -> TrainState -> Layout -> Dict Int Int -> TrainState
@@ -145,11 +145,12 @@ normalizeLocation layout switchState loc =
                     |> normalizeLocation layout switchState
 
     else if Quantity.lessThanZero loc.pos then
-        previousTrack loc.edge layout switchState 
-            |> Maybe.andThen (\nextLoc ->
-                -- TODO Determine and use the appropriate connection number instead of 0
-                { nextLoc | pos = loc.pos |> Quantity.plus (Track.length nextLoc.track) }
-                    |> normalizeLocation layout switchState
+        previousTrack loc.edge layout switchState
+            |> Maybe.andThen
+                (\nextLoc ->
+                    -- TODO Determine and use the appropriate connection number instead of 0
+                    { nextLoc | pos = loc.pos |> Quantity.plus (Track.length nextLoc.track) }
+                        |> normalizeLocation layout switchState
                 )
 
     else

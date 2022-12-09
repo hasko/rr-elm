@@ -4,8 +4,8 @@ import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
 import Dict exposing (Dict)
 import Frame2d
-import Html exposing (Html, br, button, div, li, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, disabled, scope)
+import Html exposing (Html, a, br, button, div, li, nav, span, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (attribute, class, disabled, href, scope, type_)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
@@ -22,6 +22,7 @@ import Svg.Attributes exposing (id, stroke, strokeWidth, viewBox, width, x1, x2,
 import Tuple
 
 
+main : Program () Model Msg
 main =
     Browser.element { init = init, update = update, subscriptions = subscriptions, view = view }
 
@@ -134,7 +135,19 @@ updateTick delta model =
 view : Model -> Html Msg
 view model =
     div [ class "container" ]
-        [ svg
+        [ nav [ class "navbar navbar-expand-lg" ]
+            [ div [ class "container-fluid" ]
+                [ a [ class "navbar-brand", href "#" ] [ text "Trains" ]
+                , button [ class "navbar-toggler", type_ "button", attribute "data-bs-toggle" "collapse", attribute "data-bs-target" "#navbarSupportedContent" ]
+                    [ span [ class "navbar-toggler-icon" ] []
+                    ]
+                , div [ class "collapse navbar-collapse", id "navbarSupportedContent" ]
+                    [ ul [ class "navbar-nav me-auto mb-2 mb-lg-0" ]
+                        [ li [ class "nav-item" ] [ a [ class "nav-link", href "#" ] [ text "Load" ] ] ]
+                    ]
+                ]
+            ]
+        , svg
             [ width "100%"
             , viewBox
                 (model.layout
