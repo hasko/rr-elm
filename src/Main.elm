@@ -1,4 +1,4 @@
-module Main exposing (Msg(..), main)
+port module Main exposing (Msg(..), main)
 
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
@@ -9,6 +9,7 @@ import Html.Attributes exposing (attribute, class, disabled, href, scope, type_)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
+import Json.Encode exposing (Value)
 import Length
 import List.Extra
 import Maybe exposing (withDefault)
@@ -22,7 +23,7 @@ import Svg.Attributes exposing (id, stroke, strokeWidth, viewBox, width, x1, x2,
 import Tuple
 
 
-main : Program () Model Msg
+main : Program (Maybe Value) Model Msg
 main =
     Browser.element { init = init, update = update, subscriptions = subscriptions, view = view }
 
@@ -43,7 +44,13 @@ type Msg
     | ChangeSwitch Int Switch
 
 
-init : () -> ( Model, Cmd Msg )
+port sendLayout : Value -> Cmd msg
+
+
+port layoutReceiver : (Value -> msg) -> Sub msg
+
+
+init : Maybe Value -> ( Model, Cmd Msg )
 init _ =
     let
         l =
@@ -95,7 +102,7 @@ update msg model =
         Reset ->
             let
                 ( m, _ ) =
-                    init ()
+                    init Nothing
             in
             ( { m | running = False }, Cmd.none )
 
