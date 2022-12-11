@@ -9,7 +9,8 @@ import Html.Attributes exposing (attribute, class, disabled, href, scope, type_)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
-import Json.Encode exposing (Value)
+import Json.Decode as Decode exposing (Decoder)
+import Json.Encode as Encode exposing (Value)
 import Length
 import List.Extra
 import Maybe exposing (withDefault)
@@ -33,6 +34,7 @@ type alias Model =
     , layout : Layout
     , switchState : Dict Int Int
     , running : Bool
+    , flash : Maybe String
     }
 
 
@@ -42,6 +44,7 @@ type Msg
     | Step
     | Reset
     | ChangeSwitch Int Switch
+    | LayoutReceived Value
 
 
 port sendLayout : Value -> Cmd msg
@@ -65,6 +68,7 @@ init _ =
       , layout = l
       , switchState = Dict.empty
       , running = False
+      , flash = Nothing
       }
     , Cmd.none
     )
@@ -76,7 +80,7 @@ subscriptions model =
         onAnimationFrameDelta Tick
 
     else
-        Sub.none
+        layoutReceiver LayoutReceived
 
 
 
@@ -118,6 +122,14 @@ update msg model =
             in
             -- Construct the new model based on the new switch state.
             ( { model | switchState = newState }, Cmd.none )
+
+        LayoutReceived value ->
+            case Decode.decodeValue modelDecoder value of
+                Ok m ->
+                    ( m, Cmd.none )
+
+                Err err ->
+                    ( { model | flash = Decode.errorToString err }, Cmd.none )
 
 
 updateTick : Float -> Model -> ( Model, Cmd Msg )
@@ -326,3 +338,17 @@ viewSwitchConfig routes =
 role : String -> Html.Attribute msg
 role r =
     Html.Attributes.attribute "role" r
+
+
+
+--- JSON ---
+
+
+modelDecoder : Decoder Model
+modelDecoder =
+    Decode.map5 Model
+        (Decode.field "layout" Layout.decoder)
+        (Decode.field "trainState" Railroad.Train.trainStateDecoder)
+        (Decode.field "switchState" switchStateDecoder)
+        (Decode.succeed False)
+        (Decode.succeed Nothing)
