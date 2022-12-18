@@ -256,8 +256,8 @@ decoder =
     Decode.map4 TrainState
         (Decode.field "name" Decode.string)
         (Decode.field "composition" (Decode.list rollingStockDecoder))
-        (Decode.field "speed" Decode.float)
-        (Decode.maybe (Decode.field "location" trainLocationDecoder))
+        (Decode.field "speed" (Decode.float |> Decode.map Speed.metersPerSecond))
+        (Decode.field "location" (Decode.maybe Layout.locationDecoder))
 
 
 rollingStockDecoder : Decoder RollingStock
