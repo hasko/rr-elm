@@ -1,6 +1,8 @@
 module Railroad.Layout exposing
     ( Layout
+    , Orientation(..)
     , Switch
+    , TrainLocation
     , boundingBox
     , coordsFor
     , decoder
@@ -34,6 +36,20 @@ type Layout
 
 type alias Switch =
     { configs : List (List ( Int, Int )) }
+
+
+type alias TrainLocation =
+    { edge : ( Int, Int ) -- The vertices
+    , pos : Length -- The position on the track
+    , orientation : Orientation
+    , track : Track -- The track information for convenience
+    }
+
+
+type
+    Orientation
+    -- TODO Add Reverse
+    = Aligned
 
 
 cursors : Layout -> Dict Int Frame

@@ -1,7 +1,5 @@
 module Railroad.Train exposing
-    ( Orientation(..)
-    , TrainLocation
-    , TrainState
+    ( TrainState
     , decoder
     , endLocation
     , initialLocation
@@ -21,7 +19,7 @@ import List.Extra
 import Maybe exposing (andThen, withDefault)
 import Point2d
 import Quantity
-import Railroad.Layout as Layout exposing (Layout)
+import Railroad.Layout as Layout exposing (Layout, Orientation(..), TrainLocation)
 import Railroad.Track as Track exposing (Track)
 import Set
 
@@ -36,18 +34,6 @@ type alias TrainState =
 
 type alias RollingStock =
     { length : Length }
-
-
-type alias TrainLocation =
-    { edge : ( Int, Int ) -- The vertices
-    , pos : Length -- The position on the track
-    , orientation : Orientation
-    , track : Track -- The track information for convenience
-    }
-
-
-type Orientation
-    = Aligned
 
 
 length : TrainState -> Length
