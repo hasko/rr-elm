@@ -10,6 +10,7 @@ import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
 import Json.Decode as Decode exposing (Decoder)
+import Json.Decode.Extra
 import Json.Encode as Encode exposing (Value)
 import Length
 import List.Extra
@@ -356,5 +357,4 @@ modelDecoder =
 
 switchStateDecoder : Decoder (Dict Int Int)
 switchStateDecoder =
-    -- TODO fix this
-    Decode.succeed Dict.empty
+    Json.Decode.Extra.dict2 Decode.int Decode.int
