@@ -10,6 +10,7 @@ module Railroad.Train exposing
     )
 
 import Dict exposing (Dict)
+import Duration
 import Frame2d
 import Graph
 import Graph.Pair exposing (getEdgeData)
@@ -23,12 +24,13 @@ import Quantity
 import Railroad.Layout as Layout exposing (Layout, Orientation(..))
 import Railroad.Track as Track exposing (Track)
 import Set
+import Speed exposing (Speed)
 
 
 type alias TrainState =
     { name : String
     , composition : List RollingStock
-    , speed : Float -- in m/s
+    , speed : Speed
     , location : Maybe Layout.Location
     }
 
@@ -94,13 +96,13 @@ move millis trainState layout switchState =
             -- Calculate new position, disregarding track transitions.
             let
                 distanceTraveled =
-                    trainState.speed * millis / 1000.0
+                    trainState.speed |> Quantity.for (Duration.milliseconds millis)
 
                 -- Consider which way the train is traveling on the track.
                 newPos =
                     case loc.orientation of
                         Aligned ->
-                            loc.pos |> Quantity.plus (Length.meters distanceTraveled)
+                            loc.pos |> Quantity.plus distanceTraveled
             in
             -- Create a new train state ...
             { trainState
@@ -241,7 +243,7 @@ nextTrack ( fromId, toId ) layout switchState =
 
 stopped : TrainState -> TrainState
 stopped ts =
-    { ts | speed = 0.0 }
+    { ts | speed = Quantity.zero }
 
 
 
@@ -253,7 +255,7 @@ decoder =
     Decode.map4 TrainState
         (Decode.field "name" Decode.string)
         (Decode.field "composition" (Decode.list rollingStockDecoder))
-        (Decode.field "speed" Decode.float)
+        (Decode.field "speed" (Decode.float |> Decode.map Speed.metersPerSecond))
         (Decode.maybe (Decode.field "location" Layout.locationDecoder))
 
 
@@ -274,7 +276,7 @@ encode ts =
     Encode.object
         [ ( "name", Encode.string ts.name )
         , ( "composition", Encode.list encodeRollingStock ts.composition )
-        , ( "speed", Encode.float ts.speed )
+        , ( "speed", ts.speed |> Speed.inMetersPerSecond |> Encode.float )
         , ( "loc"
           , case ts.location of
                 Nothing ->

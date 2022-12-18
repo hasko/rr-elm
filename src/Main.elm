@@ -21,6 +21,7 @@ import Railroad.Layout as Layout exposing (..)
 import Railroad.Train as Train exposing (..)
 import Rect
 import Round
+import Speed
 import Svg exposing (Svg, g, line, svg)
 import Svg.Attributes exposing (id, stroke, strokeWidth, viewBox, width, x1, x2, y1, y2)
 import Tuple
@@ -65,7 +66,7 @@ init _ =
     ( { trainState =
             { name = "Happy Train"
             , composition = [ { length = Length.meters 10 }, { length = Length.meters 10 }, { length = Length.meters 10 } ]
-            , speed = 10.0
+            , speed = Speed.metersPerSecond 10.0
             , location = Train.initialLocation l
             }
       , layout = l
@@ -212,9 +213,9 @@ view model =
                             [ th [ scope "row" ] [ text "Speed" ]
                             , td []
                                 [ text
-                                    (String.fromFloat model.trainState.speed
+                                    (String.fromFloat (Speed.inMetersPerSecond model.trainState.speed)
                                         ++ " m/s ("
-                                        ++ Round.round 1 (model.trainState.speed * 3.6)
+                                        ++ Round.round 1 (Speed.inKilometersPerHour model.trainState.speed)
                                         ++ " km/h)"
                                     )
                                 ]
