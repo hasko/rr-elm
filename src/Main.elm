@@ -129,7 +129,7 @@ update msg model =
                     ( m, Cmd.none )
 
                 Err err ->
-                    ( { model | flash = Decode.errorToString err }, Cmd.none )
+                    ( { model | flash = Just (Decode.errorToString err) }, Cmd.none )
 
 
 updateTick : Float -> Model -> ( Model, Cmd Msg )
@@ -347,8 +347,14 @@ role r =
 modelDecoder : Decoder Model
 modelDecoder =
     Decode.map5 Model
+        (Decode.field "trainState" Train.decoder)
         (Decode.field "layout" Layout.decoder)
-        (Decode.field "trainState" Railroad.Train.trainStateDecoder)
         (Decode.field "switchState" switchStateDecoder)
         (Decode.succeed False)
         (Decode.succeed Nothing)
+
+
+switchStateDecoder : Decoder (Dict Int Int)
+switchStateDecoder =
+    -- TODO fix this
+    Decode.succeed Dict.empty

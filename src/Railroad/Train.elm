@@ -2,6 +2,7 @@ module Railroad.Train exposing
     ( Orientation(..)
     , TrainLocation
     , TrainState
+    , decoder
     , endLocation
     , initialLocation
     , length
@@ -13,6 +14,8 @@ import Dict exposing (Dict)
 import Frame2d
 import Graph
 import Graph.Pair exposing (getEdgeData)
+import Json.Decode as Decode exposing (Decoder)
+import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
 import List.Extra
 import Maybe exposing (andThen, withDefault)
@@ -242,6 +245,58 @@ nextTrack ( fromId, toId ) layout switchState =
 stopped : TrainState -> TrainState
 stopped ts =
     { ts | speed = 0.0 }
+
+
+
+-- JSON
+
+
+decoder : Decoder TrainState
+decoder =
+    Decode.map4 TrainState
+        (Decode.field "name" Decode.string)
+        (Decode.field "composition" (Decode.list rollingStockDecoder))
+        (Decode.field "speed" Decode.float)
+        (Decode.maybe (Decode.field "location" trainLocationDecoder))
+
+
+rollingStockDecoder : Decoder RollingStock
+rollingStockDecoder =
+    Decode.map RollingStock
+        (Decode.field "length" Decode.float
+            |> Decode.map Length.meters
+        )
+
+
+trainLocationDecoder : Decoder TrainLocation
+trainLocationDecoder =
+    Decode.map4 TrainLocation
+        (Decode.field "edge" edgeDecoder)
+        (Decode.field "pos" (Decode.float |> Decode.map Length.meters))
+        (Decode.field "orientation" orientationDecoder)
+        -- TODO Fix the track assignment
+        (Decode.succeed (Track.StraightTrack (Length.meters 1)))
+
+
+edgeDecoder : Decoder ( Int, Int )
+edgeDecoder =
+    Decode.map2 Tuple.pair
+        (Decode.field "from" Decode.int)
+        (Decode.field "to" Decode.int)
+
+
+orientationDecoder : Decoder Orientation
+orientationDecoder =
+    Decode.string
+        |> Decode.andThen
+            (\s ->
+                case s of
+                    "aligned" ->
+                        Decode.succeed Aligned
+
+                    _ ->
+                        Decode.fail "Invalid orientation"
+            )
 
 
 
