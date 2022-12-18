@@ -3,6 +3,7 @@ module Railroad.Layout exposing
     , Switch
     , boundingBox
     , coordsFor
+    , decoder
     , initialLayout
     , switches
     , toGraph
@@ -14,6 +15,7 @@ import Dict exposing (Dict)
 import Direction2d
 import Frame2d
 import Graph exposing (Graph, insertData, insertEdgeData)
+import Json.Decode as Decode exposing (Decoder)
 import Length exposing (Length)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
@@ -86,9 +88,11 @@ renderLayout nodeId currentFrame ((Layout g) as layout) knownFrames =
 
 coordsFor : Length -> ( Int, Int ) -> Layout -> Maybe Frame
 coordsFor pos ( fromNode, toNode ) ((Layout g) as layout) =
-     Graph.getEdgeData fromNode toNode g |> Maybe.andThen (\track -> 
-            cursors layout |> Dict.get fromNode |> Maybe.map (\cursor -> getPositionOnTrack pos cursor track))
-            
+    Graph.getEdgeData fromNode toNode g
+        |> Maybe.andThen
+            (\track ->
+                cursors layout |> Dict.get fromNode |> Maybe.map (\cursor -> getPositionOnTrack pos cursor track)
+            )
 
 
 switches : Layout -> List ( Int, Switch )
@@ -173,3 +177,13 @@ initialLayout =
 toGraph : Layout -> Graph Int Switch Track
 toGraph (Layout g) =
     g
+
+
+
+-- JSON
+
+
+decoder : Decoder Layout
+decoder =
+    -- TODO Fix this
+    Decode.succeed (Layout Graph.empty)

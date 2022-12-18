@@ -119,6 +119,14 @@ update msg model =
             -- Construct the new model based on the new switch state.
             ( { model | switchState = newState }, Cmd.none )
 
+        LayoutReceived value ->
+            case Decode.decodeValue modelDecoder value of
+                Ok m ->
+                    ( m, Cmd.none )
+
+                Err err ->
+                    ( { model | flash = Just (Decode.errorToString err) }, Cmd.none )
+
 
 updateTick : Float -> Model -> ( Model, Cmd Msg )
 updateTick delta model =
@@ -326,3 +334,23 @@ viewSwitchConfig routes =
 role : String -> Html.Attribute msg
 role r =
     Html.Attributes.attribute "role" r
+
+
+
+--- JSON ---
+
+
+modelDecoder : Decoder Model
+modelDecoder =
+    Decode.map5 Model
+        (Decode.field "trainState" Train.decoder)
+        (Decode.field "layout" Layout.decoder)
+        (Decode.field "switchState" switchStateDecoder)
+        (Decode.succeed False)
+        (Decode.succeed Nothing)
+
+
+switchStateDecoder : Decoder (Dict Int Int)
+switchStateDecoder =
+    -- TODO fix this
+    Decode.succeed Dict.empty
