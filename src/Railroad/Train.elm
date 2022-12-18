@@ -256,7 +256,7 @@ decoder =
         (Decode.field "name" Decode.string)
         (Decode.field "composition" (Decode.list rollingStockDecoder))
         (Decode.field "speed" (Decode.float |> Decode.map Speed.metersPerSecond))
-        (Decode.maybe (Decode.field "location" Layout.locationDecoder))
+        (Decode.field "location" (Decode.maybe Layout.locationDecoder))
 
 
 rollingStockDecoder : Decoder RollingStock
