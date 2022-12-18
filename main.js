@@ -4392,6 +4392,10 @@ var _Bitwise_shiftRightZfBy = F2(function(offset, a)
 {
 	return a >>> offset;
 });
+var $elm$core$Maybe$Just = function (a) {
+	return {$: 0, a: a};
+};
+var $elm$core$Maybe$Nothing = {$: 1};
 var $elm$core$Basics$EQ = 1;
 var $elm$core$Basics$GT = 2;
 var $elm$core$Basics$LT = 0;
@@ -4495,10 +4499,6 @@ var $elm$json$Json$Decode$OneOf = function (a) {
 };
 var $elm$core$Basics$False = 1;
 var $elm$core$Basics$add = _Basics_add;
-var $elm$core$Maybe$Just = function (a) {
-	return {$: 0, a: a};
-};
-var $elm$core$Maybe$Nothing = {$: 1};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
 var $elm$core$Basics$append = _Utils_append;
@@ -5583,6 +5583,8 @@ var $author$project$Main$init = function (_v0) {
 		},
 		$elm$core$Platform$Cmd$none);
 };
+var $elm$json$Json$Decode$null = _Json_decodeNull;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
 var $author$project$Main$Tick = function (a) {
 	return {$: 0, a: a};
 };
@@ -6116,7 +6118,7 @@ var $author$project$Main$update = F2(
 			case 2:
 				return model.Q ? _Utils_Tuple2(model, $elm$core$Platform$Cmd$none) : A2($author$project$Main$updateTick, 1000.0, model);
 			case 3:
-				var _v1 = $author$project$Main$init(0);
+				var _v1 = $author$project$Main$init($elm$core$Maybe$Nothing);
 				var m = _v1.a;
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -6141,9 +6143,19 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 		}
 	});
+var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $author$project$Main$Reset = {$: 3};
 var $author$project$Main$Step = {$: 2};
 var $author$project$Main$Toggle = {$: 1};
+var $elm$html$Html$a = _VirtualDom_node('a');
+var $elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $author$project$Rect$Rect = F4(
 	function (a, b, c, d) {
 		return {$: 0, a: a, b: b, c: c, d: d};
@@ -6726,6 +6738,12 @@ var $author$project$Rect$expand = F2(
 var $elm$core$String$fromFloat = _String_fromNumber;
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
+var $elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
+};
 var $elm$svg$Svg$Attributes$id = _VirtualDom_attribute('id');
 var $elm$virtual_dom$VirtualDom$lazy = _VirtualDom_lazy;
 var $elm$html$Html$Lazy$lazy = $elm$virtual_dom$VirtualDom$lazy;
@@ -6743,6 +6761,8 @@ var $author$project$Railroad$Train$length = function (train) {
 			},
 			train.bX));
 };
+var $elm$html$Html$li = _VirtualDom_node('li');
+var $elm$html$Html$nav = _VirtualDom_node('nav');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 0, a: a};
 };
@@ -6793,14 +6813,6 @@ var $author$project$Rect$rectToString = function (r) {
 					$author$project$Rect$height(r)
 				])));
 };
-var $elm$virtual_dom$VirtualDom$attribute = F2(
-	function (key, value) {
-		return A2(
-			_VirtualDom_attribute,
-			_VirtualDom_noOnOrFormAction(key),
-			_VirtualDom_noJavaScriptOrHtmlUri(value));
-	});
-var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $author$project$Main$role = function (r) {
 	return A2($elm$html$Html$Attributes$attribute, 'role', r);
 };
@@ -7051,6 +7063,7 @@ var $elm$core$Tuple$second = function (_v0) {
 	var y = _v0.b;
 	return y;
 };
+var $elm$html$Html$span = _VirtualDom_node('span');
 var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
 var $elm$html$Html$table = _VirtualDom_node('table');
 var $elm$html$Html$tbody = _VirtualDom_node('tbody');
@@ -7383,6 +7396,8 @@ var $author$project$Railroad$Layout$toSvg = function (layout) {
 			$drathier$elm_graph$Graph$edgesWithData(g)));
 };
 var $elm$html$Html$tr = _VirtualDom_node('tr');
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
 var $drathier$elm_graph$Graph$nodes = A2(
 	$drathier$elm_graph$Graph$foldl,
@@ -7426,8 +7441,6 @@ var $author$project$Main$ChangeSwitch = F2(
 	function (a, b) {
 		return {$: 4, a: a, b: b};
 	});
-var $elm$html$Html$li = _VirtualDom_node('li');
-var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $joshforisha$elm_html_entities$Html$Entity$entity = function (codes) {
 	return A2(
 		$elm$core$String$join,
@@ -7780,6 +7793,93 @@ var $author$project$Main$view = function (model) {
 		_List_fromArray(
 			[
 				A2(
+				$elm$html$Html$nav,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('navbar navbar-expand-lg')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('container-fluid')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$a,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('navbar-brand'),
+										$elm$html$Html$Attributes$href('#')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Trains')
+									])),
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('navbar-toggler'),
+										$elm$html$Html$Attributes$type_('button'),
+										A2($elm$html$Html$Attributes$attribute, 'data-bs-toggle', 'collapse'),
+										A2($elm$html$Html$Attributes$attribute, 'data-bs-target', '#navbarSupportedContent')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$span,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('navbar-toggler-icon')
+											]),
+										_List_Nil)
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('collapse navbar-collapse'),
+										$elm$svg$Svg$Attributes$id('navbarSupportedContent')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$ul,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('navbar-nav me-auto mb-2 mb-lg-0')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$li,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('nav-item')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$a,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('nav-link'),
+																$elm$html$Html$Attributes$href('#')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('Load')
+															]))
+													]))
+											]))
+									]))
+							]))
+					])),
+				A2(
 				$elm$svg$Svg$svg,
 				_List_fromArray(
 					[
@@ -8021,4 +8121,9 @@ var $author$project$Main$view = function (model) {
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{c3: $author$project$Main$init, dr: $author$project$Main$subscriptions, dv: $author$project$Main$update, dw: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
-	$elm$json$Json$Decode$succeed(0))(0)}});}(this));
+	$elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, $elm$json$Json$Decode$value)
+			])))(0)}});}(this));
