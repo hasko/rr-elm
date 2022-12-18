@@ -297,33 +297,6 @@ encodeRollingStock rs =
 -- JSON
 
 
-decoder : Decoder TrainState
-decoder =
-    Decode.map4 TrainState
-        (Decode.field "name" Decode.string)
-        (Decode.field "composition" (Decode.list rollingStockDecoder))
-        (Decode.field "speed" (Decode.float |> Decode.map Speed.metersPerSecond))
-        (Decode.field "location" (Decode.maybe Layout.locationDecoder))
-
-
-rollingStockDecoder : Decoder RollingStock
-rollingStockDecoder =
-    Decode.map RollingStock
-        (Decode.field "length" Decode.float
-            |> Decode.map Length.meters
-        )
-
-
-trainLocationDecoder : Decoder TrainLocation
-trainLocationDecoder =
-    Decode.map4 TrainLocation
-        (Decode.field "edge" edgeDecoder)
-        (Decode.field "pos" (Decode.float |> Decode.map Length.meters))
-        (Decode.field "orientation" orientationDecoder)
-        -- TODO Fix the track assignment
-        (Decode.succeed (Track.StraightTrack (Length.meters 1)))
-
-
 edgeDecoder : Decoder ( Int, Int )
 edgeDecoder =
     Decode.map2 Tuple.pair
