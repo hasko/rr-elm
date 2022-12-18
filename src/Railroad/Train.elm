@@ -1,6 +1,7 @@
 module Railroad.Train exposing
     ( TrainState
     , decoder
+    , encode
     , endLocation
     , initialLocation
     , length
@@ -262,6 +263,32 @@ rollingStockDecoder =
         (Decode.field "length" Decode.float
             |> Decode.map Length.meters
         )
+
+
+
+-- JSON encode
+
+
+encode : TrainState -> Value
+encode ts =
+    Encode.object
+        [ ( "name", Encode.string ts.name )
+        , ( "composition", Encode.list encodeRollingStock ts.composition )
+        , ( "speed", Encode.float ts.speed )
+        , ( "loc"
+          , case ts.location of
+                Nothing ->
+                    Encode.null
+
+                Just loc ->
+                    Layout.encodeLocation loc
+          )
+        ]
+
+
+encodeRollingStock : RollingStock -> Value
+encodeRollingStock rs =
+    Encode.object [ ( "length", rs.length |> Length.inMeters |> Encode.float ) ]
 
 
 

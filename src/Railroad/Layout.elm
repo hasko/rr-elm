@@ -6,6 +6,8 @@ module Railroad.Layout exposing
     , boundingBox
     , coordsFor
     , decoder
+    , encode
+    , encodeLocation
     , initialLayout
     , locationDecoder
     , switches
@@ -20,6 +22,7 @@ import Direction2d
 import Frame2d
 import Graph exposing (Graph, insertData, insertEdgeData)
 import Json.Decode as Decode exposing (Decoder)
+import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
@@ -202,7 +205,7 @@ toGraph (Layout g) =
 
 
 
--- JSON
+-- JSON Decode
 
 
 decoder : Decoder Layout
@@ -238,3 +241,78 @@ orientationDecoder =
                     _ ->
                         Decode.fail "Invalid orientation"
             )
+
+
+
+-- JSON encode
+
+
+encode : Layout -> Value
+encode (Layout g) =
+    Encode.object
+        [ ( "nodes", Encode.list encodeNode (Graph.nodes g) )
+        , ( "edges", Encode.list encodeEdge (Graph.edgesWithData g) )
+        ]
+
+
+encodeNode : ( Int, Maybe Switch ) -> Value
+encodeNode ( nodeId, mSwitch ) =
+    Encode.object
+        (( "id", Encode.int nodeId )
+            :: (case mSwitch of
+                    Nothing ->
+                        []
+
+                    Just sw ->
+                        [ ( "configs"
+                          , sw.configs
+                                |> Encode.list
+                                    (Encode.list
+                                        (\( from, to ) ->
+                                            Encode.object
+                                                [ ( "from", Encode.int from )
+                                                , ( "to", Encode.int to )
+                                                ]
+                                        )
+                                    )
+                          )
+                        ]
+               )
+        )
+
+
+encodeEdge : ( Int, Int, Maybe Track ) -> Value
+encodeEdge ( from, to, mTrack ) =
+    Encode.object
+        [ ( "from", Encode.int from )
+        , ( "to", Encode.int to )
+        , ( "track"
+          , case mTrack of
+                Nothing ->
+                    Encode.null
+
+                Just t ->
+                    Track.encode t
+          )
+        ]
+
+
+encodeLocation : Location -> Value
+encodeLocation loc =
+    Encode.object
+        [ ( "edge", encodeVertex loc.edge )
+        , ( "pos", loc.pos |> Length.inMeters |> Encode.float )
+        , ( "orientation", encodeOrientation loc.orientation )
+        ]
+
+
+encodeOrientation : Orientation -> Value
+encodeOrientation o =
+    case o of
+        Aligned ->
+            Encode.string "aligned"
+
+
+encodeVertex : ( Int, Int ) -> Value
+encodeVertex ( from, to ) =
+    Encode.object [ ( "from", Encode.int from ), ( "to", Encode.int to ) ]

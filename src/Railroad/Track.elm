@@ -1,5 +1,7 @@
 module Railroad.Track exposing
     ( Track(..)
+    , decoder
+    , encode
     , getPositionOnTrack
     , length
     , moveFrame
@@ -12,6 +14,8 @@ import Direction2d
 import Frame2d
 import Geometry.Svg as Gsvg
 import Html.Attributes
+import Json.Decode as Decode exposing (Decoder)
+import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
 import Point2d
 import Quantity
@@ -164,4 +168,40 @@ toSvg track =
 
 
 
--- JSON
+-- JSON encode
+
+
+encode : Track -> Value
+encode track =
+    case track of
+        StraightTrack l ->
+            Encode.object [ ( "length", Encode.float (Length.inMeters l) ) ]
+
+        CurvedTrack r a ->
+            Encode.object
+                [ ( "radius", Encode.float (Length.inMeters r) )
+                , ( "sweep", Encode.float (Angle.inDegrees a) )
+                ]
+
+
+
+-- JSON decode
+
+
+decoder : Decoder Track
+decoder =
+    Decode.oneOf [ straightDecoder, curveDecoder ]
+
+
+straightDecoder : Decoder Track
+straightDecoder =
+    Decode.field "length" Decode.float
+        |> Decode.map Length.meters
+        |> Decode.map StraightTrack
+
+
+curveDecoder : Decoder Track
+curveDecoder =
+    Decode.map2 CurvedTrack
+        (Decode.field "radius" Decode.float |> Decode.map Length.meters)
+        (Decode.field "sweep" Decode.float |> Decode.map Angle.degrees)

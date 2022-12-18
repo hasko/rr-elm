@@ -3,6 +3,7 @@ port module Main exposing (Msg(..), main)
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
 import Dict exposing (Dict)
+import File.Download
 import Frame2d
 import Html exposing (Html, a, br, button, div, li, nav, span, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (attribute, class, disabled, href, scope, type_)
@@ -46,6 +47,7 @@ type Msg
     | Reset
     | ChangeSwitch Int Switch
     | LayoutReceived Value
+    | SaveRequested
 
 
 port sendLayout : Value -> Cmd msg
@@ -132,6 +134,9 @@ update msg model =
                 Err err ->
                     ( { model | flash = Just (Decode.errorToString err) }, Cmd.none )
 
+        SaveRequested ->
+            ( model, encodeModel model |> Encode.encode 0 |> File.Download.string "rr.json" "application/json" )
+
 
 updateTick : Float -> Model -> ( Model, Cmd Msg )
 updateTick delta model =
@@ -163,7 +168,9 @@ view model =
                     ]
                 , div [ class "collapse navbar-collapse", id "navbarSupportedContent" ]
                     [ ul [ class "navbar-nav me-auto mb-2 mb-lg-0" ]
-                        [ li [ class "nav-item" ] [ a [ class "nav-link", href "#" ] [ text "Load" ] ] ]
+                        [ li [ class "nav-item" ] [ a [ class "nav-link", href "#" ] [ text "Load" ] ]
+                        , li [ class "nav-item" ] [ a [ class "nav-link", href "#", onClick SaveRequested ] [ text "Save" ] ]
+                        ]
                     ]
                 ]
             ]
@@ -358,3 +365,16 @@ modelDecoder =
 switchStateDecoder : Decoder (Dict Int Int)
 switchStateDecoder =
     Json.Decode.Extra.dict2 Decode.int Decode.int
+
+
+
+-- JSON encode
+
+
+encodeModel : Model -> Value
+encodeModel model =
+    Encode.object
+        [ ( "layout", Layout.encode model.layout )
+        , ( "trains", Encode.list Train.encode [ model.trainState ] )
+        , ( "switchStates", Encode.dict String.fromInt Encode.int model.switchState )
+        ]
