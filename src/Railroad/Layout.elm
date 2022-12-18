@@ -10,6 +10,7 @@ module Railroad.Layout exposing
     , switches
     , toGraph
     , toSvg
+    , trackAt
     )
 
 import Angle
@@ -44,6 +45,11 @@ type alias TrainLocation =
     , orientation : Orientation
     , track : Track -- The track information for convenience
     }
+
+
+trackAt : ( Int, Int ) -> Layout -> Maybe Track
+trackAt ( from, to ) (Layout g) =
+    Graph.getEdgeData from to g
 
 
 type
