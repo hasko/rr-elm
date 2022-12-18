@@ -3,13 +3,16 @@ port module Main exposing (Msg(..), main)
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
 import Dict exposing (Dict)
+import File.Download
 import Frame2d
 import Html exposing (Html, a, br, button, div, li, nav, span, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (attribute, class, disabled, href, scope, type_)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
-import Json.Encode exposing (Value)
+import Json.Decode as Decode exposing (Decoder)
+import Json.Decode.Extra
+import Json.Encode as Encode exposing (Value)
 import Length
 import List.Extra
 import Maybe exposing (withDefault)
@@ -18,6 +21,7 @@ import Railroad.Layout as Layout exposing (..)
 import Railroad.Train as Train exposing (..)
 import Rect
 import Round
+import Speed
 import Svg exposing (Svg, g, line, svg)
 import Svg.Attributes exposing (id, stroke, strokeWidth, viewBox, width, x1, x2, y1, y2)
 import Tuple
@@ -33,6 +37,7 @@ type alias Model =
     , layout : Layout
     , switchState : Dict Int Int
     , running : Bool
+    , flash : Maybe String
     }
 
 
@@ -42,6 +47,8 @@ type Msg
     | Step
     | Reset
     | ChangeSwitch Int Switch
+    | LayoutReceived Value
+    | SaveRequested
 
 
 port sendLayout : Value -> Cmd msg
@@ -59,12 +66,13 @@ init _ =
     ( { trainState =
             { name = "Happy Train"
             , composition = [ { length = Length.meters 10 }, { length = Length.meters 10 }, { length = Length.meters 10 } ]
-            , speed = 10.0
+            , speed = Speed.metersPerSecond 10.0
             , location = Train.initialLocation l
             }
       , layout = l
       , switchState = Dict.empty
       , running = False
+      , flash = Nothing
       }
     , Cmd.none
     )
@@ -76,7 +84,7 @@ subscriptions model =
         onAnimationFrameDelta Tick
 
     else
-        Sub.none
+        layoutReceiver LayoutReceived
 
 
 
@@ -127,6 +135,9 @@ update msg model =
                 Err err ->
                     ( { model | flash = Just (Decode.errorToString err) }, Cmd.none )
 
+        SaveRequested ->
+            ( model, encodeModel model |> Encode.encode 0 |> File.Download.string "rr.json" "application/json" )
+
 
 updateTick : Float -> Model -> ( Model, Cmd Msg )
 updateTick delta model =
@@ -158,7 +169,9 @@ view model =
                     ]
                 , div [ class "collapse navbar-collapse", id "navbarSupportedContent" ]
                     [ ul [ class "navbar-nav me-auto mb-2 mb-lg-0" ]
-                        [ li [ class "nav-item" ] [ a [ class "nav-link", href "#" ] [ text "Load" ] ] ]
+                        [ li [ class "nav-item" ] [ a [ class "nav-link", href "#" ] [ text "Load" ] ]
+                        , li [ class "nav-item" ] [ a [ class "nav-link", href "#", onClick SaveRequested ] [ text "Save" ] ]
+                        ]
                     ]
                 ]
             ]
@@ -200,9 +213,9 @@ view model =
                             [ th [ scope "row" ] [ text "Speed" ]
                             , td []
                                 [ text
-                                    (String.fromFloat model.trainState.speed
+                                    (String.fromFloat (Speed.inMetersPerSecond model.trainState.speed)
                                         ++ " m/s ("
-                                        ++ Round.round 1 (model.trainState.speed * 3.6)
+                                        ++ Round.round 1 (Speed.inKilometersPerHour model.trainState.speed)
                                         ++ " km/h)"
                                     )
                                 ]
@@ -352,5 +365,17 @@ modelDecoder =
 
 switchStateDecoder : Decoder (Dict Int Int)
 switchStateDecoder =
-    -- TODO fix this
-    Decode.succeed Dict.empty
+    Json.Decode.Extra.dict2 Decode.int Decode.int
+
+
+
+-- JSON encode
+
+
+encodeModel : Model -> Value
+encodeModel model =
+    Encode.object
+        [ ( "layout", Layout.encode model.layout )
+        , ( "trains", Encode.list Train.encode [ model.trainState ] )
+        , ( "switchStates", Encode.dict String.fromInt Encode.int model.switchState )
+        ]

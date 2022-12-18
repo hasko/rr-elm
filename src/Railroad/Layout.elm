@@ -1,13 +1,19 @@
 module Railroad.Layout exposing
     ( Layout
+    , Location
+    , Orientation(..)
     , Switch
     , boundingBox
     , coordsFor
     , decoder
+    , encode
+    , encodeLocation
     , initialLayout
+    , locationDecoder
     , switches
     , toGraph
     , toSvg
+    , trackAt
     )
 
 import Angle
@@ -16,6 +22,7 @@ import Direction2d
 import Frame2d
 import Graph exposing (Graph, insertData, insertEdgeData)
 import Json.Decode as Decode exposing (Decoder)
+import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
@@ -34,6 +41,24 @@ type Layout
 
 type alias Switch =
     { configs : List (List ( Int, Int )) }
+
+
+type alias Location =
+    { edge : ( Int, Int ) -- The vertices
+    , pos : Length -- The position on the track
+    , orientation : Orientation
+    }
+
+
+trackAt : ( Int, Int ) -> Layout -> Maybe Track
+trackAt ( from, to ) (Layout g) =
+    Graph.getEdgeData from to g
+
+
+type
+    Orientation
+    -- TODO Add Reverse
+    = Aligned
 
 
 cursors : Layout -> Dict Int Frame
@@ -180,10 +205,114 @@ toGraph (Layout g) =
 
 
 
--- JSON
+-- JSON Decode
 
 
 decoder : Decoder Layout
 decoder =
     -- TODO Fix this
     Decode.succeed (Layout Graph.empty)
+
+
+locationDecoder : Decoder Location
+locationDecoder =
+    Decode.map3 Location
+        (Decode.field "edge" edgeDecoder)
+        (Decode.field "pos" (Decode.float |> Decode.map Length.meters))
+        (Decode.field "orientation" orientationDecoder)
+
+
+edgeDecoder : Decoder ( Int, Int )
+edgeDecoder =
+    Decode.map2 Tuple.pair
+        (Decode.field "from" Decode.int)
+        (Decode.field "to" Decode.int)
+
+
+orientationDecoder : Decoder Orientation
+orientationDecoder =
+    Decode.string
+        |> Decode.andThen
+            (\s ->
+                case s of
+                    "aligned" ->
+                        Decode.succeed Aligned
+
+                    _ ->
+                        Decode.fail "Invalid orientation"
+            )
+
+
+
+-- JSON encode
+
+
+encode : Layout -> Value
+encode (Layout g) =
+    Encode.object
+        [ ( "nodes", Encode.list encodeNode (Graph.nodes g) )
+        , ( "edges", Encode.list encodeEdge (Graph.edgesWithData g) )
+        ]
+
+
+encodeNode : ( Int, Maybe Switch ) -> Value
+encodeNode ( nodeId, mSwitch ) =
+    Encode.object
+        (( "id", Encode.int nodeId )
+            :: (case mSwitch of
+                    Nothing ->
+                        []
+
+                    Just sw ->
+                        [ ( "configs"
+                          , sw.configs
+                                |> Encode.list
+                                    (Encode.list
+                                        (\( from, to ) ->
+                                            Encode.object
+                                                [ ( "from", Encode.int from )
+                                                , ( "to", Encode.int to )
+                                                ]
+                                        )
+                                    )
+                          )
+                        ]
+               )
+        )
+
+
+encodeEdge : ( Int, Int, Maybe Track ) -> Value
+encodeEdge ( from, to, mTrack ) =
+    Encode.object
+        [ ( "from", Encode.int from )
+        , ( "to", Encode.int to )
+        , ( "track"
+          , case mTrack of
+                Nothing ->
+                    Encode.null
+
+                Just t ->
+                    Track.encode t
+          )
+        ]
+
+
+encodeLocation : Location -> Value
+encodeLocation loc =
+    Encode.object
+        [ ( "edge", encodeVertex loc.edge )
+        , ( "pos", loc.pos |> Length.inMeters |> Encode.float )
+        , ( "orientation", encodeOrientation loc.orientation )
+        ]
+
+
+encodeOrientation : Orientation -> Value
+encodeOrientation o =
+    case o of
+        Aligned ->
+            Encode.string "aligned"
+
+
+encodeVertex : ( Int, Int ) -> Value
+encodeVertex ( from, to ) =
+    Encode.object [ ( "from", Encode.int from ), ( "to", Encode.int to ) ]
