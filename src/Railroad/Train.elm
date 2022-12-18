@@ -19,7 +19,7 @@ import List.Extra
 import Maybe exposing (andThen, withDefault)
 import Point2d
 import Quantity
-import Railroad.Layout as Layout exposing (Layout, Orientation(..), TrainLocation)
+import Railroad.Layout as Layout exposing (Layout, Orientation(..))
 import Railroad.Track as Track exposing (Track)
 import Set
 
@@ -28,7 +28,7 @@ type alias TrainState =
     { name : String
     , composition : List RollingStock
     , speed : Float -- in m/s
-    , location : Maybe TrainLocation
+    , location : Maybe Layout.Location
     }
 
 
@@ -41,12 +41,12 @@ length train =
     List.map .length train.composition |> Quantity.sum
 
 
-endLocation : Length -> Layout -> Dict Int Int -> TrainLocation -> Maybe TrainLocation
+endLocation : Length -> Layout -> Dict Int Int -> Layout.Location -> Maybe Layout.Location
 endLocation l layout switchState startLoc =
     endLocationRec l Quantity.zero layout switchState startLoc
 
 
-endLocationRec : Length -> Length -> Layout -> Dict Int Int -> TrainLocation -> Maybe TrainLocation
+endLocationRec : Length -> Length -> Layout -> Dict Int Int -> Layout.Location -> Maybe Layout.Location
 endLocationRec l correction layout switchState startLoc =
     case Layout.coordsFor startLoc.pos startLoc.edge layout |> Maybe.map Frame2d.originPoint of
         Nothing ->
@@ -112,42 +112,52 @@ move millis trainState layout switchState =
             }
 
 
-normalizeLocation : Layout -> Dict Int Int -> TrainLocation -> Maybe TrainLocation
+normalizeLocation : Layout -> Dict Int Int -> Layout.Location -> Maybe Layout.Location
 normalizeLocation layout switchState loc =
-    -- If the position is beyond the end of the current track ...
-    -- TODO Determine and use the appropriate connection nimber instead of 0
-    if loc.pos |> Quantity.greaterThan (Track.length loc.track) then
-        -- ... get the next track.
-        case nextTrack loc.edge layout switchState of
-            Nothing ->
-                -- If there is no next track, return.
-                Nothing
+    case Layout.trackAt loc.edge layout of
+        Just track ->
+            -- If the position is beyond the end of the current track ...
+            -- TODO Determine and use the appropriate connection number instead of 0
+            if loc.pos |> Quantity.greaterThan (Track.length track) then
+                -- ... get the next track.
+                case nextTrack loc.edge layout switchState of
+                    Nothing ->
+                        -- If there is no next track, return.
+                        Nothing
 
-            Just nextLoc ->
-                -- Calculate the new position.
-                { nextLoc
-                  -- Subtract the current track length from the position.
-                  -- TODO Determine and use the appropriate connection number instead of 0
-                    | pos = loc.pos |> Quantity.minus (Track.length loc.track)
-                }
-                    -- ... and repeat until done.
-                    |> normalizeLocation layout switchState
+                    Just nextLoc ->
+                        -- Calculate the new position.
+                        { nextLoc
+                          -- Subtract the current track length from the position.
+                          -- TODO Determine and use the appropriate connection number instead of 0
+                            | pos = loc.pos |> Quantity.minus (Track.length track)
+                        }
+                            -- ... and repeat until done.
+                            |> normalizeLocation layout switchState
 
-    else if Quantity.lessThanZero loc.pos then
-        previousTrack loc.edge layout switchState
-            |> Maybe.andThen
-                (\nextLoc ->
-                    -- TODO Determine and use the appropriate connection number instead of 0
-                    { nextLoc | pos = loc.pos |> Quantity.plus (Track.length nextLoc.track) }
-                        |> normalizeLocation layout switchState
-                )
+            else if Quantity.lessThanZero loc.pos then
+                previousTrack loc.edge layout switchState
+                    |> Maybe.andThen
+                        (\nextLoc ->
+                            case Layout.trackAt nextLoc.edge layout of
+                                Nothing ->
+                                    Nothing
 
-    else
-        -- We are within the track bounds, so return.
-        Just loc
+                                Just nt ->
+                                    -- TODO Determine and use the appropriate connection number instead of 0
+                                    { nextLoc | pos = loc.pos |> Quantity.plus (Track.length nt) }
+                                        |> normalizeLocation layout switchState
+                        )
+
+            else
+                -- We are within the track bounds, so return.
+                Just loc
+
+        Nothing ->
+            Nothing
 
 
-previousTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe TrainLocation
+previousTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe Layout.Location
 previousTrack ( fromId, toId ) layout switchState =
     let
         g =
@@ -165,7 +175,7 @@ previousTrack ( fromId, toId ) layout switchState =
                         Graph.Pair.getEdgeData edge g
                             |> andThen
                                 (\track ->
-                                    Just { edge = edge, pos = Quantity.zero, orientation = Aligned, track = track }
+                                    Just { edge = edge, pos = Quantity.zero, orientation = Aligned }
                                 )
                     )
 
@@ -185,12 +195,12 @@ previousTrack ( fromId, toId ) layout switchState =
                         getEdgeData edge g
                             |> andThen
                                 (\track ->
-                                    Just { edge = edge, pos = Quantity.zero, orientation = Aligned, track = track }
+                                    Just { edge = edge, pos = Quantity.zero, orientation = Aligned }
                                 )
                     )
 
 
-nextTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe TrainLocation
+nextTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe Layout.Location
 nextTrack ( fromId, toId ) layout switchState =
     let
         g =
@@ -207,7 +217,7 @@ nextTrack ( fromId, toId ) layout switchState =
                         Graph.Pair.getEdgeData edge g
                             |> Maybe.map
                                 (\track ->
-                                    { edge = edge, pos = Quantity.zero, orientation = Aligned, track = track }
+                                    { edge = edge, pos = Quantity.zero, orientation = Aligned }
                                 )
                     )
 
@@ -223,7 +233,7 @@ nextTrack ( fromId, toId ) layout switchState =
                         getEdgeData edge g
                             |> Maybe.map
                                 (\track ->
-                                    { edge = edge, pos = Quantity.zero, orientation = Aligned, track = track }
+                                    { edge = edge, pos = Quantity.zero, orientation = Aligned }
                                 )
                     )
 
@@ -243,7 +253,7 @@ decoder =
         (Decode.field "name" Decode.string)
         (Decode.field "composition" (Decode.list rollingStockDecoder))
         (Decode.field "speed" Decode.float)
-        (Decode.maybe (Decode.field "location" trainLocationDecoder))
+        (Decode.maybe (Decode.field "location" Layout.locationDecoder))
 
 
 rollingStockDecoder : Decoder RollingStock
@@ -254,42 +264,11 @@ rollingStockDecoder =
         )
 
 
-trainLocationDecoder : Decoder TrainLocation
-trainLocationDecoder =
-    Decode.map4 TrainLocation
-        (Decode.field "edge" edgeDecoder)
-        (Decode.field "pos" (Decode.float |> Decode.map Length.meters))
-        (Decode.field "orientation" orientationDecoder)
-        -- TODO Fix the track assignment
-        (Decode.succeed (Track.StraightTrack (Length.meters 1)))
-
-
-edgeDecoder : Decoder ( Int, Int )
-edgeDecoder =
-    Decode.map2 Tuple.pair
-        (Decode.field "from" Decode.int)
-        (Decode.field "to" Decode.int)
-
-
-orientationDecoder : Decoder Orientation
-orientationDecoder =
-    Decode.string
-        |> Decode.andThen
-            (\s ->
-                case s of
-                    "aligned" ->
-                        Decode.succeed Aligned
-
-                    _ ->
-                        Decode.fail "Invalid orientation"
-            )
-
-
 
 -- Samples
 
 
-initialLocation : Layout -> Maybe TrainLocation
+initialLocation : Layout -> Maybe Layout.Location
 initialLocation layout =
     getEdgeData ( 0, 1 ) (Layout.toGraph layout)
         |> Maybe.map
@@ -297,6 +276,5 @@ initialLocation layout =
                 { edge = ( 0, 1 )
                 , pos = Length.meters 40.0
                 , orientation = Aligned
-                , track = track
                 }
             )

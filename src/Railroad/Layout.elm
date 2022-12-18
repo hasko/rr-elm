@@ -1,12 +1,13 @@
 module Railroad.Layout exposing
     ( Layout
+    , Location
     , Orientation(..)
     , Switch
-    , TrainLocation
     , boundingBox
     , coordsFor
     , decoder
     , initialLayout
+    , locationDecoder
     , switches
     , toGraph
     , toSvg
@@ -39,11 +40,10 @@ type alias Switch =
     { configs : List (List ( Int, Int )) }
 
 
-type alias TrainLocation =
+type alias Location =
     { edge : ( Int, Int ) -- The vertices
     , pos : Length -- The position on the track
     , orientation : Orientation
-    , track : Track -- The track information for convenience
     }
 
 
@@ -209,3 +209,32 @@ decoder : Decoder Layout
 decoder =
     -- TODO Fix this
     Decode.succeed (Layout Graph.empty)
+
+
+locationDecoder : Decoder Location
+locationDecoder =
+    Decode.map3 Location
+        (Decode.field "edge" edgeDecoder)
+        (Decode.field "pos" (Decode.float |> Decode.map Length.meters))
+        (Decode.field "orientation" orientationDecoder)
+
+
+edgeDecoder : Decoder ( Int, Int )
+edgeDecoder =
+    Decode.map2 Tuple.pair
+        (Decode.field "from" Decode.int)
+        (Decode.field "to" Decode.int)
+
+
+orientationDecoder : Decoder Orientation
+orientationDecoder =
+    Decode.string
+        |> Decode.andThen
+            (\s ->
+                case s of
+                    "aligned" ->
+                        Decode.succeed Aligned
+
+                    _ ->
+                        Decode.fail "Invalid orientation"
+            )
