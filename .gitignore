@@ -2,7 +2,7 @@
 elm-stuff
 # elm-repl generated files
 repl-temp-*
-js/elm.js
+js/elm*.js
 README.html
 
 node_modules/

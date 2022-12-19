@@ -1,11 +1,22 @@
 {
-  "devDependencies": {
-    "elm-review": "^2.7.1"
+  "name": "rr-elm",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "prepare": "elm make src/Main.elm --output=js/elm-opt.js --optimize && uglifyjs js/elm-opt.js --compress \"pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters,keep_fargs=false,unsafe_comps,unsafe\" | uglifyjs --mangle --output js/elm.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "elm reactor"
   },
+  "author": "",
   "repository": {
     "type": "git",
     "url": "https://github.com/hasko/rr-elm"
   },
   "private": true,
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "elm": "^0.19.1-5",
+    "elm-review": "^2.9.0",
+    "uglify-js": "^3.17.4"
+  }
 }
