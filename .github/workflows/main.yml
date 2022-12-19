@@ -18,7 +18,7 @@ jobs:
         with:
           elm-version: 0.19.1
       - name: Build Elm code
-        run: mkdir build && cp index.html build && elm make src/Main.elm --optimize --output=build/main.js
+        run: mkdir build && cp index.html build && elm make src/Main.elm --optimize --output=build/js/elm.js
       - name: Deploy to GitHub pages
         uses: JamesIves/github-pages-deploy-action@4.1.0
         with:
