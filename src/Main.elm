@@ -6,6 +6,7 @@ import Browser.Events exposing (onAnimationFrameDelta)
 import Dict exposing (Dict)
 import File.Download
 import Frame2d
+import Graph exposing (Graph)
 import Html exposing (Html, a, br, button, div, li, nav, span, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (attribute, class, disabled, href, scope, style, type_)
 import Html.Entity
@@ -19,6 +20,7 @@ import Maybe exposing (withDefault)
 import Point2d
 import Railroad.Layout as Layout exposing (..)
 import Railroad.Switch exposing (Switch)
+import Railroad.Track exposing (Track)
 import Railroad.Train as Train exposing (..)
 import Rect
 import Round
@@ -37,6 +39,7 @@ type alias Model =
     { trainState : TrainState
     , layout : Layout
     , switchState : Dict Int Int
+    , prunedGraph : Graph Int () Track
     , running : Bool
     , flash : Maybe String
     }
@@ -72,6 +75,7 @@ init _ =
             }
       , layout = l
       , switchState = Dict.empty
+      , prunedGraph = Layout.pruneGraph l Dict.empty
       , running = False
       , flash = Nothing
       }
@@ -126,7 +130,7 @@ update msg model =
                     Dict.insert i newCfg model.switchState
             in
             -- Construct the new model based on the new switch state.
-            ( { model | switchState = newState }, Cmd.none )
+            ( { model | switchState = newState, prunedGraph = Layout.pruneGraph model.layout newState }, Cmd.none )
 
         LayoutReceived value ->
             case Decode.decodeValue modelDecoder value of
@@ -373,12 +377,19 @@ role r =
 
 modelDecoder : Decoder Model
 modelDecoder =
-    Decode.map5 Model
+    Decode.map3
+        (\ts l sws ->
+            { trainState = ts
+            , layout = l
+            , switchState = sws
+            , prunedGraph = Layout.pruneGraph l sws
+            , running = False
+            , flash = Just "Loaded successfully"
+            }
+        )
         (Decode.field "trainState" Train.decoder)
         (Decode.field "layout" Layout.decoder)
         (Decode.field "switchState" switchStateDecoder)
-        (Decode.succeed False)
-        (Decode.succeed Nothing)
 
 
 switchStateDecoder : Decoder (Dict Int Int)

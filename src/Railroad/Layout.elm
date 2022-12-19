@@ -10,6 +10,7 @@ module Railroad.Layout exposing
     , locationDecoder
     , nextTrack
     , previousTrack
+    , pruneGraph
     , toGraph
     , toSvg
     , trackAt
