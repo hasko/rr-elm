@@ -9,6 +9,7 @@ module Railroad.Train exposing
     , stopped
     )
 
+import Array
 import Dict exposing (Dict)
 import Duration
 import Frame2d
@@ -21,7 +22,8 @@ import List.Extra
 import Maybe exposing (andThen, withDefault)
 import Point2d
 import Quantity
-import Railroad.Layout as Layout exposing (Layout, Orientation(..))
+import Railroad.Layout as Layout exposing (Layout, nextTrack, previousTrack)
+import Railroad.Orientation exposing (Orientation(..))
 import Railroad.Track as Track exposing (Track)
 import Set
 import Speed exposing (Speed)
@@ -103,6 +105,9 @@ move millis trainState layout switchState =
                     case loc.orientation of
                         Aligned ->
                             loc.pos |> Quantity.plus distanceTraveled
+
+                        Reversed ->
+                            loc.pos |> Quantity.minus distanceTraveled
             in
             -- Create a new train state ...
             { trainState
@@ -123,7 +128,7 @@ normalizeLocation layout switchState loc =
             -- TODO Determine and use the appropriate connection number instead of 0
             if loc.pos |> Quantity.greaterThan (Track.length track) then
                 -- ... get the next track.
-                case nextTrack loc.edge layout switchState of
+                case nextTrack loc layout switchState of
                     Nothing ->
                         -- If there is no next track, return.
                         Nothing
@@ -139,7 +144,7 @@ normalizeLocation layout switchState loc =
                             |> normalizeLocation layout switchState
 
             else if Quantity.lessThanZero loc.pos then
-                previousTrack loc.edge layout switchState
+                previousTrack loc layout switchState
                     |> Maybe.andThen
                         (\nextLoc ->
                             case Layout.trackAt nextLoc.edge layout of
@@ -158,87 +163,6 @@ normalizeLocation layout switchState loc =
 
         Nothing ->
             Nothing
-
-
-previousTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe Layout.Location
-previousTrack ( fromId, toId ) layout switchState =
-    let
-        g =
-            Layout.toGraph layout
-    in
-    case Graph.getData toId g of
-        Nothing ->
-            -- If there is no switch, just return the first/only track.
-            Graph.incoming fromId g
-                |> Set.toList
-                |> List.head
-                |> Maybe.map (\otherId -> ( otherId, fromId ))
-                |> andThen
-                    (\edge ->
-                        Graph.Pair.getEdgeData edge g
-                            |> andThen
-                                (\track ->
-                                    Just { edge = edge, pos = Quantity.zero, orientation = Aligned }
-                                )
-                    )
-
-        Just switch ->
-            Dict.get fromId switchState
-                |> withDefault 0
-                -- Select the right switch configuration.
-                |> (\i -> List.Extra.getAt i switch.configs)
-                -- Get the right route.
-                |> Maybe.map (\cfg -> List.filter (\( _, routeTo ) -> routeTo == toId) cfg)
-                |> andThen List.head
-                -- Choose the previous edge.
-                |> Maybe.map (\( routeFrom, _ ) -> ( routeFrom, fromId ))
-                -- Get the track for the edge
-                |> andThen
-                    (\edge ->
-                        getEdgeData edge g
-                            |> andThen
-                                (\track ->
-                                    Just { edge = edge, pos = Quantity.zero, orientation = Aligned }
-                                )
-                    )
-
-
-nextTrack : ( Int, Int ) -> Layout -> Dict Int Int -> Maybe Layout.Location
-nextTrack ( fromId, toId ) layout switchState =
-    let
-        g =
-            Layout.toGraph layout
-    in
-    case Graph.getData toId g of
-        Nothing ->
-            Graph.outgoing toId g
-                |> Set.toList
-                |> List.head
-                |> andThen (\otherId -> Just ( toId, otherId ))
-                |> andThen
-                    (\edge ->
-                        Graph.Pair.getEdgeData edge g
-                            |> Maybe.map
-                                (\track ->
-                                    { edge = edge, pos = Quantity.zero, orientation = Aligned }
-                                )
-                    )
-
-        Just switch ->
-            Dict.get toId switchState
-                |> withDefault 0
-                |> (\i -> List.Extra.getAt i switch.configs)
-                |> Maybe.map (\cfg -> List.filter (\( from, _ ) -> from == fromId) cfg)
-                |> andThen List.head
-                |> Maybe.map (\( _, to ) -> ( toId, to ))
-                |> andThen
-                    (\edge ->
-                        getEdgeData edge g
-                            |> Maybe.map
-                                (\track ->
-                                    { edge = edge, pos = Quantity.zero, orientation = Aligned }
-                                )
-                    )
 
 
 stopped : TrainState -> TrainState
