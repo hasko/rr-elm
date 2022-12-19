@@ -113,29 +113,38 @@ coordsFor pos ( fromNode, toNode ) layout =
             )
 
 
-{-| Evaluate the current switch state and elminate all unusable edges from the layout graph.
-This results in the graph that is currently traversable by trains.
+{-| Evaluate the current switch state and elminate all unusable edges from the layout graph, if the third parameter is True.
+This results in the graph that is currently traversable by trains. Returns only the unusable edges if the third parameter is False.
 -}
-pruneGraph : Layout -> Dict Int Int -> Graph Int () Track
+pruneGraph : Layout -> Dict Int Int -> ( Graph Int () Track, Graph Int () Track )
 pruneGraph layout switchStates =
     switchStates
         |> Dict.foldl
-            (\switchId currentState g ->
+            (\switchId currentState buf ->
                 case Array.get switchId layout.switches of
                     Nothing ->
-                        g
+                        buf
 
                     Just sw ->
-                        -- TODO Fix this
-                        Switch.inactiveEdges sw currentState |> List.foldl (\( from, to ) gg -> Graph.removeEdge from to gg) g
+                        Switch.activeEdges sw currentState
+                            |> List.foldl
+                                (\( from, to ) ( usable, unusable ) ->
+                                    case Graph.getEdgeData from to unusable of
+                                        Nothing ->
+                                            ( usable, unusable )
+
+                                        Just e ->
+                                            ( Graph.insertEdgeData from to e usable, Graph.removeEdge from to unusable )
+                                )
+                                buf
             )
-            layout.graph
+            ( Graph.empty, layout.graph )
 
 
 previousTrack : Location -> Layout -> Dict Int Int -> Maybe Location
 previousTrack loc layout switchStates =
     let
-        g =
+        ( g, _ ) =
             pruneGraph layout switchStates
 
         ( from, to ) =
@@ -200,27 +209,23 @@ nextTrack loc layout switchStates =
     let
         iLoc =
             { loc | orientation = Orientation.invert loc.orientation }
-
-        next =
-            previousTrack iLoc layout switchStates
     in
-    case next of
-        Nothing ->
-            Nothing
-
-        Just l ->
-            Just { l | orientation = Orientation.invert l.orientation }
+    previousTrack iLoc layout switchStates
+        |> Maybe.map (\l -> { l | orientation = Orientation.invert l.orientation })
 
 
 
 -- Views
 
 
-toSvg : Layout -> Svg msg
-toSvg layout =
+toSvg : Layout -> Dict Int Int -> Svg msg
+toSvg layout switchStates =
     let
         allFrames =
             cursors layout
+
+        ( usableEdges, unusableEdges ) =
+            pruneGraph layout switchStates
     in
     Svg.g [ Svg.Attributes.id "layout" ]
         (Graph.edgesWithData layout.graph
@@ -254,7 +259,7 @@ toSvg layout =
                                         ++ ")"
                                     )
                                 ]
-                                (Track.toSvg track)
+                                (Track.toSvg track (Graph.memberEdge ( from, to ) usableEdges))
 
                         _ ->
                             Svg.g [ id trackId ] []

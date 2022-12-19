@@ -26,6 +26,7 @@ activeEdges switch state =
 
 inactiveEdges : Switch -> Int -> List ( Int, Int )
 inactiveEdges switch state =
+    -- TODO doesn't work, fix
     case Array.get state switch.configs of
         Nothing ->
             []

@@ -122,14 +122,21 @@ curveToArc r a =
 -- SVG
 
 
-toSvg : Track -> List (Svg msg)
-toSvg track =
+toSvg : Track -> Bool -> List (Svg msg)
+toSvg track active =
     let
         cc1 =
             connectorFrames track
                 |> Tuple.second
                 |> Frame2d.originPoint
                 |> Point2d.toRecord Length.inMeters
+
+        strokeColor =
+            if active then
+                "gray"
+
+            else
+                "crimson"
     in
     [ case track of
         StraightTrack _ ->
@@ -138,7 +145,7 @@ toSvg track =
                 , SA.y1 "0"
                 , cc1.x |> String.fromFloat |> SA.x2
                 , cc1.y |> String.fromFloat |> SA.y2
-                , SA.stroke "grey"
+                , SA.stroke strokeColor
                 , SA.strokeWidth "1.435"
                 ]
                 []
@@ -150,7 +157,7 @@ toSvg track =
             in
             Gsvg.arc2d
                 [ SA.fill "none"
-                , SA.stroke "grey"
+                , SA.stroke strokeColor
                 , SA.strokeWidth "1.435"
                 ]
                 arc

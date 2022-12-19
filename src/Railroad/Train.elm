@@ -9,23 +9,18 @@ module Railroad.Train exposing
     , stopped
     )
 
-import Array
 import Dict exposing (Dict)
 import Duration
 import Frame2d
-import Graph
 import Graph.Pair exposing (getEdgeData)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
-import List.Extra
-import Maybe exposing (andThen, withDefault)
 import Point2d
 import Quantity
 import Railroad.Layout as Layout exposing (Layout, nextTrack, previousTrack)
 import Railroad.Orientation exposing (Orientation(..))
-import Railroad.Track as Track exposing (Track)
-import Set
+import Railroad.Track as Track
 import Speed exposing (Speed)
 
 

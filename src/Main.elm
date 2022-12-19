@@ -39,7 +39,6 @@ type alias Model =
     { trainState : TrainState
     , layout : Layout
     , switchState : Dict Int Int
-    , prunedGraph : Graph Int () Track
     , running : Bool
     , flash : Maybe String
     }
@@ -75,7 +74,6 @@ init _ =
             }
       , layout = l
       , switchState = Dict.empty
-      , prunedGraph = Layout.pruneGraph l Dict.empty
       , running = False
       , flash = Nothing
       }
@@ -130,7 +128,7 @@ update msg model =
                     Dict.insert i newCfg model.switchState
             in
             -- Construct the new model based on the new switch state.
-            ( { model | switchState = newState, prunedGraph = Layout.pruneGraph model.layout newState }, Cmd.none )
+            ( { model | switchState = newState }, Cmd.none )
 
         LayoutReceived value ->
             case Decode.decodeValue modelDecoder value of
@@ -189,7 +187,7 @@ view model =
                     |> Rect.rectToString
                 )
             ]
-            [ lazy Layout.toSvg model.layout
+            [ lazy2 Layout.toSvg model.layout model.switchState
             , g [ id "trains" ] [ viewTrain model.trainState model.layout model.switchState ]
             ]
         , div [ class "row mb-3" ]
@@ -382,7 +380,6 @@ modelDecoder =
             { trainState = ts
             , layout = l
             , switchState = sws
-            , prunedGraph = Layout.pruneGraph l sws
             , running = False
             , flash = Just "Loaded successfully"
             }
