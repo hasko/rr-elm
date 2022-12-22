@@ -243,13 +243,9 @@ orientationDecoder =
 -- Samples
 
 
-initialLocation : Layout -> Maybe Layout.Location
-initialLocation layout =
-    getEdgeData ( 0, 1 ) (Layout.toGraph layout)
-        |> Maybe.map
-            (\track ->
-                { edge = ( 0, 1 )
-                , pos = Length.meters 40.0
-                , orientation = Aligned
-                }
-            )
+initialLocation : Layout.Location
+initialLocation =
+    { edge = ( 0, 1 )
+    , pos = Length.meters 40.0
+    , orientation = Aligned
+    }

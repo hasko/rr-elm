@@ -27,7 +27,8 @@ import Vector2d
 
 type Track
     = StraightTrack Length
-    | CurvedTrack Length Angle -- radius in m, angle in degrees
+    | CurvedTrack Length Angle
+    | MapExit
 
 
 length : Track -> Length
@@ -38,6 +39,10 @@ length track =
 
         CurvedTrack r a ->
             Quantity.multiplyBy (Angle.inRadians a) r |> Quantity.abs
+
+        MapExit ->
+            -- Assume infinite length off map
+            Quantity.positiveInfinity
 
 
 connectorFrames : Track -> ( Frame, Frame )
@@ -54,6 +59,10 @@ connectorFrames track =
                     (Quantity.multiplyBy (Angle.sin a) r)
                 )
             )
+
+        MapExit ->
+            -- Entry and exit are the same
+            ( Frame2d.atOrigin, Frame2d.atOrigin )
 
 
 moveFrame : Frame -> Track -> Frame
@@ -80,6 +89,10 @@ moveFrame cursor track =
                 |> Frame2d.translateBy (Vector2d.meters (s * cos avgDirRad) (s * sin avgDirRad))
                 |> Frame2d.rotateBy a
 
+        MapExit ->
+            -- Nothing to move
+            cursor
+
 
 getPositionOnTrack : Length -> Frame -> Track -> Frame
 getPositionOnTrack trackPosition cursor track =
@@ -101,6 +114,10 @@ getPositionOnTrack trackPosition cursor track =
                     Arc2d.endPoint arc
             in
             cursor |> Frame2d.moveTo p |> Frame2d.rotateBy a2
+
+        MapExit ->
+            -- Just assume the unseen track is straight
+            Frame2d.translateBy (Vector2d.xy trackPosition Quantity.zero) cursor
 
 
 curveToArc : Length -> Angle -> Arc2d Length.Meters coords
@@ -138,9 +155,9 @@ toSvg track active =
             else
                 "lightGray"
     in
-    [ case track of
+    case track of
         StraightTrack _ ->
-            Svg.line
+            [ Svg.line
                 [ SA.x1 "0"
                 , SA.y1 "0"
                 , cc1.x |> String.fromFloat |> SA.x2
@@ -149,19 +166,31 @@ toSvg track active =
                 , SA.strokeWidth "1.435"
                 ]
                 []
+            , trackDelimiter
+            ]
 
         CurvedTrack r a ->
             let
                 arc =
                     curveToArc r a
             in
-            Gsvg.arc2d
+            [ Gsvg.arc2d
                 [ SA.fill "none"
                 , SA.stroke strokeColor
                 , SA.strokeWidth "1.435"
                 ]
                 arc
-    , Svg.line
+            , trackDelimiter
+            ]
+
+        MapExit ->
+            -- TODO draw a nice icon or something
+            []
+
+
+trackDelimiter : Svg msg
+trackDelimiter =
+    Svg.line
         [ SA.x1 "0"
         , SA.y1 "-1"
         , SA.x2 "0"
@@ -171,7 +200,6 @@ toSvg track active =
         , Html.Attributes.attribute "vector-effect" "non-scaling-stroke"
         ]
         []
-    ]
 
 
 
@@ -189,6 +217,9 @@ encode track =
                 [ ( "radius", Encode.float (Length.inMeters r) )
                 , ( "sweep", Encode.float (Angle.inDegrees a) )
                 ]
+
+        MapExit ->
+            Encode.object [ ( "type", Encode.string "map-exit" ) ]
 
 
 

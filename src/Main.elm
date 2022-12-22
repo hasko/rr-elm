@@ -73,7 +73,7 @@ init _ =
             { name = "Happy Train"
             , composition = [ { length = Length.meters 10 }, { length = Length.meters 10 }, { length = Length.meters 10 } ]
             , speed = Speed.metersPerSecond 10.0
-            , location = Train.initialLocation l
+            , location = Just Train.initialLocation
             }
       , layout = l
       , switchState = Array.repeat (Array.length l.switches) 0
@@ -263,11 +263,13 @@ viewTrain : TrainState -> Layout -> Array Int -> Svg Msg
 viewTrain train layout switchState =
     case train.location of
         Nothing ->
+            -- Train is nowhere to be seen. TODO Should be off map location.
             g [] []
 
         Just loc ->
             g [ Svg.Attributes.id "train" ]
                 (List.foldl
+                    -- Iterate through the train cars (including engines) and collect the svgs to draw
                     (\car ( currentLoc, svg ) ->
                         case Layout.coordsFor currentLoc.pos currentLoc.edge layout of
                             Nothing ->
