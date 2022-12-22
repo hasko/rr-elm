@@ -70,7 +70,7 @@ init _ =
     ( { trains =
             [ { name = "Happy Train"
               , composition = List.repeat 5 { length = Length.meters 10 }
-              , speed = Speed.metersPerSecond 10.0
+              , speed = Speed.kilometersPerHour 40.0
               , location = Just { edge = ( 0, 1 ), pos = Length.meters 55.0, orientation = Orientation.Aligned }
               }
             ]
@@ -255,7 +255,7 @@ view model =
                                         [ th [ scope "row" ] [ text "Speed" ]
                                         , td []
                                             [ text
-                                                (String.fromFloat (Speed.inMetersPerSecond train.speed)
+                                                (Round.round 1 (Speed.inMetersPerSecond train.speed)
                                                     ++ " m/s ("
                                                     ++ Round.round 1 (Speed.inKilometersPerHour train.speed)
                                                     ++ " km/h)"
