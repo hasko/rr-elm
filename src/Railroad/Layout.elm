@@ -1,8 +1,6 @@
 module Railroad.Layout exposing
     ( Layout
     , Location
-    , Orientation(..)
-    , Switch
     , boundingBox
     , coordsFor
     , decoder
@@ -10,37 +8,42 @@ module Railroad.Layout exposing
     , encodeLocation
     , initialLayout
     , locationDecoder
-    , switches
+    , nextTrack
+    , partitionGraph
+    , previousTrack
     , toGraph
     , toSvg
     , trackAt
     )
 
 import Angle
+import Array exposing (Array)
 import Dict exposing (Dict)
 import Direction2d
 import Frame2d
-import Graph exposing (Graph, insertData, insertEdgeData)
+import Graph exposing (Graph, getEdgeData, insertEdgeData)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
 import Maybe exposing (Maybe(..))
-import Maybe.Extra
 import Point2d
+import Quantity
+import Railroad.Orientation as Orientation exposing (Orientation(..))
+import Railroad.Switch as Switch exposing (Switch)
 import Railroad.Track as Track exposing (Track(..), getPositionOnTrack, moveFrame)
 import Railroad.Util exposing (Frame)
 import Rect exposing (Rect(..))
 import Set
-import Svg exposing (Svg)
+import Svg exposing (Svg, switch)
 import Svg.Attributes exposing (id)
 
 
-type Layout
-    = Layout (Graph Int Switch Track)
+type alias Layout =
+    { graph : G, switches : Array Switch }
 
 
-type alias Switch =
-    { configs : List (List ( Int, Int )) }
+type alias G =
+    Graph Int () Track
 
 
 type alias Location =
@@ -51,14 +54,8 @@ type alias Location =
 
 
 trackAt : ( Int, Int ) -> Layout -> Maybe Track
-trackAt ( from, to ) (Layout g) =
-    Graph.getEdgeData from to g
-
-
-type
-    Orientation
-    -- TODO Add Reverse
-    = Aligned
+trackAt ( from, to ) layout =
+    Graph.getEdgeData from to layout.graph
 
 
 cursors : Layout -> Dict Int Frame
@@ -76,7 +73,7 @@ boundingBox layout =
 
 
 renderLayout : Int -> Frame -> Layout -> Dict Int Frame -> Dict Int Frame
-renderLayout nodeId currentFrame ((Layout g) as layout) knownFrames =
+renderLayout nodeId currentFrame layout knownFrames =
     -- If the node cursor is already calculated ...
     if Dict.member nodeId knownFrames then
         -- ... then we are done.
@@ -85,12 +82,12 @@ renderLayout nodeId currentFrame ((Layout g) as layout) knownFrames =
     else
         -- Get all the outoing tracks from this node.
         -- TODO Consider incoming tracks too.
-        Graph.outgoing nodeId g
+        Graph.outgoing nodeId layout.graph
             -- Calculate the next node position for each track and collect them.
             |> Set.foldl
                 (\nextNodeId acc ->
                     -- Get the track for this pair of nodes.
-                    case Graph.getEdgeData nodeId nextNodeId g of
+                    case Graph.getEdgeData nodeId nextNodeId layout.graph of
                         Nothing ->
                             -- If there is no track, our layout is inconsistent. Return what we know so far.
                             acc
@@ -112,35 +109,139 @@ renderLayout nodeId currentFrame ((Layout g) as layout) knownFrames =
 
 
 coordsFor : Length -> ( Int, Int ) -> Layout -> Maybe Frame
-coordsFor pos ( fromNode, toNode ) ((Layout g) as layout) =
-    Graph.getEdgeData fromNode toNode g
+coordsFor pos ( fromNode, toNode ) layout =
+    Graph.getEdgeData fromNode toNode layout.graph
         |> Maybe.andThen
             (\track ->
                 cursors layout |> Dict.get fromNode |> Maybe.map (\cursor -> getPositionOnTrack pos cursor track)
             )
 
 
-switches : Layout -> List ( Int, Switch )
-switches (Layout g) =
-    Graph.nodes g
-        -- Convert from a list of pairs with a Maybe inside to a list of Maybes
-        |> List.map (\( vertex, data ) -> Maybe.map (\switch -> ( vertex, switch )) data)
-        -- Filter out the Nothings
-        |> Maybe.Extra.values
+{-| Split the layout in a traversable graph and a non-traversable, based on the current switch state.
+-}
+partitionGraph : Layout -> Dict Int Int -> ( G, G )
+partitionGraph layout switchStates =
+    let
+        inactiveEdges =
+            Debug.log "SWITCH STATES: " switchStates
+                |> Dict.foldl
+                    (\switchId switchState buf ->
+                        buf
+                            ++ (Array.get switchId (Debug.log "SWITCHES: " layout.switches)
+                                    |> Maybe.map (\sw -> Switch.inactiveEdges (Debug.log "SWITCH: " sw) switchState)
+                                    |> Maybe.withDefault []
+                               )
+                    )
+                    []
+                |> Debug.log "Inactive edges: "
+    in
+    layout.graph
+        |> Graph.edgesWithData
+        |> List.foldl
+            (\( from, to, maybeData ) ( usable, unusable ) ->
+                case maybeData of
+                    Nothing ->
+                        -- This should never happen.
+                        ( usable, unusable )
+
+                    Just edgeData ->
+                        if List.member ( from, to ) inactiveEdges then
+                            ( Graph.removeEdge from to usable, Graph.insertEdgeData from to edgeData unusable )
+
+                        else
+                            ( usable, unusable )
+            )
+            ( layout.graph, Graph.empty )
+
+
+previousTrack : Location -> Layout -> Dict Int Int -> Maybe Location
+previousTrack loc layout switchStates =
+    let
+        ( g, _ ) =
+            partitionGraph layout switchStates
+
+        ( from, to ) =
+            loc.edge
+    in
+    case loc.orientation of
+        Aligned ->
+            let
+                inc =
+                    Graph.incoming from g |> Set.toList
+
+                out =
+                    Graph.outgoing from g |> Set.remove to |> Set.toList
+            in
+            case ( inc, out ) of
+                ( e :: _, _ ) ->
+                    Just
+                        { edge = ( e, from )
+                        , pos = Graph.getEdgeData e from g |> Maybe.map Track.length |> Maybe.withDefault Quantity.zero
+                        , orientation = Aligned
+                        }
+
+                ( _, e :: _ ) ->
+                    Just
+                        { edge = ( from, e )
+                        , pos = Quantity.zero
+                        , orientation = Reversed
+                        }
+
+                ( _, _ ) ->
+                    Nothing
+
+        Reversed ->
+            let
+                inc =
+                    Graph.incoming to g |> Set.remove from |> Set.toList
+
+                out =
+                    Graph.outgoing to g |> Set.toList
+            in
+            case ( inc, out ) of
+                ( e :: _, _ ) ->
+                    Just
+                        { edge = ( e, to )
+                        , pos = Graph.getEdgeData e to g |> Maybe.map Track.length |> Maybe.withDefault Quantity.zero
+                        , orientation = Reversed
+                        }
+
+                ( _, e :: _ ) ->
+                    Just
+                        { edge = ( to, e )
+                        , pos = Quantity.zero
+                        , orientation = Aligned
+                        }
+
+                ( _, _ ) ->
+                    Nothing
+
+
+nextTrack : Location -> Layout -> Dict Int Int -> Maybe Location
+nextTrack loc layout switchStates =
+    let
+        iLoc =
+            { loc | orientation = Orientation.invert loc.orientation }
+    in
+    previousTrack iLoc layout switchStates
+        |> Maybe.map (\l -> { l | orientation = Orientation.invert l.orientation })
 
 
 
 -- Views
 
 
-toSvg : Layout -> Svg msg
-toSvg ((Layout g) as layout) =
+toSvg : Layout -> Dict Int Int -> Svg msg
+toSvg layout switchStates =
     let
         allFrames =
             cursors layout
+
+        ( usableEdges, _ ) =
+            partitionGraph layout switchStates
     in
     Svg.g [ Svg.Attributes.id "layout" ]
-        (Graph.edgesWithData g
+        (Graph.edgesWithData layout.graph
             |> List.map
                 (\( from, to, maybeTrack ) ->
                     let
@@ -171,7 +272,7 @@ toSvg ((Layout g) as layout) =
                                         ++ ")"
                                     )
                                 ]
-                                (Track.toSvg track)
+                                (Track.toSvg track (Graph.memberEdge ( from, to ) usableEdges))
 
                         _ ->
                             Svg.g [ id trackId ] []
@@ -185,23 +286,24 @@ toSvg ((Layout g) as layout) =
 
 initialLayout : Layout
 initialLayout =
-    Graph.empty
-        |> insertEdgeData 0 1 (StraightTrack (Length.meters 75.0))
-        |> insertEdgeData 1 2 (CurvedTrack (Length.meters 300.0) (Angle.degrees 15.0))
-        |> insertEdgeData 2 4 (CurvedTrack (Length.meters 300) (Angle.degrees -15))
-        -- CCW
-        |> insertEdgeData 1 3 (StraightTrack (Length.meters 75.0))
-        |> insertData 1 (Switch [ [ ( 0, 2 ) ], [ ( 0, 3 ) ] ])
-        |> Layout
+    { graph =
+        Graph.empty
+            |> insertEdgeData 0 1 (StraightTrack (Length.meters 75.0))
+            |> insertEdgeData 1 2 (CurvedTrack (Length.meters 300.0) (Angle.degrees 15.0))
+            |> insertEdgeData 2 4 (CurvedTrack (Length.meters 300) (Angle.degrees -15))
+            |> insertEdgeData 1 3 (StraightTrack (Length.meters 77.645))
+            |> insertEdgeData 3 4 (StraightTrack (Length.meters 77.645))
+    , switches = Array.fromList [ { edges = Array.fromList [ ( 1, 2 ), ( 1, 3 ) ], configs = Array.fromList [ [ 0 ], [ 1 ] ] } ]
+    }
 
 
 
--- TODO: Refactor so we don't need to expose the Graph.
+-- TODO: Refactor so we don't need to expose the Graph. Only used for the starting location of the train. Having map exits should fix that.
 
 
-toGraph : Layout -> Graph Int Switch Track
-toGraph (Layout g) =
-    g
+toGraph : Layout -> Graph Int () Track
+toGraph layout =
+    layout.graph
 
 
 
@@ -211,7 +313,7 @@ toGraph (Layout g) =
 decoder : Decoder Layout
 decoder =
     -- TODO Fix this
-    Decode.succeed (Layout Graph.empty)
+    Decode.succeed { graph = Graph.empty, switches = Array.empty }
 
 
 locationDecoder : Decoder Location
@@ -248,37 +350,19 @@ orientationDecoder =
 
 
 encode : Layout -> Value
-encode (Layout g) =
+encode layout =
     Encode.object
-        [ ( "nodes", Encode.list encodeNode (Graph.nodes g) )
-        , ( "edges", Encode.list encodeEdge (Graph.edgesWithData g) )
+        [ ( "edges", Encode.list encodeEdge (Graph.edgesWithData layout.graph) )
+        , ( "switches", Encode.array encodeSwitch layout.switches )
         ]
 
 
-encodeNode : ( Int, Maybe Switch ) -> Value
-encodeNode ( nodeId, mSwitch ) =
+encodeSwitch : Switch -> Value
+encodeSwitch switch =
     Encode.object
-        (( "id", Encode.int nodeId )
-            :: (case mSwitch of
-                    Nothing ->
-                        []
-
-                    Just sw ->
-                        [ ( "configs"
-                          , sw.configs
-                                |> Encode.list
-                                    (Encode.list
-                                        (\( from, to ) ->
-                                            Encode.object
-                                                [ ( "from", Encode.int from )
-                                                , ( "to", Encode.int to )
-                                                ]
-                                        )
-                                    )
-                          )
-                        ]
-               )
-        )
+        [ ( "edges", Encode.array encodeVertex switch.edges )
+        , ( "configs", Encode.array (Encode.list Encode.int) switch.configs )
+        ]
 
 
 encodeEdge : ( Int, Int, Maybe Track ) -> Value
@@ -302,15 +386,8 @@ encodeLocation loc =
     Encode.object
         [ ( "edge", encodeVertex loc.edge )
         , ( "pos", loc.pos |> Length.inMeters |> Encode.float )
-        , ( "orientation", encodeOrientation loc.orientation )
+        , ( "orientation", Orientation.encode loc.orientation )
         ]
-
-
-encodeOrientation : Orientation -> Value
-encodeOrientation o =
-    case o of
-        Aligned ->
-            Encode.string "aligned"
 
 
 encodeVertex : ( Int, Int ) -> Value

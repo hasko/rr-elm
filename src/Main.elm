@@ -1,12 +1,14 @@
 port module Main exposing (Msg(..), main)
 
+import Array exposing (Array)
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
 import Dict exposing (Dict)
 import File.Download
 import Frame2d
+import Graph exposing (Graph)
 import Html exposing (Html, a, br, button, div, li, nav, span, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (attribute, class, disabled, href, scope, type_)
+import Html.Attributes exposing (attribute, class, disabled, href, scope, style, type_)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
@@ -14,10 +16,11 @@ import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Extra
 import Json.Encode as Encode exposing (Value)
 import Length
-import List.Extra
 import Maybe exposing (withDefault)
 import Point2d
 import Railroad.Layout as Layout exposing (..)
+import Railroad.Switch exposing (Switch)
+import Railroad.Track exposing (Track)
 import Railroad.Train as Train exposing (..)
 import Rect
 import Round
@@ -70,7 +73,7 @@ init _ =
             , location = Train.initialLocation l
             }
       , layout = l
-      , switchState = Dict.empty
+      , switchState = l.switches |> Array.indexedMap (\i _ -> ( i, 0 )) |> Array.toList |> Dict.fromList
       , running = False
       , flash = Nothing
       }
@@ -118,7 +121,7 @@ update msg model =
             let
                 -- Get the next configuration number, cycling around if necessary.
                 newCfg =
-                    modBy (List.length switch.configs) ((Dict.get i model.switchState |> withDefault 0) + 1)
+                    modBy (Array.length switch.configs) ((Dict.get i model.switchState |> withDefault 0) + 1)
 
                 -- Get the new switch state for the model.
                 newState =
@@ -184,7 +187,7 @@ view model =
                     |> Rect.rectToString
                 )
             ]
-            [ lazy Layout.toSvg model.layout
+            [ Layout.toSvg model.layout model.switchState
             , g [ id "trains" ] [ viewTrain model.trainState model.layout model.switchState ]
             ]
         , div [ class "row mb-3" ]
@@ -309,7 +312,7 @@ viewSwitches layout switchState =
     table [ class "table" ]
         [ thead [] [ tr [] [ th [] [ text "ID" ], th [] [ text "Connections" ], th [] [ text "Active" ], th [] [] ] ]
         , tbody []
-            (Layout.switches layout |> List.map (\( i, switch ) -> viewSwitch i switch (Dict.get i switchState |> withDefault 0)))
+            (layout.switches |> Array.indexedMap (\i switch -> viewSwitch i switch (Dict.get i switchState |> withDefault 0)) |> Array.toList)
         ]
 
 
@@ -318,26 +321,43 @@ viewSwitch i switch state =
     tr []
         [ td [] [ text (String.fromInt i) ]
         , td []
-            [ ul [] (List.map viewSwitchConfig switch.configs |> List.map (\t -> li [] [ t ])) ]
+            [ ul []
+                (switch.configs
+                    |> Array.map (viewSwitchRoutes switch.edges)
+                    |> Array.map (\t -> li [ style "list-style" "none" ] [ t ])
+                    |> Array.toList
+                )
+            ]
         , td []
-            [ case List.Extra.getAt state switch.configs of
+            [ case Array.get state switch.configs of
                 Nothing ->
                     -- Switch state is inconsistent
                     text "inconsistent"
 
                 Just cfg ->
-                    viewSwitchConfig cfg
+                    viewSwitchRoutes switch.edges cfg
             ]
         , td [] [ button [ class "btn btn-primary btn-sm", onClick (ChangeSwitch i switch) ] [ text "Change" ] ]
         ]
 
 
-viewSwitchConfig : List ( Int, Int ) -> Html Msg
-viewSwitchConfig routes =
-    routes
-        |> List.map (\( from, to ) -> String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to)
+viewSwitchRoutes : Array ( Int, Int ) -> List Int -> Html msg
+viewSwitchRoutes edges activeEdges =
+    activeEdges
+        |> List.map (\e -> Array.get e edges)
+        |> List.map viewSwitchRoute
         |> String.join ", "
         |> text
+
+
+viewSwitchRoute : Maybe ( Int, Int ) -> String
+viewSwitchRoute maybeEdge =
+    case maybeEdge of
+        Nothing ->
+            "Undefined"
+
+        Just ( from, to ) ->
+            String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to
 
 
 
@@ -355,12 +375,18 @@ role r =
 
 modelDecoder : Decoder Model
 modelDecoder =
-    Decode.map5 Model
+    Decode.map3
+        (\ts l sws ->
+            { trainState = ts
+            , layout = l
+            , switchState = sws
+            , running = False
+            , flash = Just "Loaded successfully"
+            }
+        )
         (Decode.field "trainState" Train.decoder)
         (Decode.field "layout" Layout.decoder)
         (Decode.field "switchState" switchStateDecoder)
-        (Decode.succeed False)
-        (Decode.succeed Nothing)
 
 
 switchStateDecoder : Decoder (Dict Int Int)
