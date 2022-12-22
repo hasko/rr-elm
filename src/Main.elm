@@ -6,31 +6,26 @@ import Browser.Events exposing (onAnimationFrameDelta)
 import Dict exposing (Dict)
 import Duration exposing (Duration)
 import File.Download
-import Frame2d
-import Graph exposing (Graph)
+import Graph
 import Html exposing (Html, a, br, button, div, li, nav, span, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (attribute, class, disabled, href, scope, style, type_)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
-import IntDict exposing (IntDict)
 import Json.Decode as Decode exposing (Decoder)
-import Json.Decode.Extra
 import Json.Encode as Encode exposing (Value)
 import Length
 import Maybe exposing (withDefault)
-import Point2d
 import Railroad.Layout as Layout exposing (..)
 import Railroad.Orientation as Orientation
 import Railroad.Switch exposing (Switch)
-import Railroad.Track exposing (Track)
 import Railroad.Train as Train exposing (..)
 import Railroad.Train.Svg
 import Rect
 import Round
 import Speed
-import Svg exposing (Svg, g, line, svg)
-import Svg.Attributes exposing (id, stroke, strokeWidth, viewBox, width, x1, x2, y1, y2)
+import Svg exposing (g, svg)
+import Svg.Attributes exposing (id, viewBox, width)
 import Tuple
 
 
