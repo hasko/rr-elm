@@ -34,7 +34,7 @@ type alias RollingStock =
     { length : Length }
 
 
-length : { a | composition : List RollingStock } -> Length
+length : { a | composition : List { b | length : Length } } -> Length
 length train =
     List.map .length train.composition |> Quantity.sum
 

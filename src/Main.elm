@@ -18,6 +18,7 @@ import Quantity
 import Railroad.Layout as Layout exposing (..)
 import Railroad.Orientation as Orientation
 import Railroad.Switch exposing (Switch)
+import Railroad.Track exposing (Track(..))
 import Railroad.Train as Train exposing (..)
 import Railroad.Train.Svg
 import Rect
@@ -158,8 +159,25 @@ updateTick delta model =
             -- Train could not move, stop it immediately.
             { model | trains = Train.stopped model.trains, running = False }
 
-        Just _ ->
-            { model | trains = newTrainState }
+        Just loc ->
+            let
+                invisible =
+                    Layout.tracksBefore loc (Train.length newTrainState) model.layout model.switchState
+                        |> List.all
+                            (\( _, _, t ) ->
+                                case t of
+                                    MapExit ->
+                                        True
+
+                                    _ ->
+                                        False
+                            )
+            in
+            if invisible then
+                { model | trains = { newTrainState | location = Nothing } }
+
+            else
+                { model | trains = newTrainState }
 
 
 
