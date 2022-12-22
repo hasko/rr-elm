@@ -48,38 +48,38 @@ endLocation l layout switchState startLoc =
 
 endLocationRec : Length -> Length -> Layout -> Dict Int Int -> Layout.Location -> Maybe Layout.Location
 endLocationRec l correction layout switchState startLoc =
-    case Layout.coordsFor startLoc.pos startLoc.edge layout |> Maybe.map Frame2d.originPoint of
-        Nothing ->
-            Nothing
+    Layout.coordsFor startLoc.pos startLoc.edge layout
+        |> Maybe.map Frame2d.originPoint
+        |> Maybe.andThen
+            (\p1 ->
+                { startLoc | pos = startLoc.pos |> Quantity.minus l |> Quantity.minus correction }
+                    |> normalizeLocation layout switchState
+                    |> Maybe.andThen
+                        (\loc ->
+                            Layout.coordsFor loc.pos loc.edge layout
+                                |> Maybe.map Frame2d.originPoint
+                                |> Maybe.andThen
+                                    (\p2 ->
+                                        let
+                                            d =
+                                                Point2d.distanceFrom p1 p2
 
-        Just p1 ->
-            case { startLoc | pos = startLoc.pos |> Quantity.minus l |> Quantity.minus correction } |> normalizeLocation layout switchState of
-                Nothing ->
-                    Nothing
+                                            {-
+                                               err =
+                                                   l |> Quantity.minus d
 
-                Just loc ->
-                    Layout.coordsFor loc.pos loc.edge layout
-                        |> Maybe.map Frame2d.originPoint
-                        |> Maybe.andThen
-                            (\p2 ->
-                                let
-                                    d =
-                                        Point2d.distanceFrom p1 p2
+                                               _ =
+                                                   Debug.log "Calculation" { length = Length.inMeters l, d = Length.inMeters d, err = Length.inMeters err }
+                                            -}
+                                        in
+                                        if Quantity.equalWithin (Length.centimeters 5) d l then
+                                            Just loc
 
-                                    {-
-                                       err =
-                                           l |> Quantity.minus d
-
-                                       _ =
-                                           Debug.log "Calculation" { length = Length.inMeters l, d = Length.inMeters d, err = Length.inMeters err }
-                                    -}
-                                in
-                                if Quantity.equalWithin (Length.centimeters 5) d l then
-                                    Just loc
-
-                                else
-                                    endLocationRec l (Quantity.plus correction (l |> Quantity.minus d)) layout switchState startLoc
-                            )
+                                        else
+                                            endLocationRec l (Quantity.plus correction (l |> Quantity.minus d)) layout switchState startLoc
+                                    )
+                        )
+            )
 
 
 move : Float -> TrainState -> Layout -> Dict Int Int -> TrainState
