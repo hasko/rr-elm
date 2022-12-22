@@ -7,3 +7,4 @@
     * all edges have data
     * all edges referred to in switches exits
     * all tracks lead somewhere, even if it's a track end or map exit
+    * Map exit end nodes should only have one incoming edge (which is infinitely far out)

@@ -305,7 +305,9 @@ initialLayout =
             |> insertEdgeData 2 4 (CurvedTrack (Length.meters 300) (Angle.degrees -15))
             |> insertEdgeData 1 3 (StraightTrack (Length.meters 77.645))
             |> insertEdgeData 3 5 (StraightTrack (Length.meters 77.645))
-            |> insertEdgeData 5 6 MapExit
+            |> insertEdgeData 5 1000 MapExit
+            |> insertEdgeData 0 1001 MapExit
+            |> insertEdgeData 4 1002 MapExit
     , switches = Array.fromList [ { edges = Array.fromList [ ( 1, 2 ), ( 1, 3 ) ], configs = Array.fromList [ [ 0 ], [ 1 ] ] } ]
     }
 
