@@ -9,10 +9,12 @@ module Railroad.Train exposing
     , stopped
     )
 
+import Array exposing (Array)
 import Dict exposing (Dict)
 import Duration
 import Frame2d
 import Graph.Pair exposing (getEdgeData)
+import IntDict exposing (IntDict)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
@@ -41,12 +43,12 @@ length train =
     List.map .length train.composition |> Quantity.sum
 
 
-endLocation : Length -> Layout -> Dict Int Int -> Layout.Location -> Maybe Layout.Location
+endLocation : Length -> Layout -> Array Int -> Layout.Location -> Maybe Layout.Location
 endLocation l layout switchState startLoc =
     endLocationRec l Quantity.zero layout switchState startLoc
 
 
-endLocationRec : Length -> Length -> Layout -> Dict Int Int -> Layout.Location -> Maybe Layout.Location
+endLocationRec : Length -> Length -> Layout -> Array Int -> Layout.Location -> Maybe Layout.Location
 endLocationRec l correction layout switchState startLoc =
     Layout.coordsFor startLoc.pos startLoc.edge layout
         |> Maybe.map Frame2d.originPoint
@@ -82,7 +84,7 @@ endLocationRec l correction layout switchState startLoc =
             )
 
 
-move : Float -> TrainState -> Layout -> Dict Int Int -> TrainState
+move : Float -> TrainState -> Layout -> Array Int -> TrainState
 move millis trainState layout switchState =
     case trainState.location of
         Nothing ->
@@ -115,7 +117,7 @@ move millis trainState layout switchState =
             }
 
 
-normalizeLocation : Layout -> Dict Int Int -> Layout.Location -> Maybe Layout.Location
+normalizeLocation : Layout -> Array Int -> Layout.Location -> Maybe Layout.Location
 normalizeLocation layout switchState loc =
     case Layout.trackAt loc.edge layout of
         Just track ->

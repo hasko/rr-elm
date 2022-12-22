@@ -12,6 +12,7 @@ import Html.Attributes exposing (attribute, class, disabled, href, scope, style,
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy, lazy2)
+import IntDict exposing (IntDict)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Extra
 import Json.Encode as Encode exposing (Value)
@@ -38,7 +39,7 @@ main =
 type alias Model =
     { trainState : TrainState
     , layout : Layout
-    , switchState : Dict Int Int
+    , switchState : Array Int
     , running : Bool
     , flash : Maybe String
     }
@@ -73,7 +74,7 @@ init _ =
             , location = Train.initialLocation l
             }
       , layout = l
-      , switchState = l.switches |> Array.indexedMap (\i _ -> ( i, 0 )) |> Array.toList |> Dict.fromList
+      , switchState = Array.repeat (Array.length l.switches) 0
       , running = False
       , flash = Nothing
       }
@@ -121,11 +122,11 @@ update msg model =
             let
                 -- Get the next configuration number, cycling around if necessary.
                 newCfg =
-                    modBy (Array.length switch.configs) ((Dict.get i model.switchState |> withDefault 0) + 1)
+                    modBy (Array.length switch.configs) ((Array.get i model.switchState |> withDefault 0) + 1)
 
                 -- Get the new switch state for the model.
                 newState =
-                    Dict.insert i newCfg model.switchState
+                    Array.set i newCfg model.switchState
             in
             -- Construct the new model based on the new switch state.
             ( { model | switchState = newState }, Cmd.none )
@@ -254,7 +255,7 @@ view model =
         ]
 
 
-viewTrain : TrainState -> Layout -> Dict Int Int -> Svg Msg
+viewTrain : TrainState -> Layout -> Array Int -> Svg Msg
 viewTrain train layout switchState =
     case train.location of
         Nothing ->
@@ -307,12 +308,12 @@ viewTrain train layout switchState =
                 )
 
 
-viewSwitches : Layout -> Dict Int Int -> Html Msg
+viewSwitches : Layout -> Array Int -> Html Msg
 viewSwitches layout switchState =
     table [ class "table" ]
         [ thead [] [ tr [] [ th [] [ text "ID" ], th [] [ text "Connections" ], th [] [ text "Active" ], th [] [] ] ]
         , tbody []
-            (layout.switches |> Array.indexedMap (\i switch -> viewSwitch i switch (Dict.get i switchState |> withDefault 0)) |> Array.toList)
+            (layout.switches |> Array.indexedMap (\i switch -> viewSwitch i switch (Array.get i switchState |> withDefault 0)) |> Array.toList)
         ]
 
 
@@ -386,12 +387,15 @@ modelDecoder =
         )
         (Decode.field "trainState" Train.decoder)
         (Decode.field "layout" Layout.decoder)
-        (Decode.field "switchState" switchStateDecoder)
+        (Decode.field "switchState" (Decode.array Decode.int))
+        |> Decode.andThen
+            (\m ->
+                if Array.length m.switchState /= Array.length m.layout.switches then
+                    Decode.fail "Incorrect number of switch states"
 
-
-switchStateDecoder : Decoder (Dict Int Int)
-switchStateDecoder =
-    Json.Decode.Extra.dict2 Decode.int Decode.int
+                else
+                    Decode.succeed m
+            )
 
 
 
@@ -403,5 +407,5 @@ encodeModel model =
     Encode.object
         [ ( "layout", Layout.encode model.layout )
         , ( "trains", Encode.list Train.encode [ model.trainState ] )
-        , ( "switchStates", Encode.dict String.fromInt Encode.int model.switchState )
+        , ( "switchStates", Encode.array Encode.int model.switchState )
         ]

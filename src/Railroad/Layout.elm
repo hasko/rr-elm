@@ -22,6 +22,7 @@ import Dict exposing (Dict)
 import Direction2d
 import Frame2d
 import Graph exposing (Graph, getEdgeData, insertEdgeData)
+import IntDict exposing (IntDict)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
@@ -47,6 +48,10 @@ type alias G =
     Graph Int () Track
 
 
+type alias Edge =
+    ( Int, Int, Track )
+
+
 type alias Location =
     { edge : ( Int, Int ) -- The vertices
     , pos : Length -- The position on the track
@@ -59,10 +64,10 @@ trackAt ( from, to ) layout =
     Graph.getEdgeData from to layout.graph
 
 
-cursors : Layout -> Dict Int Frame
+cursors : Layout -> IntDict Frame
 cursors layout =
     -- Render the layout starting at connection 0 and at the origin, facing east, and return the resulting cursors.
-    renderLayout 0 (Frame2d.atPoint (Point2d.meters 0 2.5)) layout Dict.empty
+    renderLayout 0 (Frame2d.atPoint (Point2d.meters 0 2.5)) layout IntDict.empty
 
 
 boundingBox : Layout -> Rect
@@ -70,13 +75,13 @@ boundingBox layout =
     List.foldl
         (\c (Rect x1 y1 x2 y2) -> Rect (min x1 c.x) (min y1 c.y) (max x2 c.x) (max y2 c.y))
         (Rect 0 0 0 0)
-        (cursors layout |> Dict.values |> List.map (Frame2d.originPoint >> Point2d.toRecord Length.inMeters))
+        (cursors layout |> IntDict.values |> List.map (Frame2d.originPoint >> Point2d.toRecord Length.inMeters))
 
 
-renderLayout : Int -> Frame -> Layout -> Dict Int Frame -> Dict Int Frame
+renderLayout : Int -> Frame -> Layout -> IntDict Frame -> IntDict Frame
 renderLayout nodeId currentFrame layout knownFrames =
     -- If the node cursor is already calculated ...
-    if Dict.member nodeId knownFrames then
+    if IntDict.member nodeId knownFrames then
         -- ... then we are done.
         knownFrames
 
@@ -106,7 +111,7 @@ renderLayout nodeId currentFrame layout knownFrames =
                                 acc
                 )
                 -- Begin with the list of known cursors plus the current one.
-                (Dict.insert nodeId currentFrame knownFrames)
+                (IntDict.insert nodeId currentFrame knownFrames)
 
 
 coordsFor : Length -> ( Int, Int ) -> Layout -> Maybe Frame
@@ -114,26 +119,25 @@ coordsFor pos ( fromNode, toNode ) layout =
     Graph.getEdgeData fromNode toNode layout.graph
         |> Maybe.andThen
             (\track ->
-                cursors layout |> Dict.get fromNode |> Maybe.map (\cursor -> getPositionOnTrack pos cursor track)
+                cursors layout |> IntDict.get fromNode |> Maybe.map (\cursor -> getPositionOnTrack pos cursor track)
             )
 
 
 {-| Split the layout in a traversable graph and a non-traversable, based on the current switch state.
 -}
-partitionGraph : Layout -> Dict Int Int -> ( List ( Int, Int, Track ), List ( Int, Int, Track ) )
+partitionGraph : Layout -> Array Int -> ( List Edge, List Edge )
 partitionGraph layout switchStates =
     let
         inactiveEdges =
             switchStates
-                |> Dict.foldl
-                    (\switchId switchState buf ->
-                        buf
-                            ++ (Array.get switchId layout.switches
-                                    |> Maybe.map (\sw -> Switch.inactiveEdges sw switchState)
-                                    |> Maybe.withDefault []
-                               )
+                |> Array.indexedMap
+                    (\switchId switchState ->
+                        Array.get switchId layout.switches
+                            |> Maybe.map (\sw -> Switch.inactiveEdges sw switchState)
+                            |> Maybe.withDefault []
                     )
-                    []
+                |> Array.toList
+                |> List.concat
     in
     layout.graph
         |> Graph.edgesWithData
@@ -154,7 +158,7 @@ partitionGraph layout switchStates =
             ( [], [] )
 
 
-previousTrack : Location -> Layout -> Dict Int Int -> Maybe Location
+previousTrack : Location -> Layout -> Array Int -> Maybe Location
 previousTrack loc layout switchStates =
     let
         ( g, _ ) =
@@ -217,7 +221,7 @@ previousTrack loc layout switchStates =
                     Nothing
 
 
-nextTrack : Location -> Layout -> Dict Int Int -> Maybe Location
+nextTrack : Location -> Layout -> Array Int -> Maybe Location
 nextTrack loc layout switchStates =
     let
         iLoc =
@@ -231,7 +235,7 @@ nextTrack loc layout switchStates =
 -- Views
 
 
-toSvg : Layout -> Dict Int Int -> Svg msg
+toSvg : Layout -> Array Int -> Svg msg
 toSvg layout switchStates =
     let
         allFrames =
@@ -244,6 +248,7 @@ toSvg layout switchStates =
         (tracksToSvg allFrames False unusableEdges ++ tracksToSvg allFrames True usableEdges)
 
 
+tracksToSvg : IntDict Frame -> Bool -> List Edge -> List (Svg msg)
 tracksToSvg allFrames enabled tuples =
     tuples
         |> List.map
@@ -253,7 +258,7 @@ tracksToSvg allFrames enabled tuples =
                         "track-" ++ String.fromInt from ++ "-" ++ String.fromInt to
 
                     maybeRef =
-                        Dict.get from allFrames
+                        IntDict.get from allFrames
                 in
                 case maybeRef of
                     Just ref ->
