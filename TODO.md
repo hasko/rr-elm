@@ -9,3 +9,4 @@
     * Map exit end nodes should only have one incoming edge (which is infinitely far out)
 * Implement partially visible train cars.
 * Stop simulation if all trains are invisible and none is approaching from a map exit.
+* Fix drawing of reverse curves and straights
