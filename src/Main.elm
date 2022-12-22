@@ -22,6 +22,7 @@ import Railroad.Train as Train exposing (..)
 import Railroad.Train.Svg
 import Rect
 import Round
+import Set exposing (Set)
 import Speed
 import Svg exposing (g, svg)
 import Svg.Attributes exposing (id, viewBox, width)
@@ -211,7 +212,7 @@ view model =
             , div [ class "col-1" ] [ text (String.fromInt (frameRate model.deltas) ++ " fps") ]
             ]
         , div [ class "row" ]
-            [ div [ class "col" ] [ lazy2 viewSwitches model.layout model.switchState ]
+            [ div [ class "col" ] [ viewSwitches model.layout model.switchState (getBlockedSwitches model.layout model.switchState [ model.trainState ]) ]
             , div [ class "col" ]
                 [ table [ class "table" ]
                     [ tbody []
@@ -260,7 +261,7 @@ view model =
                                 [ model.trainState.location
                                     |> Maybe.map (\loc -> Layout.tracksBefore loc (Train.length model.trainState) model.layout model.switchState)
                                     |> Maybe.withDefault []
-                                    |> List.map (\( from, to, track ) -> String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to)
+                                    |> List.map (\( from, to, _ ) -> String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to)
                                     |> String.join ", "
                                     |> text
                                 ]
@@ -272,17 +273,26 @@ view model =
         ]
 
 
-viewSwitches : Layout -> Array Int -> Html Msg
-viewSwitches layout switchState =
+viewSwitches : Layout -> Array Int -> Set Int -> Html Msg
+viewSwitches layout switchStates blockedSwitches =
     table [ class "table" ]
         [ thead [] [ tr [] [ th [] [ text "ID" ], th [] [ text "Connections" ], th [] [ text "Active" ], th [] [] ] ]
         , tbody []
-            (layout.switches |> Array.indexedMap (\i switch -> viewSwitch i switch (Array.get i switchState |> withDefault 0)) |> Array.toList)
+            (layout.switches
+                |> Array.indexedMap
+                    (\i switch ->
+                        viewSwitch i
+                            switch
+                            (Array.get i switchStates |> withDefault 0)
+                            (Set.member i blockedSwitches)
+                    )
+                |> Array.toList
+            )
         ]
 
 
-viewSwitch : Int -> Switch -> Int -> Html Msg
-viewSwitch i switch state =
+viewSwitch : Int -> Switch -> Int -> Bool -> Html Msg
+viewSwitch i switch state blocked =
     tr []
         [ td [] [ text (String.fromInt i) ]
         , td []
@@ -302,7 +312,17 @@ viewSwitch i switch state =
                 Just cfg ->
                     viewSwitchRoutes switch.edges cfg
             ]
-        , td [] [ button [ class "btn btn-primary btn-sm", onClick (ChangeSwitch i switch) ] [ text "Change" ] ]
+        , td []
+            [ button
+                [ class "btn btn-primary btn-sm"
+                , if blocked then
+                    disabled True
+
+                  else
+                    onClick (ChangeSwitch i switch)
+                ]
+                [ text "Change" ]
+            ]
         ]
 
 
@@ -323,6 +343,39 @@ viewSwitchRoute maybeEdge =
 
         Just ( from, to ) ->
             String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to
+
+
+getBlockedSwitches : Layout -> Array Int -> List TrainState -> Set Int
+getBlockedSwitches layout switchStates trains =
+    let
+        coveredEdges =
+            trains
+                |> List.map
+                    (\train ->
+                        train.location
+                            |> Maybe.map (\loc -> Layout.tracksBefore loc (Train.length train) layout switchStates)
+                            |> Maybe.withDefault []
+                    )
+                |> List.concat
+                |> List.map (\( from, to, _ ) -> ( from, to ))
+                |> Set.fromList
+    in
+    layout.switches
+        |> Array.toList
+        |> List.indexedMap
+            (\i sw ->
+                ( i
+                , sw.edges
+                    |> Array.toList
+                    |> Set.fromList
+                    |> Set.intersect coveredEdges
+                    |> Set.isEmpty
+                    |> not
+                )
+            )
+        |> List.filter Tuple.second
+        |> List.map Tuple.first
+        |> Set.fromList
 
 
 
