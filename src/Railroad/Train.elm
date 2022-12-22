@@ -3,7 +3,6 @@ module Railroad.Train exposing
     , decoder
     , encode
     , endLocation
-    , initialLocation
     , length
     , move
     , stopped
@@ -237,15 +236,3 @@ orientationDecoder =
                     _ ->
                         Decode.fail "Invalid orientation"
             )
-
-
-
--- Samples
-
-
-initialLocation : Layout.Location
-initialLocation =
-    { edge = ( 0, 1 )
-    , pos = Length.meters 40.0
-    , orientation = Aligned
-    }

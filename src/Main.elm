@@ -25,6 +25,7 @@ import Railroad.Orientation as Orientation
 import Railroad.Switch exposing (Switch)
 import Railroad.Track exposing (Track)
 import Railroad.Train as Train exposing (..)
+import Railroad.Train.Svg
 import Rect
 import Round
 import Speed
@@ -71,9 +72,9 @@ init _ =
     in
     ( { trainState =
             { name = "Happy Train"
-            , composition = [ { length = Length.meters 10 }, { length = Length.meters 10 }, { length = Length.meters 10 } ]
+            , composition = List.repeat 5 { length = Length.meters 10 }
             , speed = Speed.metersPerSecond 10.0
-            , location = Just Train.initialLocation
+            , location = Just { edge = ( 0, 1 ), pos = Length.meters 55.0, orientation = Orientation.Aligned }
             }
       , layout = l
       , switchState = Array.repeat (Array.length l.switches) 0
@@ -191,7 +192,7 @@ view model =
                 )
             ]
             [ Layout.toSvg model.layout model.switchState
-            , g [ id "trains" ] [ viewTrain model.trainState model.layout model.switchState ]
+            , g [ id "trains" ] [ Railroad.Train.Svg.toSvg model.trainState model.layout model.switchState ]
             ]
         , div [ class "row mb-3" ]
             [ div [ class "btn-group", role "group" ]
@@ -257,61 +258,6 @@ view model =
                 ]
             ]
         ]
-
-
-viewTrain : TrainState -> Layout -> Array Int -> Svg Msg
-viewTrain train layout switchState =
-    case train.location of
-        Nothing ->
-            -- Train is nowhere to be seen. TODO Should be off map location.
-            g [] []
-
-        Just loc ->
-            g [ Svg.Attributes.id "train" ]
-                (List.foldl
-                    -- Iterate through the train cars (including engines) and collect the svgs to draw
-                    (\car ( currentLoc, svg ) ->
-                        case Layout.coordsFor currentLoc.pos currentLoc.edge layout of
-                            Nothing ->
-                                ( currentLoc, svg )
-
-                            Just c1 ->
-                                case Train.endLocation car.length layout switchState currentLoc of
-                                    Nothing ->
-                                        -- If the train end fits on no track, draw nothing.
-                                        ( currentLoc, svg )
-
-                                    Just trainEndLocation ->
-                                        case Layout.coordsFor trainEndLocation.pos trainEndLocation.edge layout of
-                                            -- Train end is not on any track.
-                                            Nothing ->
-                                                ( currentLoc, svg )
-
-                                            Just c2 ->
-                                                let
-                                                    p1 =
-                                                        c1 |> Frame2d.originPoint |> Point2d.toRecord Length.inMeters
-
-                                                    p2 =
-                                                        c2 |> Frame2d.originPoint |> Point2d.toRecord Length.inMeters
-                                                in
-                                                ( trainEndLocation
-                                                , line
-                                                    [ x1 (p1.x |> String.fromFloat)
-                                                    , y1 (p1.y |> String.fromFloat)
-                                                    , x2 (p2.x |> String.fromFloat)
-                                                    , y2 (p2.y |> String.fromFloat)
-                                                    , stroke "#3B3332"
-                                                    , strokeWidth "2.990"
-                                                    ]
-                                                    []
-                                                    :: svg
-                                                )
-                    )
-                    ( loc, [] )
-                    train.composition
-                    |> Tuple.second
-                )
 
 
 viewSwitches : Layout -> Array Int -> Html Msg
