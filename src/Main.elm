@@ -36,7 +36,7 @@ main =
 
 
 type alias Model =
-    { trains : Train
+    { trains : List Train
     , layout : Layout
     , switchState : Array Int
     , running : Bool
@@ -68,11 +68,12 @@ init _ =
             Layout.initialLayout
     in
     ( { trains =
-            { name = "Happy Train"
-            , composition = List.repeat 5 { length = Length.meters 10 }
-            , speed = Speed.metersPerSecond 10.0
-            , location = Just { edge = ( 0, 1 ), pos = Length.meters 55.0, orientation = Orientation.Aligned }
-            }
+            [ { name = "Happy Train"
+              , composition = List.repeat 5 { length = Length.meters 10 }
+              , speed = Speed.metersPerSecond 10.0
+              , location = Just { edge = ( 0, 1 ), pos = Length.meters 55.0, orientation = Orientation.Aligned }
+              }
+            ]
       , layout = l
       , switchState = Array.repeat (Array.length l.switches) 0
       , running = False
@@ -151,33 +152,44 @@ update msg model =
 updateTick : Duration -> Model -> Model
 updateTick delta model =
     let
-        newTrainState =
-            Train.move delta model.trains model.layout model.switchState
+        newTrainStates =
+            model.trains
+                |> List.map
+                    (\train ->
+                        let
+                            newTrainState =
+                                Train.move delta train model.layout model.switchState
+                        in
+                        case newTrainState.location of
+                            Nothing ->
+                                -- Train could not move, stop it immediately.
+                                Train.stopped train
+
+                            Just loc ->
+                                let
+                                    invisible =
+                                        Layout.tracksBefore loc (Train.length newTrainState) model.layout model.switchState
+                                            |> List.all
+                                                (\( _, _, t ) ->
+                                                    case t of
+                                                        MapExit ->
+                                                            True
+
+                                                        _ ->
+                                                            False
+                                                )
+                                in
+                                if invisible then
+                                    { newTrainState | location = Nothing }
+
+                                else
+                                    newTrainState
+                    )
     in
-    case newTrainState.location of
-        Nothing ->
-            -- Train could not move, stop it immediately.
-            { model | trains = Train.stopped model.trains, running = False }
-
-        Just loc ->
-            let
-                invisible =
-                    Layout.tracksBefore loc (Train.length newTrainState) model.layout model.switchState
-                        |> List.all
-                            (\( _, _, t ) ->
-                                case t of
-                                    MapExit ->
-                                        True
-
-                                    _ ->
-                                        False
-                            )
-            in
-            if invisible then
-                { model | trains = { newTrainState | location = Nothing } }
-
-            else
-                { model | trains = newTrainState }
+    { model
+        | trains = newTrainStates
+        , running = List.any (\train -> train.speed |> Quantity.greaterThanZero) newTrainStates
+    }
 
 
 
@@ -211,7 +223,7 @@ view model =
                 )
             ]
             [ lazy2 Layout.toSvg model.layout model.switchState
-            , g [ id "trains" ] [ Railroad.Train.Svg.toSvg model.trains model.layout model.switchState ]
+            , g [ id "trains" ] (List.map (\train -> Railroad.Train.Svg.toSvg train model.layout model.switchState) model.trains)
             ]
         , div [ class "row mb-3" ]
             [ div [ class "btn-group col", role "group" ]
@@ -230,63 +242,67 @@ view model =
             , div [ class "col-1" ] [ text (String.fromInt (frameRate model.deltas) ++ " fps") ]
             ]
         , div [ class "row" ]
-            [ div [ class "col" ] [ viewSwitches model.layout model.switchState (getBlockedSwitches model.layout model.switchState [ model.trains ]) ]
+            [ div [ class "col" ] [ viewSwitches model.layout model.switchState (getBlockedSwitches model.layout model.switchState model.trains) ]
             , div [ class "col" ]
-                [ table [ class "table" ]
-                    [ tbody []
-                        [ tr [] [ th [ scope "row" ] [ text "Name" ], td [] [ text model.trains.name ] ]
-                        , tr [] [ th [ scope "row" ] [ text "Length" ], td [] [ text (String.fromFloat (Length.inMeters (Train.length model.trains)) ++ " m") ] ]
-                        , tr []
-                            [ th [ scope "row" ] [ text "Speed" ]
-                            , td []
-                                [ text
-                                    (String.fromFloat (Speed.inMetersPerSecond model.trains.speed)
-                                        ++ " m/s ("
-                                        ++ Round.round 1 (Speed.inKilometersPerHour model.trains.speed)
-                                        ++ " km/h)"
-                                    )
-                                ]
-                            ]
-                        , tr []
-                            [ th [ scope "row" ] [ text "Location" ]
-                            , td []
-                                (case model.trains.location of
-                                    Nothing ->
-                                        [ text "Nowhere" ]
-
-                                    Just loc ->
-                                        [ text
-                                            ("edge ("
-                                                ++ String.fromInt (Tuple.first loc.edge)
-                                                ++ ", "
-                                                ++ String.fromInt (Tuple.second loc.edge)
-                                                ++ ")"
-                                            )
-                                        , br [] []
-                                        , text
-                                            ("pos "
-                                                ++ Round.round 2 (Length.inMeters loc.pos)
-                                                ++ " m"
-                                            )
-                                        , br [] []
-                                        , text (Orientation.toString loc.orientation)
+                (model.trains
+                    |> List.map
+                        (\train ->
+                            table [ class "table" ]
+                                [ tbody []
+                                    [ tr [] [ th [ scope "row" ] [ text "Name" ], td [] [ text train.name ] ]
+                                    , tr [] [ th [ scope "row" ] [ text "Length" ], td [] [ text (String.fromFloat (Length.inMeters (Train.length train)) ++ " m") ] ]
+                                    , tr []
+                                        [ th [ scope "row" ] [ text "Speed" ]
+                                        , td []
+                                            [ text
+                                                (String.fromFloat (Speed.inMetersPerSecond train.speed)
+                                                    ++ " m/s ("
+                                                    ++ Round.round 1 (Speed.inKilometersPerHour train.speed)
+                                                    ++ " km/h)"
+                                                )
+                                            ]
                                         ]
-                                )
-                            ]
-                        , tr []
-                            [ th [ scope "row" ] [ text "Tracks covered" ]
-                            , td []
-                                [ model.trains.location
-                                    |> Maybe.map (\loc -> Layout.tracksBefore loc (Train.length model.trains) model.layout model.switchState)
-                                    |> Maybe.withDefault []
-                                    |> List.map (\( from, to, _ ) -> String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to)
-                                    |> String.join ", "
-                                    |> text
+                                    , tr []
+                                        [ th [ scope "row" ] [ text "Location" ]
+                                        , td []
+                                            (case train.location of
+                                                Nothing ->
+                                                    [ text "Nowhere" ]
+
+                                                Just loc ->
+                                                    [ text
+                                                        ("edge ("
+                                                            ++ String.fromInt (Tuple.first loc.edge)
+                                                            ++ ", "
+                                                            ++ String.fromInt (Tuple.second loc.edge)
+                                                            ++ ")"
+                                                        )
+                                                    , br [] []
+                                                    , text
+                                                        ("pos "
+                                                            ++ Round.round 2 (Length.inMeters loc.pos)
+                                                            ++ " m"
+                                                        )
+                                                    , br [] []
+                                                    , text (Orientation.toString loc.orientation)
+                                                    ]
+                                            )
+                                        ]
+                                    , tr []
+                                        [ th [ scope "row" ] [ text "Tracks covered" ]
+                                        , td []
+                                            [ train.location
+                                                |> Maybe.map (\loc -> Layout.tracksBefore loc (Train.length train) model.layout model.switchState)
+                                                |> Maybe.withDefault []
+                                                |> List.map (\( from, to, _ ) -> String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to)
+                                                |> String.join ", "
+                                                |> text
+                                            ]
+                                        ]
+                                    ]
                                 ]
-                            ]
-                        ]
-                    ]
-                ]
+                        )
+                )
             ]
         ]
 
@@ -430,7 +446,7 @@ modelDecoder =
             , deltas = []
             }
         )
-        (Decode.field "trains" Train.decoder)
+        (Decode.field "trains" (Decode.list Train.decoder))
         (Decode.field "layout" Layout.decoder)
         (Decode.field "switchState" (Decode.array Decode.int))
         |> Decode.andThen
@@ -451,6 +467,6 @@ encodeModel : Model -> Value
 encodeModel model =
     Encode.object
         [ ( "layout", Layout.encode model.layout )
-        , ( "trains", Encode.list Train.encode [ model.trains ] )
+        , ( "trains", Encode.list Train.encode model.trains )
         , ( "switchStates", Encode.array Encode.int model.switchState )
         ]
