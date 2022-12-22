@@ -6310,7 +6310,7 @@ var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$array = _Json_decodeArray;
 var $author$project$Railroad$Layout$decoder = $elm$json$Json$Decode$succeed(
 	{X: $drathier$elm_graph$Graph$empty, bm: $elm$core$Array$empty});
-var $author$project$Railroad$Train$TrainState = F4(
+var $author$project$Railroad$Train$Train = F4(
 	function (name, composition, speed, location) {
 		return {df: composition, a$: location, cz: name, bS: speed};
 	});
@@ -6374,7 +6374,7 @@ var $author$project$Railroad$Train$rollingStockDecoder = A2(
 		A2($elm$json$Json$Decode$field, 'length', $elm$json$Json$Decode$float)));
 var $author$project$Railroad$Train$decoder = A5(
 	$elm$json$Json$Decode$map4,
-	$author$project$Railroad$Train$TrainState,
+	$author$project$Railroad$Train$Train,
 	A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
 	A2(
 		$elm$json$Json$Decode$field,
@@ -6409,7 +6409,7 @@ var $author$project$Main$modelDecoder = A2(
 					B: ts
 				};
 			}),
-		A2($elm$json$Json$Decode$field, 'trainState', $author$project$Railroad$Train$decoder),
+		A2($elm$json$Json$Decode$field, 'trains', $author$project$Railroad$Train$decoder),
 		A2($elm$json$Json$Decode$field, 'layout', $author$project$Railroad$Layout$decoder),
 		A2(
 			$elm$json$Json$Decode$field,
