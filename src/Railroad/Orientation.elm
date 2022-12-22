@@ -1,4 +1,4 @@
-module Railroad.Orientation exposing (Orientation(..), encode, invert)
+module Railroad.Orientation exposing (Orientation(..), encode, invert, toString)
 
 import Json.Encode as Encode exposing (Value)
 
@@ -26,3 +26,13 @@ encode o =
 
         Reversed ->
             Encode.string "reversed"
+
+
+toString : Orientation -> String
+toString o =
+    case o of
+        Aligned ->
+            "Aligned"
+
+        Reversed ->
+            "Reversed"

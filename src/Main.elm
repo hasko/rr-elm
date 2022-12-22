@@ -4,6 +4,7 @@ import Array exposing (Array)
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
 import Dict exposing (Dict)
+import Duration exposing (Duration)
 import File.Download
 import Frame2d
 import Graph exposing (Graph)
@@ -20,6 +21,7 @@ import Length
 import Maybe exposing (withDefault)
 import Point2d
 import Railroad.Layout as Layout exposing (..)
+import Railroad.Orientation as Orientation
 import Railroad.Switch exposing (Switch)
 import Railroad.Track exposing (Track)
 import Railroad.Train as Train exposing (..)
@@ -99,7 +101,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick delta ->
-            updateTick delta model
+            updateTick (Duration.milliseconds delta) model
 
         Toggle ->
             ( { model | running = not model.running }, Cmd.none )
@@ -109,7 +111,7 @@ update msg model =
                 ( model, Cmd.none )
 
             else
-                updateTick 1000.0 model
+                updateTick Duration.second model
 
         Reset ->
             let
@@ -143,7 +145,7 @@ update msg model =
             ( model, encodeModel model |> Encode.encode 0 |> File.Download.string "rr.json" "application/json" )
 
 
-updateTick : Float -> Model -> ( Model, Cmd Msg )
+updateTick : Duration -> Model -> ( Model, Cmd Msg )
 updateTick delta model =
     let
         newTrainState =
@@ -245,6 +247,8 @@ view model =
                                                 ++ Round.round 2 (Length.inMeters loc.pos)
                                                 ++ " m"
                                             )
+                                        , br [] []
+                                        , text (Orientation.toString loc.orientation)
                                         ]
                                 )
                             ]

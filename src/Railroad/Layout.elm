@@ -18,15 +18,13 @@ module Railroad.Layout exposing
 
 import Angle
 import Array exposing (Array)
-import Dict exposing (Dict)
 import Direction2d
 import Frame2d
-import Graph exposing (Graph, getEdgeData, insertEdgeData)
+import Graph exposing (Graph, insertEdgeData)
 import IntDict exposing (IntDict)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
-import List.Extra
 import Maybe exposing (Maybe(..))
 import Point2d
 import Quantity
@@ -162,6 +160,7 @@ previousTrack : Location -> Layout -> Array Int -> Maybe Location
 previousTrack loc layout switchStates =
     let
         ( g, _ ) =
+            -- Only look at usable tracks.
             partitionGraph layout switchStates
 
         ( from, to ) =
@@ -169,29 +168,33 @@ previousTrack loc layout switchStates =
     in
     case loc.orientation of
         Aligned ->
+            -- The train is facing in the same direction as the track.
             let
                 inc =
+                    -- Get all tracks facing into the _from_ node; there should be at most one.
                     g |> List.filter (\( _, t, _ ) -> t == from) |> List.head
 
                 out =
+                    -- Get all tracks facing away from the _from_ node; again, at most one (excluding ours)
                     g |> List.filter (\( f, t, _ ) -> f == from && t /= to) |> List.head
             in
             case ( inc, out ) of
-                ( Just ( f, t, e ), _ ) ->
+                ( Just ( f, t, e ), Nothing ) ->
                     Just
-                        { edge = ( t, from )
+                        { edge = ( f, t )
                         , pos = Track.length e
                         , orientation = Aligned
                         }
 
-                ( _, Just ( f, t, e ) ) ->
+                ( Nothing, Just ( f, t, _ ) ) ->
                     Just
-                        { edge = ( from, t )
+                        { edge = ( f, t )
                         , pos = Quantity.zero
                         , orientation = Reversed
                         }
 
                 ( _, _ ) ->
+                    -- Something is wrong with the layout
                     Nothing
 
         Reversed ->
@@ -203,21 +206,22 @@ previousTrack loc layout switchStates =
                     g |> List.filter (\( f, _, _ ) -> f == to) |> List.head
             in
             case ( inc, out ) of
-                ( Just ( f, t, e ), _ ) ->
+                ( Just ( f, t, e ), Nothing ) ->
                     Just
-                        { edge = ( f, to )
+                        { edge = ( f, t )
                         , pos = Track.length e
-                        , orientation = Reversed
-                        }
-
-                ( _, Just ( f, t, e ) ) ->
-                    Just
-                        { edge = ( to, f )
-                        , pos = Quantity.zero
                         , orientation = Aligned
                         }
 
+                ( Nothing, Just ( f, t, _ ) ) ->
+                    Just
+                        { edge = ( f, t )
+                        , pos = Quantity.zero
+                        , orientation = Reversed
+                        }
+
                 ( _, _ ) ->
+                    -- Something is wrong with the layout
                     Nothing
 
 
@@ -300,7 +304,7 @@ initialLayout =
             |> insertEdgeData 1 2 (CurvedTrack (Length.meters 300.0) (Angle.degrees 15.0))
             |> insertEdgeData 2 4 (CurvedTrack (Length.meters 300) (Angle.degrees -15))
             |> insertEdgeData 1 3 (StraightTrack (Length.meters 77.645))
-            |> insertEdgeData 3 4 (StraightTrack (Length.meters 77.645))
+            |> insertEdgeData 3 5 (StraightTrack (Length.meters 77.645))
     , switches = Array.fromList [ { edges = Array.fromList [ ( 1, 2 ), ( 1, 3 ) ], configs = Array.fromList [ [ 0 ], [ 1 ] ] } ]
     }
 

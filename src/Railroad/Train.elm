@@ -11,7 +11,7 @@ module Railroad.Train exposing
 
 import Array exposing (Array)
 import Dict exposing (Dict)
-import Duration
+import Duration exposing (Duration)
 import Frame2d
 import Graph.Pair exposing (getEdgeData)
 import IntDict exposing (IntDict)
@@ -84,18 +84,18 @@ endLocationRec l correction layout switchState startLoc =
             )
 
 
-move : Float -> TrainState -> Layout -> Array Int -> TrainState
-move millis trainState layout switchState =
+move : Duration -> TrainState -> Layout -> Array Int -> TrainState
+move deltaT trainState layout switchState =
     case trainState.location of
         Nothing ->
-            -- If the train has no location, no need to move.
+            -- TODO If the train has no location, no need to move. Use off-map locations instead.
             trainState
 
         Just loc ->
             -- Calculate new position, disregarding track transitions.
             let
                 distanceTraveled =
-                    trainState.speed |> Quantity.for (Duration.milliseconds millis)
+                    trainState.speed |> Quantity.for deltaT
 
                 -- Consider which way the train is traveling on the track.
                 newPos =
