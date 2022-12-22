@@ -123,18 +123,17 @@ partitionGraph : Layout -> Dict Int Int -> ( G, G )
 partitionGraph layout switchStates =
     let
         inactiveEdges =
-            switchStates
+            Debug.log "SWITCH STATES: " switchStates
                 |> Dict.foldl
                     (\switchId switchState buf ->
                         buf
-                            ++ (layout.switches
-                                    |> Array.get switchId
-                                    |> Maybe.map (\sw -> Switch.inactiveEdges sw switchState)
+                            ++ (Array.get switchId (Debug.log "SWITCHES: " layout.switches)
+                                    |> Maybe.map (\sw -> Switch.inactiveEdges (Debug.log "SWITCH: " sw) switchState)
                                     |> Maybe.withDefault []
                                )
                     )
                     []
-                |> Debug.log "Active edges: "
+                |> Debug.log "Inactive edges: "
     in
     layout.graph
         |> Graph.edgesWithData

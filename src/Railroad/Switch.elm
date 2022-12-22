@@ -25,13 +25,8 @@ activeEdges switch state =
 
 inactiveEdges : Switch -> Int -> List ( Int, Int )
 inactiveEdges switch state =
-    case Array.get state switch.configs of
-        Nothing ->
-            []
-
-        Just edgeIds ->
-            let
-                ae =
-                    activeEdges switch state
-            in
-            switch.edges |> Array.toList |> List.filter (\edge -> List.member edge ae |> not)
+    let
+        ae =
+            activeEdges switch state
+    in
+    switch.edges |> Array.toList |> List.filter (\edge -> List.member edge ae |> not)

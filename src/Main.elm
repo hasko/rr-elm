@@ -73,7 +73,7 @@ init _ =
             , location = Train.initialLocation l
             }
       , layout = l
-      , switchState = Dict.empty
+      , switchState = l.switches |> Array.indexedMap (\i _ -> ( i, 0 )) |> Array.toList |> Dict.fromList
       , running = False
       , flash = Nothing
       }
