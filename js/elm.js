@@ -5639,44 +5639,54 @@ var $elm$core$Basics$negate = function (n) {
 var $author$project$Railroad$Layout$initialLayout = {
 	W: A4(
 		$drathier$elm_graph$Graph$insertEdgeData,
-		5,
-		6,
+		4,
+		1002,
 		$author$project$Railroad$Track$MapExit,
 		A4(
 			$drathier$elm_graph$Graph$insertEdgeData,
-			3,
-			5,
-			$author$project$Railroad$Track$StraightTrack(
-				$ianmackenzie$elm_units$Length$meters(77.645)),
+			0,
+			1001,
+			$author$project$Railroad$Track$MapExit,
 			A4(
 				$drathier$elm_graph$Graph$insertEdgeData,
-				1,
-				3,
-				$author$project$Railroad$Track$StraightTrack(
-					$ianmackenzie$elm_units$Length$meters(77.645)),
+				5,
+				1000,
+				$author$project$Railroad$Track$MapExit,
 				A4(
 					$drathier$elm_graph$Graph$insertEdgeData,
-					2,
-					4,
-					A2(
-						$author$project$Railroad$Track$CurvedTrack,
-						$ianmackenzie$elm_units$Length$meters(300),
-						$ianmackenzie$elm_units$Angle$degrees(-15)),
+					3,
+					5,
+					$author$project$Railroad$Track$StraightTrack(
+						$ianmackenzie$elm_units$Length$meters(77.645)),
 					A4(
 						$drathier$elm_graph$Graph$insertEdgeData,
 						1,
-						2,
-						A2(
-							$author$project$Railroad$Track$CurvedTrack,
-							$ianmackenzie$elm_units$Length$meters(300.0),
-							$ianmackenzie$elm_units$Angle$degrees(15.0)),
+						3,
+						$author$project$Railroad$Track$StraightTrack(
+							$ianmackenzie$elm_units$Length$meters(77.645)),
 						A4(
 							$drathier$elm_graph$Graph$insertEdgeData,
-							0,
-							1,
-							$author$project$Railroad$Track$StraightTrack(
-								$ianmackenzie$elm_units$Length$meters(75.0)),
-							$drathier$elm_graph$Graph$empty)))))),
+							2,
+							4,
+							A2(
+								$author$project$Railroad$Track$CurvedTrack,
+								$ianmackenzie$elm_units$Length$meters(300),
+								$ianmackenzie$elm_units$Angle$degrees(-15)),
+							A4(
+								$drathier$elm_graph$Graph$insertEdgeData,
+								1,
+								2,
+								A2(
+									$author$project$Railroad$Track$CurvedTrack,
+									$ianmackenzie$elm_units$Length$meters(300.0),
+									$ianmackenzie$elm_units$Angle$degrees(15.0)),
+								A4(
+									$drathier$elm_graph$Graph$insertEdgeData,
+									0,
+									1,
+									$author$project$Railroad$Track$StraightTrack(
+										$ianmackenzie$elm_units$Length$meters(75.0)),
+									$drathier$elm_graph$Graph$empty)))))))),
 	bS: $elm$core$Array$fromList(
 		_List_fromArray(
 			[
@@ -8464,6 +8474,25 @@ var $author$project$Railroad$Layout$toSvg = F2(
 				A3($author$project$Railroad$Layout$tracksToSvg, allFrames, false, unusableEdges),
 				A3($author$project$Railroad$Layout$tracksToSvg, allFrames, true, usableEdges)));
 	});
+var $author$project$Railroad$Train$Svg$carToSvg = F2(
+	function (p1, p2) {
+		return A2(
+			$elm$svg$Svg$line,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$x1(
+					$elm$core$String$fromFloat(p1.bX)),
+					$elm$svg$Svg$Attributes$y1(
+					$elm$core$String$fromFloat(p1.bY)),
+					$elm$svg$Svg$Attributes$x2(
+					$elm$core$String$fromFloat(p2.bX)),
+					$elm$svg$Svg$Attributes$y2(
+					$elm$core$String$fromFloat(p2.bY)),
+					$elm$svg$Svg$Attributes$stroke('#3B3332'),
+					$elm$svg$Svg$Attributes$strokeWidth('2.990')
+				]),
+			_List_Nil);
+	});
 var $author$project$Railroad$Layout$coordsFor = F3(
 	function (pos, _v0, layout) {
 		var fromNode = _v0.a;
@@ -8587,6 +8616,7 @@ var $author$project$Railroad$Train$Svg$toSvg = F3(
 						function (car, _v1) {
 							var currentLoc = _v1.a;
 							var svg = _v1.b;
+							var maybeTrack1 = A2($author$project$Railroad$Layout$trackAt, currentLoc.bn, layout);
 							var _v2 = A3($author$project$Railroad$Layout$coordsFor, currentLoc.cG, currentLoc.bn, layout);
 							if (_v2.$ === 1) {
 								return _Utils_Tuple2(currentLoc, svg);
@@ -8597,6 +8627,7 @@ var $author$project$Railroad$Train$Svg$toSvg = F3(
 									return _Utils_Tuple2(currentLoc, svg);
 								} else {
 									var trainEndLocation = _v3.a;
+									var maybeTrack2 = A2($author$project$Railroad$Layout$trackAt, trainEndLocation.bn, layout);
 									var _v4 = A3($author$project$Railroad$Layout$coordsFor, trainEndLocation.cG, trainEndLocation.bn, layout);
 									if (_v4.$ === 1) {
 										return _Utils_Tuple2(currentLoc, svg);
@@ -8610,27 +8641,24 @@ var $author$project$Railroad$Train$Svg$toSvg = F3(
 											$ianmackenzie$elm_geometry$Point2d$toRecord,
 											$ianmackenzie$elm_units$Length$inMeters,
 											$ianmackenzie$elm_geometry$Frame2d$originPoint(c1));
-										return _Utils_Tuple2(
-											trainEndLocation,
-											A2(
-												$elm$core$List$cons,
+										var _v5 = _Utils_Tuple2(maybeTrack1, maybeTrack2);
+										if ((((!_v5.a.$) && (_v5.a.a.$ === 2)) && (!_v5.b.$)) && (_v5.b.a.$ === 2)) {
+											var _v6 = _v5.a.a;
+											var _v7 = _v5.b.a;
+											return _Utils_eq(currentLoc.bn, trainEndLocation.bn) ? _Utils_Tuple2(trainEndLocation, svg) : _Utils_Tuple2(
+												trainEndLocation,
 												A2(
-													$elm$svg$Svg$line,
-													_List_fromArray(
-														[
-															$elm$svg$Svg$Attributes$x1(
-															$elm$core$String$fromFloat(p1.bX)),
-															$elm$svg$Svg$Attributes$y1(
-															$elm$core$String$fromFloat(p1.bY)),
-															$elm$svg$Svg$Attributes$x2(
-															$elm$core$String$fromFloat(p2.bX)),
-															$elm$svg$Svg$Attributes$y2(
-															$elm$core$String$fromFloat(p2.bY)),
-															$elm$svg$Svg$Attributes$stroke('#3B3332'),
-															$elm$svg$Svg$Attributes$strokeWidth('2.990')
-														]),
-													_List_Nil),
-												svg));
+													$elm$core$List$cons,
+													A2($author$project$Railroad$Train$Svg$carToSvg, p1, p2),
+													svg));
+										} else {
+											return _Utils_Tuple2(
+												trainEndLocation,
+												A2(
+													$elm$core$List$cons,
+													A2($author$project$Railroad$Train$Svg$carToSvg, p1, p2),
+													svg));
+										}
 									}
 								}
 							}
