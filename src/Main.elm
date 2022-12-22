@@ -9,7 +9,7 @@ import Html exposing (Html, a, br, button, div, li, nav, span, table, tbody, td,
 import Html.Attributes exposing (attribute, class, disabled, href, scope, style, type_)
 import Html.Entity
 import Html.Events exposing (onClick)
-import Html.Lazy exposing (lazy, lazy2)
+import Html.Lazy exposing (lazy2)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length
@@ -253,6 +253,17 @@ view model =
                                         , text (Orientation.toString loc.orientation)
                                         ]
                                 )
+                            ]
+                        , tr []
+                            [ th [ scope "row" ] [ text "Tracks covered" ]
+                            , td []
+                                [ model.trainState.location
+                                    |> Maybe.map (\loc -> Layout.tracksBefore loc (Train.length model.trainState) model.layout model.switchState)
+                                    |> Maybe.withDefault []
+                                    |> List.map (\( from, to, track ) -> String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to)
+                                    |> String.join ", "
+                                    |> text
+                                ]
                             ]
                         ]
                     ]

@@ -9,11 +9,8 @@ module Railroad.Train exposing
     )
 
 import Array exposing (Array)
-import Dict exposing (Dict)
 import Duration exposing (Duration)
 import Frame2d
-import Graph.Pair exposing (getEdgeData)
-import IntDict exposing (IntDict)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)

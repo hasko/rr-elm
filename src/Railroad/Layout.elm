@@ -14,6 +14,8 @@ module Railroad.Layout exposing
     , toGraph
     , toSvg
     , trackAt
+    , tracksAhead
+    , tracksBefore
     )
 
 import Angle
@@ -60,6 +62,46 @@ type alias Location =
 trackAt : ( Int, Int ) -> Layout -> Maybe Track
 trackAt ( from, to ) layout =
     Graph.getEdgeData from to layout.graph
+
+
+
+{- Return the edges ahead from a given position, considering switch states, up to a given cut-off distance. -}
+
+
+tracksAhead : Location -> Length -> Layout -> Array Int -> List Edge
+tracksAhead loc cutoff layout switchStates =
+    case trackAt loc.edge layout of
+        Nothing ->
+            []
+
+        Just currentTrack ->
+            let
+                newCutoff =
+                    case loc.orientation of
+                        Aligned ->
+                            cutoff |> Quantity.minus (Track.length currentTrack) |> Quantity.plus loc.pos
+
+                        Reversed ->
+                            cutoff |> Quantity.minus loc.pos
+
+                res =
+                    ( Tuple.first loc.edge, Tuple.second loc.edge, currentTrack )
+            in
+            if newCutoff |> Quantity.lessThanOrEqualToZero then
+                [ res ]
+
+            else
+                case nextTrack loc layout switchStates of
+                    Nothing ->
+                        [ res ]
+
+                    Just theNextTrack ->
+                        res :: tracksAhead theNextTrack newCutoff layout switchStates
+
+
+tracksBefore : Location -> Length -> Layout -> Array Int -> List Edge
+tracksBefore loc cutoff layout switchStates =
+    tracksAhead { loc | orientation = Orientation.invert loc.orientation } cutoff layout switchStates |> List.reverse
 
 
 cursors : Layout -> IntDict Frame
