@@ -25,6 +25,7 @@ import Graph exposing (Graph, getEdgeData, insertEdgeData)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
+import List.Extra
 import Maybe exposing (Maybe(..))
 import Point2d
 import Quantity
@@ -119,21 +120,20 @@ coordsFor pos ( fromNode, toNode ) layout =
 
 {-| Split the layout in a traversable graph and a non-traversable, based on the current switch state.
 -}
-partitionGraph : Layout -> Dict Int Int -> ( G, G )
+partitionGraph : Layout -> Dict Int Int -> ( List ( Int, Int, Track ), List ( Int, Int, Track ) )
 partitionGraph layout switchStates =
     let
         inactiveEdges =
-            Debug.log "SWITCH STATES: " switchStates
+            switchStates
                 |> Dict.foldl
                     (\switchId switchState buf ->
                         buf
-                            ++ (Array.get switchId (Debug.log "SWITCHES: " layout.switches)
-                                    |> Maybe.map (\sw -> Switch.inactiveEdges (Debug.log "SWITCH: " sw) switchState)
+                            ++ (Array.get switchId layout.switches
+                                    |> Maybe.map (\sw -> Switch.inactiveEdges sw switchState)
                                     |> Maybe.withDefault []
                                )
                     )
                     []
-                |> Debug.log "Inactive edges: "
     in
     layout.graph
         |> Graph.edgesWithData
@@ -146,12 +146,12 @@ partitionGraph layout switchStates =
 
                     Just edgeData ->
                         if List.member ( from, to ) inactiveEdges then
-                            ( Graph.removeEdge from to usable, Graph.insertEdgeData from to edgeData unusable )
+                            ( usable, ( from, to, edgeData ) :: unusable )
 
                         else
-                            ( usable, unusable )
+                            ( ( from, to, edgeData ) :: usable, unusable )
             )
-            ( layout.graph, Graph.empty )
+            ( [], [] )
 
 
 previousTrack : Location -> Layout -> Dict Int Int -> Maybe Location
@@ -167,22 +167,22 @@ previousTrack loc layout switchStates =
         Aligned ->
             let
                 inc =
-                    Graph.incoming from g |> Set.toList
+                    g |> List.filter (\( _, t, _ ) -> t == from) |> List.head
 
                 out =
-                    Graph.outgoing from g |> Set.remove to |> Set.toList
+                    g |> List.filter (\( f, t, _ ) -> f == from && t /= to) |> List.head
             in
             case ( inc, out ) of
-                ( e :: _, _ ) ->
+                ( Just ( f, t, e ), _ ) ->
                     Just
-                        { edge = ( e, from )
-                        , pos = Graph.getEdgeData e from g |> Maybe.map Track.length |> Maybe.withDefault Quantity.zero
+                        { edge = ( t, from )
+                        , pos = Track.length e
                         , orientation = Aligned
                         }
 
-                ( _, e :: _ ) ->
+                ( _, Just ( f, t, e ) ) ->
                     Just
-                        { edge = ( from, e )
+                        { edge = ( from, t )
                         , pos = Quantity.zero
                         , orientation = Reversed
                         }
@@ -193,22 +193,22 @@ previousTrack loc layout switchStates =
         Reversed ->
             let
                 inc =
-                    Graph.incoming to g |> Set.remove from |> Set.toList
+                    g |> List.filter (\( f, t, _ ) -> t == to && f /= from) |> List.head
 
                 out =
-                    Graph.outgoing to g |> Set.toList
+                    g |> List.filter (\( f, _, _ ) -> f == to) |> List.head
             in
             case ( inc, out ) of
-                ( e :: _, _ ) ->
+                ( Just ( f, t, e ), _ ) ->
                     Just
-                        { edge = ( e, to )
-                        , pos = Graph.getEdgeData e to g |> Maybe.map Track.length |> Maybe.withDefault Quantity.zero
+                        { edge = ( f, to )
+                        , pos = Track.length e
                         , orientation = Reversed
                         }
 
-                ( _, e :: _ ) ->
+                ( _, Just ( f, t, e ) ) ->
                     Just
-                        { edge = ( to, e )
+                        { edge = ( to, f )
                         , pos = Quantity.zero
                         , orientation = Aligned
                         }
@@ -237,47 +237,50 @@ toSvg layout switchStates =
         allFrames =
             cursors layout
 
-        ( usableEdges, _ ) =
+        ( usableEdges, unusableEdges ) =
             partitionGraph layout switchStates
     in
     Svg.g [ Svg.Attributes.id "layout" ]
-        (Graph.edgesWithData layout.graph
-            |> List.map
-                (\( from, to, maybeTrack ) ->
-                    let
-                        trackId =
-                            "track-" ++ String.fromInt from ++ "-" ++ String.fromInt to
+        (tracksToSvg allFrames False unusableEdges ++ tracksToSvg allFrames True usableEdges)
 
-                        maybeRef =
-                            Dict.get from allFrames
-                    in
-                    case ( maybeTrack, maybeRef ) of
-                        ( Just track, Just ref ) ->
-                            let
-                                refP =
-                                    ref |> Frame2d.originPoint |> Point2d.toRecord Length.inMeters
 
-                                refA =
-                                    ref |> Frame2d.xDirection |> Direction2d.toAngle |> Angle.inDegrees
-                            in
-                            Svg.g
-                                [ id trackId
-                                , Svg.Attributes.transform
-                                    ("translate("
-                                        ++ String.fromFloat refP.x
-                                        ++ ","
-                                        ++ String.fromFloat refP.y
-                                        ++ ") rotate("
-                                        ++ String.fromFloat refA
-                                        ++ ")"
-                                    )
-                                ]
-                                (Track.toSvg track (Graph.memberEdge ( from, to ) usableEdges))
+tracksToSvg allFrames enabled tuples =
+    tuples
+        |> List.map
+            (\( from, to, track ) ->
+                let
+                    trackId =
+                        "track-" ++ String.fromInt from ++ "-" ++ String.fromInt to
 
-                        _ ->
-                            Svg.g [ id trackId ] []
-                )
-        )
+                    maybeRef =
+                        Dict.get from allFrames
+                in
+                case maybeRef of
+                    Just ref ->
+                        let
+                            refP =
+                                ref |> Frame2d.originPoint |> Point2d.toRecord Length.inMeters
+
+                            refA =
+                                ref |> Frame2d.xDirection |> Direction2d.toAngle |> Angle.inDegrees
+                        in
+                        Svg.g
+                            [ id trackId
+                            , Svg.Attributes.transform
+                                ("translate("
+                                    ++ String.fromFloat refP.x
+                                    ++ ","
+                                    ++ String.fromFloat refP.y
+                                    ++ ") rotate("
+                                    ++ String.fromFloat refA
+                                    ++ ")"
+                                )
+                            ]
+                            (Track.toSvg track enabled)
+
+                    Nothing ->
+                        Svg.g [ id trackId ] []
+            )
 
 
 

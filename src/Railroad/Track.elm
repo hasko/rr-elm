@@ -136,7 +136,7 @@ toSvg track active =
                 "gray"
 
             else
-                "crimson"
+                "lightGray"
     in
     [ case track of
         StraightTrack _ ->
