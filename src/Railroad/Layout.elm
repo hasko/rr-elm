@@ -21,7 +21,7 @@ import Array exposing (Array)
 import Dict exposing (Dict)
 import Direction2d
 import Frame2d
-import Graph exposing (Graph, insertEdgeData)
+import Graph exposing (Graph, getEdgeData, insertEdgeData)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
@@ -292,7 +292,8 @@ initialLayout =
             |> insertEdgeData 0 1 (StraightTrack (Length.meters 75.0))
             |> insertEdgeData 1 2 (CurvedTrack (Length.meters 300.0) (Angle.degrees 15.0))
             |> insertEdgeData 2 4 (CurvedTrack (Length.meters 300) (Angle.degrees -15))
-            |> insertEdgeData 1 3 (StraightTrack (Length.meters 75.0))
+            |> insertEdgeData 1 3 (StraightTrack (Length.meters 77.645))
+            |> insertEdgeData 3 4 (StraightTrack (Length.meters 77.645))
     , switches = Array.fromList [ { edges = Array.fromList [ ( 1, 2 ), ( 1, 3 ) ], configs = Array.fromList [ [ 0 ], [ 1 ] ] } ]
     }
 
