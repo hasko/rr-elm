@@ -5708,12 +5708,18 @@ var $author$project$Railroad$Layout$initialLayout = {
 			}
 			]))
 };
+var $ianmackenzie$elm_units$Constants$second = 1;
+var $ianmackenzie$elm_units$Constants$minute = 60 * $ianmackenzie$elm_units$Constants$second;
+var $ianmackenzie$elm_units$Constants$hour = 60 * $ianmackenzie$elm_units$Constants$minute;
+var $ianmackenzie$elm_units$Speed$metersPerSecond = function (numMetersPerSecond) {
+	return numMetersPerSecond;
+};
+var $ianmackenzie$elm_units$Speed$kilometersPerHour = function (numKilometersPerHour) {
+	return $ianmackenzie$elm_units$Speed$metersPerSecond((numKilometersPerHour * 1000) / $ianmackenzie$elm_units$Constants$hour);
+};
 var $elm$core$Array$length = function (_v0) {
 	var len = _v0.a;
 	return len;
-};
-var $ianmackenzie$elm_units$Speed$metersPerSecond = function (numMetersPerSecond) {
-	return numMetersPerSecond;
 };
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
@@ -5775,7 +5781,7 @@ var $author$project$Main$init = function (_v0) {
 							cH: $ianmackenzie$elm_units$Length$meters(55.0)
 						}),
 					cz: 'Happy Train',
-					bm: $ianmackenzie$elm_units$Speed$metersPerSecond(10.0)
+					bm: $ianmackenzie$elm_units$Speed$kilometersPerHour(40.0)
 				}
 				])
 		},
@@ -8232,9 +8238,6 @@ var $elm$html$Html$Attributes$href = function (url) {
 		_VirtualDom_noJavaScriptUri(url));
 };
 var $elm$svg$Svg$Attributes$id = _VirtualDom_attribute('id');
-var $ianmackenzie$elm_units$Constants$second = 1;
-var $ianmackenzie$elm_units$Constants$minute = 60 * $ianmackenzie$elm_units$Constants$second;
-var $ianmackenzie$elm_units$Constants$hour = 60 * $ianmackenzie$elm_units$Constants$minute;
 var $ianmackenzie$elm_units$Speed$inKilometersPerHour = function (speed) {
 	return ($ianmackenzie$elm_units$Constants$hour * $ianmackenzie$elm_units$Speed$inMetersPerSecond(speed)) * 0.001;
 };
@@ -9562,7 +9565,9 @@ var $author$project$Main$view = function (model) {
 															_List_fromArray(
 																[
 																	$elm$html$Html$text(
-																	$elm$core$String$fromFloat(
+																	A2(
+																		$myrho$elm_round$Round$round,
+																		1,
 																		$ianmackenzie$elm_units$Speed$inMetersPerSecond(train.bm)) + (' m/s (' + (A2(
 																		$myrho$elm_round$Round$round,
 																		1,
