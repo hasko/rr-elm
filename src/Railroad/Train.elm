@@ -85,7 +85,7 @@ endLocationRec l correction layout switchState startLoc =
 
 
 move : Duration -> TrainState -> Layout -> Array Int -> TrainState
-move deltaT trainState layout switchState =
+move delta trainState layout switchState =
     case trainState.location of
         Nothing ->
             -- TODO If the train has no location, no need to move. Use off-map locations instead.
@@ -95,7 +95,7 @@ move deltaT trainState layout switchState =
             -- Calculate new position, disregarding track transitions.
             let
                 distanceTraveled =
-                    trainState.speed |> Quantity.for deltaT
+                    trainState.speed |> Quantity.for delta
 
                 -- Consider which way the train is traveling on the track.
                 newPos =
