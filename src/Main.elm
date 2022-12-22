@@ -3,10 +3,8 @@ port module Main exposing (Msg(..), main)
 import Array exposing (Array)
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
-import Dict exposing (Dict)
 import Duration exposing (Duration)
 import File.Download
-import Graph
 import Html exposing (Html, a, br, button, div, li, nav, span, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (attribute, class, disabled, href, scope, style, type_)
 import Html.Entity
@@ -16,6 +14,7 @@ import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length
 import Maybe exposing (withDefault)
+import Quantity
 import Railroad.Layout as Layout exposing (..)
 import Railroad.Orientation as Orientation
 import Railroad.Switch exposing (Switch)
@@ -40,6 +39,7 @@ type alias Model =
     , switchState : Array Int
     , running : Bool
     , flash : Maybe String
+    , deltas : List Duration
     }
 
 
@@ -75,6 +75,7 @@ init _ =
       , switchState = Array.repeat (Array.length l.switches) 0
       , running = False
       , flash = Nothing
+      , deltas = []
       }
     , Cmd.none
     )
@@ -97,7 +98,11 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick delta ->
-            updateTick (Duration.milliseconds delta) model
+            let
+                d =
+                    Duration.milliseconds delta
+            in
+            ( updateTick d { model | deltas = d :: model.deltas |> List.take 100 }, Cmd.none )
 
         Toggle ->
             ( { model | running = not model.running }, Cmd.none )
@@ -107,7 +112,7 @@ update msg model =
                 ( model, Cmd.none )
 
             else
-                updateTick Duration.second model
+                ( updateTick Duration.second model, Cmd.none )
 
         Reset ->
             let
@@ -141,7 +146,7 @@ update msg model =
             ( model, encodeModel model |> Encode.encode 0 |> File.Download.string "rr.json" "application/json" )
 
 
-updateTick : Duration -> Model -> ( Model, Cmd Msg )
+updateTick : Duration -> Model -> Model
 updateTick delta model =
     let
         newTrainState =
@@ -150,10 +155,10 @@ updateTick delta model =
     case newTrainState.location of
         Nothing ->
             -- Train could not move, stop it immediately.
-            ( { model | trainState = Train.stopped model.trainState, running = False }, Cmd.none )
+            { model | trainState = Train.stopped model.trainState, running = False }
 
         Just _ ->
-            ( { model | trainState = newTrainState }, Cmd.none )
+            { model | trainState = newTrainState }
 
 
 
@@ -186,11 +191,11 @@ view model =
                     |> Rect.rectToString
                 )
             ]
-            [ Layout.toSvg model.layout model.switchState
+            [ lazy2 Layout.toSvg model.layout model.switchState
             , g [ id "trains" ] [ Railroad.Train.Svg.toSvg model.trainState model.layout model.switchState ]
             ]
         , div [ class "row mb-3" ]
-            [ div [ class "btn-group", role "group" ]
+            [ div [ class "btn-group col", role "group" ]
                 [ button [ class "btn btn-primary me-3", onClick Toggle ]
                     [ text
                         (if model.running then
@@ -203,6 +208,7 @@ view model =
                 , button [ class "btn btn-secondary me-3", onClick Step, disabled model.running ] [ text "Step (1s)" ]
                 , button [ class "btn btn-secondary", onClick Reset ] [ text "Reset" ]
                 ]
+            , div [ class "col-1" ] [ text (String.fromInt (frameRate model.deltas) ++ " fps") ]
             ]
         , div [ class "row" ]
             [ div [ class "col" ] [ lazy2 viewSwitches model.layout model.switchState ]
@@ -317,6 +323,15 @@ role r =
     Html.Attributes.attribute "role" r
 
 
+frameRate : List Duration -> Int
+frameRate deltas =
+    let
+        avg =
+            deltas |> Quantity.sum |> Duration.inSeconds
+    in
+    round (toFloat (List.length deltas) / avg)
+
+
 
 --- JSON ---
 
@@ -330,6 +345,7 @@ modelDecoder =
             , switchState = sws
             , running = False
             , flash = Just "Loaded successfully"
+            , deltas = []
             }
         )
         (Decode.field "trainState" Train.decoder)
