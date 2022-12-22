@@ -16,7 +16,7 @@ import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
 import Point2d
 import Quantity
-import Railroad.Layout as Layout exposing (Layout, nextTrack, previousTrack)
+import Railroad.Layout as Layout exposing (Layout, Location, nextTrack, previousTrack)
 import Railroad.Orientation exposing (Orientation(..))
 import Railroad.Track as Track
 import Speed exposing (Speed)
@@ -26,7 +26,7 @@ type alias Train =
     { name : String
     , composition : List RollingStock
     , speed : Speed
-    , location : Maybe Layout.Location
+    , location : Maybe Location
     }
 
 
@@ -39,12 +39,12 @@ length train =
     List.map .length train.composition |> Quantity.sum
 
 
-endLocation : Length -> Layout -> Array Int -> Layout.Location -> Maybe Layout.Location
+endLocation : Length -> Layout -> Array Int -> Location -> Maybe Location
 endLocation l layout switchState startLoc =
     endLocationRec l Quantity.zero layout switchState startLoc
 
 
-endLocationRec : Length -> Length -> Layout -> Array Int -> Layout.Location -> Maybe Layout.Location
+endLocationRec : Length -> Length -> Layout -> Array Int -> Location -> Maybe Location
 endLocationRec l correction layout switchState startLoc =
     Layout.coordsFor startLoc.pos startLoc.edge layout
         |> Maybe.map Frame2d.originPoint
@@ -113,7 +113,7 @@ move delta trainState layout switchState =
             }
 
 
-normalizeLocation : Layout -> Array Int -> Layout.Location -> Maybe Layout.Location
+normalizeLocation : Layout -> Array Int -> Location -> Maybe Location
 normalizeLocation layout switchState loc =
     case Layout.trackAt loc.edge layout of
         Just track ->
