@@ -9,8 +9,8 @@ module Railroad.Layout exposing
     , initialLayout
     , locationDecoder
     , nextTrack
+    , partitionGraph
     , previousTrack
-    , pruneGraph
     , toGraph
     , toSvg
     , trackAt
@@ -39,7 +39,11 @@ import Svg.Attributes exposing (id)
 
 
 type alias Layout =
-    { graph : Graph Int () Track, switches : Array Switch }
+    { graph : G, switches : Array Switch }
+
+
+type alias G =
+    Graph Int () Track
 
 
 type alias Location =
@@ -113,39 +117,49 @@ coordsFor pos ( fromNode, toNode ) layout =
             )
 
 
-{-| Evaluate the current switch state and elminate all unusable edges from the layout graph, if the third parameter is True.
-This results in the graph that is currently traversable by trains. Returns only the unusable edges if the third parameter is False.
+{-| Split the layout in a traversable graph and a non-traversable, based on the current switch state.
 -}
-pruneGraph : Layout -> Dict Int Int -> ( Graph Int () Track, Graph Int () Track )
-pruneGraph layout switchStates =
-    switchStates
-        |> Dict.foldl
-            (\switchId currentState buf ->
-                case Array.get switchId layout.switches of
-                    Nothing ->
+partitionGraph : Layout -> Dict Int Int -> ( G, G )
+partitionGraph layout switchStates =
+    let
+        inactiveEdges =
+            switchStates
+                |> Dict.foldl
+                    (\switchId switchState buf ->
                         buf
+                            ++ (layout.switches
+                                    |> Array.get switchId
+                                    |> Maybe.map (\sw -> Switch.inactiveEdges sw switchState)
+                                    |> Maybe.withDefault []
+                               )
+                    )
+                    []
+                |> Debug.log "Active edges: "
+    in
+    layout.graph
+        |> Graph.edgesWithData
+        |> List.foldl
+            (\( from, to, maybeData ) ( usable, unusable ) ->
+                case maybeData of
+                    Nothing ->
+                        -- This should never happen.
+                        ( usable, unusable )
 
-                    Just sw ->
-                        Switch.activeEdges sw currentState
-                            |> List.foldl
-                                (\( from, to ) ( usable, unusable ) ->
-                                    case Graph.getEdgeData from to unusable of
-                                        Nothing ->
-                                            ( usable, unusable )
+                    Just edgeData ->
+                        if List.member ( from, to ) inactiveEdges then
+                            ( Graph.removeEdge from to usable, Graph.insertEdgeData from to edgeData unusable )
 
-                                        Just e ->
-                                            ( Graph.insertEdgeData from to e usable, Graph.removeEdge from to unusable )
-                                )
-                                buf
+                        else
+                            ( usable, unusable )
             )
-            ( Graph.empty, layout.graph )
+            ( layout.graph, Graph.empty )
 
 
 previousTrack : Location -> Layout -> Dict Int Int -> Maybe Location
 previousTrack loc layout switchStates =
     let
         ( g, _ ) =
-            pruneGraph layout switchStates
+            partitionGraph layout switchStates
 
         ( from, to ) =
             loc.edge
@@ -224,8 +238,8 @@ toSvg layout switchStates =
         allFrames =
             cursors layout
 
-        ( usableEdges, unusableEdges ) =
-            pruneGraph layout switchStates
+        ( usableEdges, _ ) =
+            partitionGraph layout switchStates
     in
     Svg.g [ Svg.Attributes.id "layout" ]
         (Graph.edgesWithData layout.graph
@@ -278,14 +292,13 @@ initialLayout =
             |> insertEdgeData 0 1 (StraightTrack (Length.meters 75.0))
             |> insertEdgeData 1 2 (CurvedTrack (Length.meters 300.0) (Angle.degrees 15.0))
             |> insertEdgeData 2 4 (CurvedTrack (Length.meters 300) (Angle.degrees -15))
-            -- CCW
             |> insertEdgeData 1 3 (StraightTrack (Length.meters 75.0))
     , switches = Array.fromList [ { edges = Array.fromList [ ( 1, 2 ), ( 1, 3 ) ], configs = Array.fromList [ [ 0 ], [ 1 ] ] } ]
     }
 
 
 
--- TODO: Refactor so we don't need to expose the Graph.
+-- TODO: Refactor so we don't need to expose the Graph. Only used for the starting location of the train. Having map exits should fix that.
 
 
 toGraph : Layout -> Graph Int () Track

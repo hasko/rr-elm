@@ -187,7 +187,7 @@ view model =
                     |> Rect.rectToString
                 )
             ]
-            [ lazy2 Layout.toSvg model.layout model.switchState
+            [ Layout.toSvg model.layout model.switchState
             , g [ id "trains" ] [ viewTrain model.trainState model.layout model.switchState ]
             ]
         , div [ class "row mb-3" ]

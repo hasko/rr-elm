@@ -7,7 +7,6 @@ The current state of the switch is managed elsewhere to cleanly separate the sta
 
 import Array exposing (Array)
 import Maybe.Extra
-import Set
 
 
 type alias Switch =
@@ -26,15 +25,13 @@ activeEdges switch state =
 
 inactiveEdges : Switch -> Int -> List ( Int, Int )
 inactiveEdges switch state =
-    -- TODO doesn't work, fix
     case Array.get state switch.configs of
         Nothing ->
             []
 
         Just edgeIds ->
-            List.range 0 (Array.length switch.edges - 1)
-                |> Set.fromList
-                |> Set.diff (Set.fromList edgeIds)
-                |> Set.toList
-                |> List.map (\eid -> Array.get eid switch.edges)
-                |> Maybe.Extra.values
+            let
+                ae =
+                    activeEdges switch state
+            in
+            switch.edges |> Array.toList |> List.filter (\edge -> List.member edge ae |> not)
