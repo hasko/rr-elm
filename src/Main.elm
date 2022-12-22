@@ -35,7 +35,7 @@ main =
 
 
 type alias Model =
-    { trainState : TrainState
+    { trains : Train
     , layout : Layout
     , switchState : Array Int
     , running : Bool
@@ -66,7 +66,7 @@ init _ =
         l =
             Layout.initialLayout
     in
-    ( { trainState =
+    ( { trains =
             { name = "Happy Train"
             , composition = List.repeat 5 { length = Length.meters 10 }
             , speed = Speed.metersPerSecond 10.0
@@ -151,15 +151,15 @@ updateTick : Duration -> Model -> Model
 updateTick delta model =
     let
         newTrainState =
-            Train.move delta model.trainState model.layout model.switchState
+            Train.move delta model.trains model.layout model.switchState
     in
     case newTrainState.location of
         Nothing ->
             -- Train could not move, stop it immediately.
-            { model | trainState = Train.stopped model.trainState, running = False }
+            { model | trains = Train.stopped model.trains, running = False }
 
         Just _ ->
-            { model | trainState = newTrainState }
+            { model | trains = newTrainState }
 
 
 
@@ -193,7 +193,7 @@ view model =
                 )
             ]
             [ lazy2 Layout.toSvg model.layout model.switchState
-            , g [ id "trains" ] [ Railroad.Train.Svg.toSvg model.trainState model.layout model.switchState ]
+            , g [ id "trains" ] [ Railroad.Train.Svg.toSvg model.trains model.layout model.switchState ]
             ]
         , div [ class "row mb-3" ]
             [ div [ class "btn-group col", role "group" ]
@@ -212,19 +212,19 @@ view model =
             , div [ class "col-1" ] [ text (String.fromInt (frameRate model.deltas) ++ " fps") ]
             ]
         , div [ class "row" ]
-            [ div [ class "col" ] [ viewSwitches model.layout model.switchState (getBlockedSwitches model.layout model.switchState [ model.trainState ]) ]
+            [ div [ class "col" ] [ viewSwitches model.layout model.switchState (getBlockedSwitches model.layout model.switchState [ model.trains ]) ]
             , div [ class "col" ]
                 [ table [ class "table" ]
                     [ tbody []
-                        [ tr [] [ th [ scope "row" ] [ text "Name" ], td [] [ text model.trainState.name ] ]
-                        , tr [] [ th [ scope "row" ] [ text "Length" ], td [] [ text (String.fromFloat (Length.inMeters (Train.length model.trainState)) ++ " m") ] ]
+                        [ tr [] [ th [ scope "row" ] [ text "Name" ], td [] [ text model.trains.name ] ]
+                        , tr [] [ th [ scope "row" ] [ text "Length" ], td [] [ text (String.fromFloat (Length.inMeters (Train.length model.trains)) ++ " m") ] ]
                         , tr []
                             [ th [ scope "row" ] [ text "Speed" ]
                             , td []
                                 [ text
-                                    (String.fromFloat (Speed.inMetersPerSecond model.trainState.speed)
+                                    (String.fromFloat (Speed.inMetersPerSecond model.trains.speed)
                                         ++ " m/s ("
-                                        ++ Round.round 1 (Speed.inKilometersPerHour model.trainState.speed)
+                                        ++ Round.round 1 (Speed.inKilometersPerHour model.trains.speed)
                                         ++ " km/h)"
                                     )
                                 ]
@@ -232,7 +232,7 @@ view model =
                         , tr []
                             [ th [ scope "row" ] [ text "Location" ]
                             , td []
-                                (case model.trainState.location of
+                                (case model.trains.location of
                                     Nothing ->
                                         [ text "Nowhere" ]
 
@@ -258,8 +258,8 @@ view model =
                         , tr []
                             [ th [ scope "row" ] [ text "Tracks covered" ]
                             , td []
-                                [ model.trainState.location
-                                    |> Maybe.map (\loc -> Layout.tracksBefore loc (Train.length model.trainState) model.layout model.switchState)
+                                [ model.trains.location
+                                    |> Maybe.map (\loc -> Layout.tracksBefore loc (Train.length model.trains) model.layout model.switchState)
                                     |> Maybe.withDefault []
                                     |> List.map (\( from, to, _ ) -> String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to)
                                     |> String.join ", "
@@ -345,7 +345,7 @@ viewSwitchRoute maybeEdge =
             String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to
 
 
-getBlockedSwitches : Layout -> Array Int -> List TrainState -> Set Int
+getBlockedSwitches : Layout -> Array Int -> List Train -> Set Int
 getBlockedSwitches layout switchStates trains =
     let
         coveredEdges =
@@ -404,7 +404,7 @@ modelDecoder : Decoder Model
 modelDecoder =
     Decode.map3
         (\ts l sws ->
-            { trainState = ts
+            { trains = ts
             , layout = l
             , switchState = sws
             , running = False
@@ -412,7 +412,7 @@ modelDecoder =
             , deltas = []
             }
         )
-        (Decode.field "trainState" Train.decoder)
+        (Decode.field "trains" Train.decoder)
         (Decode.field "layout" Layout.decoder)
         (Decode.field "switchState" (Decode.array Decode.int))
         |> Decode.andThen
@@ -433,6 +433,6 @@ encodeModel : Model -> Value
 encodeModel model =
     Encode.object
         [ ( "layout", Layout.encode model.layout )
-        , ( "trains", Encode.list Train.encode [ model.trainState ] )
+        , ( "trains", Encode.list Train.encode [ model.trains ] )
         , ( "switchStates", Encode.array Encode.int model.switchState )
         ]

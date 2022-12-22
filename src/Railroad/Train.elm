@@ -1,5 +1,5 @@
 module Railroad.Train exposing
-    ( TrainState
+    ( Train
     , decoder
     , encode
     , endLocation
@@ -22,7 +22,7 @@ import Railroad.Track as Track
 import Speed exposing (Speed)
 
 
-type alias TrainState =
+type alias Train =
     { name : String
     , composition : List RollingStock
     , speed : Speed
@@ -80,7 +80,7 @@ endLocationRec l correction layout switchState startLoc =
             )
 
 
-move : Duration -> TrainState -> Layout -> Array Int -> TrainState
+move : Duration -> Train -> Layout -> Array Int -> Train
 move delta trainState layout switchState =
     case trainState.location of
         Nothing ->
@@ -158,7 +158,7 @@ normalizeLocation layout switchState loc =
             Nothing
 
 
-stopped : TrainState -> TrainState
+stopped : Train -> Train
 stopped ts =
     { ts | speed = Quantity.zero }
 
@@ -167,9 +167,9 @@ stopped ts =
 -- JSON
 
 
-decoder : Decoder TrainState
+decoder : Decoder Train
 decoder =
-    Decode.map4 TrainState
+    Decode.map4 Train
         (Decode.field "name" Decode.string)
         (Decode.field "composition" (Decode.list rollingStockDecoder))
         (Decode.field "speed" (Decode.float |> Decode.map Speed.metersPerSecond))
@@ -188,7 +188,7 @@ rollingStockDecoder =
 -- JSON encode
 
 
-encode : TrainState -> Value
+encode : Train -> Value
 encode ts =
     Encode.object
         [ ( "name", Encode.string ts.name )

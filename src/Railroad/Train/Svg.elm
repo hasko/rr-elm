@@ -11,7 +11,7 @@ import Svg exposing (Svg, g, line)
 import Svg.Attributes exposing (stroke, strokeWidth, x1, x2, y1, y2)
 
 
-toSvg : TrainState -> Layout -> Array Int -> Svg msg
+toSvg : Train -> Layout -> Array Int -> Svg msg
 toSvg train layout switchState =
     case train.location of
         Nothing ->
