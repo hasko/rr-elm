@@ -5,6 +5,7 @@ module Railroad.Track exposing
     , getPositionOnTrack
     , length
     , moveFrame
+    , moveFrameReverse
     , toSvg
     )
 
@@ -92,6 +93,19 @@ moveFrame cursor track =
         MapExit ->
             -- Nothing to move
             cursor
+
+
+moveFrameReverse : Frame -> Track -> Frame
+moveFrameReverse frame track =
+    case track of
+        StraightTrack l ->
+            moveFrame frame track
+
+        CurvedTrack r a ->
+            moveFrame frame (CurvedTrack r (Quantity.negate a))
+
+        MapExit ->
+            frame
 
 
 getPositionOnTrack : Length -> Frame -> Track -> Frame

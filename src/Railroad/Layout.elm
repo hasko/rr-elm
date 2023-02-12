@@ -11,7 +11,6 @@ module Railroad.Layout exposing
     , nextTrack
     , partitionGraph
     , previousTrack
-    , toGraph
     , toSvg
     , trackAt
     , tracksAhead
@@ -20,6 +19,7 @@ module Railroad.Layout exposing
 
 import Angle
 import Array exposing (Array)
+import Dict
 import Direction2d
 import Frame2d
 import Graph exposing (Graph, insertEdgeData)
@@ -104,12 +104,6 @@ tracksBefore loc cutoff layout switchStates =
     tracksAhead { loc | orientation = Orientation.invert loc.orientation } cutoff layout switchStates |> List.reverse
 
 
-cursors : Layout -> IntDict Frame
-cursors layout =
-    -- Render the layout starting at connection 0 and at the origin, facing east, and return the resulting cursors.
-    renderLayout 0 (Frame2d.atPoint (Point2d.meters 0 2.5)) layout IntDict.empty
-
-
 boundingBox : Layout -> Rect
 boundingBox layout =
     List.foldl
@@ -118,40 +112,98 @@ boundingBox layout =
         (cursors layout |> IntDict.values |> List.map (Frame2d.originPoint >> Point2d.toRecord Length.inMeters))
 
 
-renderLayout : Int -> Frame -> Layout -> IntDict Frame -> IntDict Frame
-renderLayout nodeId currentFrame layout knownFrames =
-    -- If the node cursor is already calculated ...
-    if IntDict.member nodeId knownFrames then
-        -- ... then we are done.
-        knownFrames
+cursors : Layout -> IntDict Frame
+cursors layout =
+    renderLayout layout (IntDict.singleton 0 Frame2d.atOrigin)
+
+
+renderLayout : Layout -> IntDict Frame -> IntDict Frame
+renderLayout layout frames =
+    let
+        c1 =
+            frames |> IntDict.keys |> List.length
+
+        newFrames =
+            List.foldl (\edge result -> renderEdge edge result) frames (Graph.edgesWithData layout.graph)
+
+        c2 =
+            newFrames |> IntDict.keys |> List.length
+    in
+    if c2 > c1 then
+        renderLayout layout newFrames
 
     else
-        -- Get all the outoing tracks from this node.
-        -- TODO Consider incoming tracks too.
-        Graph.outgoing nodeId layout.graph
-            -- Calculate the next node position for each track and collect them.
-            |> Set.foldl
-                (\nextNodeId acc ->
-                    -- Get the track for this pair of nodes.
-                    case Graph.getEdgeData nodeId nextNodeId layout.graph of
-                        Nothing ->
-                            -- If there is no track, our layout is inconsistent. Return what we know so far.
-                            acc
+        newFrames
 
-                        Just track ->
-                            -- Move the current cursor along the track and recurse.
-                            renderLayout
-                                -- Start with the next node id.
-                                nextNodeId
-                                -- Move the cursor along the track.
-                                -- TODO determine and use the appropriate connection instead of 0
-                                (moveFrame currentFrame track)
-                                -- And the rest.
-                                layout
-                                acc
-                )
-                -- Begin with the list of known cursors plus the current one.
-                (IntDict.insert nodeId currentFrame knownFrames)
+
+renderEdge : ( Int, Int, Maybe Track ) -> IntDict Frame -> IntDict Frame
+renderEdge ( from, to, maybeTrack ) frames =
+    let
+        mf1 =
+            IntDict.get from frames
+
+        mf2 =
+            IntDict.get to frames
+    in
+    case ( mf1, mf2, maybeTrack ) of
+        ( _, _, Nothing ) ->
+            -- Ignore track without spec.
+            frames
+
+        ( Just _, Just _, _ ) ->
+            -- We know both ends already.
+            frames
+
+        ( Nothing, Nothing, Just _ ) ->
+            -- We know none of the ends yet.
+            frames
+
+        ( Just f1, Nothing, Just t ) ->
+            -- Render the "to" frame.
+            IntDict.insert to (moveFrame f1 t) frames
+
+        ( Nothing, Just f2, Just t ) ->
+            -- Render the "from" frame.
+            IntDict.insert from (Track.moveFrameReverse f2 t) frames
+
+
+
+{-
+   renderLayout : Int -> Frame -> Layout -> IntDict Frame -> IntDict Frame
+   renderLayout nodeId currentFrame layout knownFrames =
+       -- If the node cursor is already calculated ...
+       if IntDict.member nodeId knownFrames then
+           -- ... then we are done.
+           knownFrames
+
+       else
+           -- Get all the outoing tracks from this node.
+           -- TODO Consider incoming tracks too.
+           Graph.outgoing nodeId layout.graph
+               -- Calculate the next node position for each track and collect them.
+               |> Set.foldl
+                   (\nextNodeId acc ->
+                       -- Get the track for this pair of nodes.
+                       case Graph.getEdgeData nodeId nextNodeId layout.graph of
+                           Nothing ->
+                               -- If there is no track, our layout is inconsistent. Return what we know so far.
+                               acc
+
+                           Just track ->
+                               -- Move the current cursor along the track and recurse.
+                               renderLayout
+                                   -- Start with the next node id.
+                                   nextNodeId
+                                   -- Move the cursor along the track.
+                                   -- TODO determine and use the appropriate connection instead of 0
+                                   (moveFrame currentFrame track)
+                                   -- And the rest.
+                                   layout
+                                   acc
+                   )
+                   -- Begin with the list of known cursors plus the current one.
+                   (IntDict.insert nodeId currentFrame knownFrames)
+-}
 
 
 coordsFor : Length -> ( Int, Int ) -> Layout -> Maybe Frame
@@ -336,31 +388,29 @@ tracksToSvg allFrames enabled tuples =
 
 
 -- Samples
+-- initialLayout : Layout
+-- initialLayout =
+--     { graph =
+--         Graph.empty
+--             |> insertEdgeData 0 1 (StraightTrack (Length.meters 75.0))
+--             |> insertEdgeData 1 2 (CurvedTrack (Length.meters 300.0) (Angle.degrees 15.0))
+--             |> insertEdgeData 2 4 (CurvedTrack (Length.meters 300) (Angle.degrees -15))
+--             |> insertEdgeData 1 3 (StraightTrack (Length.meters 77.645))
+--             |> insertEdgeData 3 5 (StraightTrack (Length.meters 77.645))
+--             |> insertEdgeData 5 1000 MapExit
+--             |> insertEdgeData 0 1001 MapExit
+--             |> insertEdgeData 4 1002 MapExit
+--     , switches = Array.fromList [ { edges = Array.fromList [ ( 1, 2 ), ( 1, 3 ) ], configs = Array.fromList [ [ 0 ], [ 1 ] ] } ]
+--     }
 
 
-initialLayout : Layout
 initialLayout =
     { graph =
         Graph.empty
-            |> insertEdgeData 0 1 (StraightTrack (Length.meters 75.0))
-            |> insertEdgeData 1 2 (CurvedTrack (Length.meters 300.0) (Angle.degrees 15.0))
-            |> insertEdgeData 2 4 (CurvedTrack (Length.meters 300) (Angle.degrees -15))
-            |> insertEdgeData 1 3 (StraightTrack (Length.meters 77.645))
-            |> insertEdgeData 3 5 (StraightTrack (Length.meters 77.645))
-            |> insertEdgeData 5 1000 MapExit
-            |> insertEdgeData 0 1001 MapExit
-            |> insertEdgeData 4 1002 MapExit
-    , switches = Array.fromList [ { edges = Array.fromList [ ( 1, 2 ), ( 1, 3 ) ], configs = Array.fromList [ [ 0 ], [ 1 ] ] } ]
+            |> insertEdgeData 0 1 (StraightTrack (Length.meters 75))
+            |> insertEdgeData 2 1 (StraightTrack (Length.meters 75))
+    , switches = Array.empty
     }
-
-
-
--- TODO: Refactor so we don't need to expose the Graph. Only used for the starting location of the train. Having map exits should fix that.
-
-
-toGraph : Layout -> Graph Int () Track
-toGraph layout =
-    layout.graph
 
 
 
