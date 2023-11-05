@@ -19,7 +19,6 @@ module Railroad.Layout exposing
 
 import Angle
 import Array exposing (Array)
-import Dict
 import Direction2d
 import Frame2d
 import Graph exposing (Graph, insertEdgeData)
@@ -35,7 +34,6 @@ import Railroad.Switch as Switch exposing (Switch)
 import Railroad.Track as Track exposing (Track(..), getPositionOnTrack, moveFrame)
 import Railroad.Util exposing (Frame)
 import Rect exposing (Rect(..))
-import Set
 import Svg exposing (Svg, switch)
 import Svg.Attributes exposing (id)
 
@@ -404,6 +402,7 @@ tracksToSvg allFrames enabled tuples =
 --     }
 
 
+initialLayout : { graph : Graph Int () Track, switches : Array Switch }
 initialLayout =
     { graph =
         Graph.empty
