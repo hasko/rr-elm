@@ -402,7 +402,7 @@ tracksToSvg allFrames enabled tuples =
 --     }
 
 
-initialLayout : { graph : Graph Int () Track, switches : Array Switch }
+initialLayout : Layout
 initialLayout =
     { graph =
         Graph.empty
