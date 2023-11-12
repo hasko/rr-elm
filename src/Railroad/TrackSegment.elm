@@ -1,7 +1,7 @@
 module Railroad.TrackSegment exposing (TrackSegment(..), length, pointAlong)
 
 import Basics.Extra
-import CubicSpline2d exposing (CubicSpline2d)
+import CubicSpline2d exposing (ArcLengthParameterized, CubicSpline2d, arcLength, arcLengthParameterized, nondegenerate)
 import Length exposing (Length)
 import LineSegment2d exposing (LineSegment2d)
 import Point2d exposing (Point2d)
@@ -10,8 +10,19 @@ import Quantity
 
 type TrackSegment units coords
     = Straight (LineSegment2d units coords)
-    | Bezier (CubicSpline2d units coords)
+    | Bezier (CubicSpline2d units coords) (ArcLengthParameterized units coords)
     | Composite (List (TrackSegment units coords))
+    | Null (Point2d units coords)
+
+
+fromCubicSpline : CubicSpline2d units coords -> TrackSegment units coords
+fromCubicSpline spline =
+    case nondegenerate spline of
+        Err p ->
+            Null p
+
+        Ok nd ->
+            Bezier spline (arcLengthParameterized (Length.millimeters 1) nd)
 
 
 length : TrackSegment Length.Meters coords -> Length
@@ -20,12 +31,8 @@ length ts =
         Straight ls ->
             LineSegment2d.length ls
 
-        Bezier bs ->
-            bs
-                |> CubicSpline2d.nondegenerate
-                |> Result.map (CubicSpline2d.arcLengthParameterized { maxError = Length.meters 0.1 })
-                |> Result.map CubicSpline2d.arcLength
-                |> Result.withDefault Quantity.zero
+        Bezier bs alps ->
+            CubicSpline2d.arcLength alps
 
         Composite cs ->
             List.map length cs |> Quantity.sum
