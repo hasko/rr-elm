@@ -115,47 +115,36 @@ move delta trainState layout switchState =
 
 normalizeLocation : Layout -> Array Int -> Location -> Maybe Location
 normalizeLocation layout switchState loc =
-    case Layout.trackAt loc.edge layout of
-        Just track ->
-            -- If the position is beyond the end of the current track ...
-            -- TODO Determine and use the appropriate connection number instead of 0
-            if loc.pos |> Quantity.greaterThan (Track.length track) then
-                -- ... get the next track.
-                case nextTrack loc layout switchState of
-                    Nothing ->
-                        -- If there is no next track, return.
-                        Nothing
+    Layout.trackAt loc.edge layout
+        |> Maybe.andThen
+            (\track ->
+                if loc.pos |> Quantity.greaterThan (Track.length track) then
+                    nextTrack loc layout switchState
+                        |> Maybe.andThen
+                            (\nextLoc ->
+                                normalizeLocation layout
+                                    switchState
+                                    { nextLoc
+                                        | pos = loc.pos |> Quantity.minus (Track.length track)
+                                    }
+                            )
 
-                    Just nextLoc ->
-                        -- Calculate the new position.
-                        { nextLoc
-                          -- Subtract the current track length from the position.
-                          -- TODO Determine and use the appropriate connection number instead of 0
-                            | pos = loc.pos |> Quantity.minus (Track.length track)
-                        }
-                            -- ... and repeat until done.
-                            |> normalizeLocation layout switchState
+                else if Quantity.lessThanZero loc.pos then
+                    previousTrack loc layout switchState
+                        |> Maybe.andThen
+                            (\nextLoc ->
+                                Layout.trackAt nextLoc.edge layout
+                                    |> Maybe.andThen
+                                        (\nt ->
+                                            normalizeLocation layout
+                                                switchState
+                                                { nextLoc | pos = loc.pos |> Quantity.plus (Track.length nt) }
+                                        )
+                            )
 
-            else if Quantity.lessThanZero loc.pos then
-                previousTrack loc layout switchState
-                    |> Maybe.andThen
-                        (\nextLoc ->
-                            case Layout.trackAt nextLoc.edge layout of
-                                Nothing ->
-                                    Nothing
-
-                                Just nt ->
-                                    -- TODO Determine and use the appropriate connection number instead of 0
-                                    { nextLoc | pos = loc.pos |> Quantity.plus (Track.length nt) }
-                                        |> normalizeLocation layout switchState
-                        )
-
-            else
-                -- We are within the track bounds, so return.
-                Just loc
-
-        Nothing ->
-            Nothing
+                else
+                    Just loc
+            )
 
 
 stopped : Train -> Train
