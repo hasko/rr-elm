@@ -7050,41 +7050,34 @@ var $author$project$Railroad$Layout$trackAt = F2(
 	});
 var $author$project$Railroad$Train$normalizeLocation = F3(
 	function (layout, switchState, loc) {
-		var _v0 = A2($author$project$Railroad$Layout$trackAt, loc.br, layout);
-		if (!_v0.$) {
-			var track = _v0.a;
-			if (A2(
-				$ianmackenzie$elm_units$Quantity$greaterThan,
-				$author$project$Railroad$Track$length(track),
-				loc.cH)) {
-				var _v1 = A3($author$project$Railroad$Layout$nextTrack, loc, layout, switchState);
-				if (_v1.$ === 1) {
-					return $elm$core$Maybe$Nothing;
-				} else {
-					var nextLoc = _v1.a;
-					return A3(
-						$author$project$Railroad$Train$normalizeLocation,
-						layout,
-						switchState,
-						_Utils_update(
-							nextLoc,
-							{
-								cH: A2(
-									$ianmackenzie$elm_units$Quantity$minus,
-									$author$project$Railroad$Track$length(track),
-									loc.cH)
-							}));
-				}
-			} else {
-				if ($ianmackenzie$elm_units$Quantity$lessThanZero(loc.cH)) {
-					return A2(
-						$elm$core$Maybe$andThen,
-						function (nextLoc) {
-							var _v2 = A2($author$project$Railroad$Layout$trackAt, nextLoc.br, layout);
-							if (_v2.$ === 1) {
-								return $elm$core$Maybe$Nothing;
-							} else {
-								var nt = _v2.a;
+		return A2(
+			$elm$core$Maybe$andThen,
+			function (track) {
+				return A2(
+					$ianmackenzie$elm_units$Quantity$greaterThan,
+					$author$project$Railroad$Track$length(track),
+					loc.cH) ? A2(
+					$elm$core$Maybe$andThen,
+					function (nextLoc) {
+						return A3(
+							$author$project$Railroad$Train$normalizeLocation,
+							layout,
+							switchState,
+							_Utils_update(
+								nextLoc,
+								{
+									cH: A2(
+										$ianmackenzie$elm_units$Quantity$minus,
+										$author$project$Railroad$Track$length(track),
+										loc.cH)
+								}));
+					},
+					A3($author$project$Railroad$Layout$nextTrack, loc, layout, switchState)) : ($ianmackenzie$elm_units$Quantity$lessThanZero(loc.cH) ? A2(
+					$elm$core$Maybe$andThen,
+					function (nextLoc) {
+						return A2(
+							$elm$core$Maybe$andThen,
+							function (nt) {
 								return A3(
 									$author$project$Railroad$Train$normalizeLocation,
 									layout,
@@ -7097,16 +7090,12 @@ var $author$project$Railroad$Train$normalizeLocation = F3(
 												$author$project$Railroad$Track$length(nt),
 												loc.cH)
 										}));
-							}
-						},
-						A3($author$project$Railroad$Layout$previousTrack, loc, layout, switchState));
-				} else {
-					return $elm$core$Maybe$Just(loc);
-				}
-			}
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
+							},
+							A2($author$project$Railroad$Layout$trackAt, nextLoc.br, layout));
+					},
+					A3($author$project$Railroad$Layout$previousTrack, loc, layout, switchState)) : $elm$core$Maybe$Just(loc));
+			},
+			A2($author$project$Railroad$Layout$trackAt, loc.br, layout));
 	});
 var $author$project$Railroad$Train$move = F4(
 	function (delta, trainState, layout, switchState) {
