@@ -5,7 +5,7 @@ import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
 import Duration exposing (Duration)
 import File.Download
-import Html exposing (Html, a, br, button, div, li, nav, span, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html exposing (Html, a, br, button, div, h2, header, li, main_, nav, section, span, strong, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (attribute, class, disabled, href, scope, style, type_)
 import Html.Entity
 import Html.Events exposing (onClick)
@@ -13,6 +13,7 @@ import Html.Lazy exposing (lazy2)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length
+import List.Extra
 import Maybe exposing (withDefault)
 import Quantity
 import Railroad.Layout as Layout exposing (..)
@@ -198,101 +199,55 @@ updateTick delta model =
 
 view : Model -> Html Msg
 view model =
-    div [ class "container" ]
-        [ nav []
-            [ ul []
-                [ li [] [ strong [] [ a [ href "#" ] [ text "Trains" ] ] ]
-                , li [] [ a [ href "#" ] [ text "Load" ] ]
-                , li [] [ a [ href "#", onClick SaveRequested ] [ text "Save" ] ]
+    div []
+        [ header [ class "container" ]
+            [ nav []
+                [ ul []
+                    [ li [] [ strong [] [ a [ href "#" ] [ text "Trains" ] ] ]
+                    , li [] [ a [ href "#" ] [ text "Load" ] ]
+                    , li [] [ a [ href "#", onClick SaveRequested ] [ text "Save" ] ]
+                    ]
+                , ul [] [ li [] [ text (String.fromInt (frameRate model.deltas) ++ " fps") ] ]
                 ]
             ]
-        , svg
-            [ width "100%"
-            , viewBox
-                (model.layout
-                    |> Layout.boundingBox
-                    |> Rect.expand 5
-                    |> Rect.rectToString
-                )
-            ]
-            [ lazy2 Layout.toSvg model.layout model.switchState
-            , g [ id "trains" ] (List.map (\train -> Railroad.Train.Svg.toSvg train model.layout model.switchState) model.trains)
-            ]
-        , div [ class "grid" ]
-            [ button [ class "primary", onClick Toggle ]
-                [ text
-                    (if model.running then
-                        "Stop"
+        , main_
+            [ class "container" ]
+            [ section [ id "layout" ]
+                [ svg
+                    [ width "100%"
+                    , viewBox
+                        (model.layout
+                            |> Layout.boundingBox
+                            |> Rect.expand 5
+                            |> Rect.rectToString
+                        )
+                    ]
+                    [ lazy2 Layout.toSvg model.layout model.switchState
+                    , g [ id "trains" ] (List.map (\train -> Railroad.Train.Svg.toSvg train model.layout model.switchState) model.trains)
+                    ]
+                , div [ class "grid" ]
+                    [ button [ class "primary", onClick Toggle ]
+                        [ text
+                            (if model.running then
+                                "Stop"
 
-                     else
-                        "Start"
-                    )
+                             else
+                                "Start"
+                            )
+                        ]
+                    , button [ class "secondary", onClick Step, disabled model.running ] [ text "Step (1s)" ]
+                    , button [ class "secondary", onClick Reset ] [ text "Reset" ]
+                    ]
                 ]
-            , button [ class "secondary", onClick Step, disabled model.running ] [ text "Step (1s)" ]
-            , button [ class "secondary", onClick Reset ] [ text "Reset" ]
-            , div [] [ text (String.fromInt (frameRate model.deltas) ++ " fps") ]
+            , section [ id "switches" ]
+                [ h2 [] [ text "Switches" ]
+                , viewSwitches model.layout model.switchState (getBlockedSwitches model.layout model.switchState model.trains)
+                ]
+            , section [ id "trains" ]
+                [ h2 [] [ text "Trains" ]
+                , viewTrains model
+                ]
             ]
-        , div [] [ viewSwitches model.layout model.switchState (getBlockedSwitches model.layout model.switchState model.trains) ]
-        , div []
-            (model.trains
-                |> List.map
-                    (\train ->
-                        table []
-                            [ tbody []
-                                [ tr [] [ th [ scope "row" ] [ text "Name" ], td [] [ text train.name ] ]
-                                , tr [] [ th [ scope "row" ] [ text "Length" ], td [] [ text (String.fromFloat (Length.inMeters (Train.length train)) ++ " m") ] ]
-                                , tr []
-                                    [ th [ scope "row" ] [ text "Speed" ]
-                                    , td []
-                                        [ text
-                                            (Round.round 1 (Speed.inMetersPerSecond train.speed)
-                                                ++ " m/s ("
-                                                ++ Round.round 1 (Speed.inKilometersPerHour train.speed)
-                                                ++ " km/h)"
-                                            )
-                                        ]
-                                    ]
-                                , tr []
-                                    [ th [ scope "row" ] [ text "Location" ]
-                                    , td []
-                                        (case train.location of
-                                            Nothing ->
-                                                [ text "Nowhere" ]
-
-                                            Just loc ->
-                                                [ text
-                                                    ("edge ("
-                                                        ++ String.fromInt (Tuple.first loc.edge)
-                                                        ++ ", "
-                                                        ++ String.fromInt (Tuple.second loc.edge)
-                                                        ++ ")"
-                                                    )
-                                                , br [] []
-                                                , text
-                                                    ("pos "
-                                                        ++ Round.round 2 (Length.inMeters loc.pos)
-                                                        ++ " m"
-                                                    )
-                                                , br [] []
-                                                , text (Orientation.toString loc.orientation)
-                                                ]
-                                        )
-                                    ]
-                                , tr []
-                                    [ th [ scope "row" ] [ text "Tracks covered" ]
-                                    , td []
-                                        [ train.location
-                                            |> Maybe.map (\loc -> Layout.tracksBefore loc (Train.length train) model.layout model.switchState)
-                                            |> Maybe.withDefault []
-                                            |> List.map (\( from, to, _ ) -> String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to)
-                                            |> String.join ", "
-                                            |> text
-                                        ]
-                                    ]
-                                ]
-                            ]
-                    )
-            )
         ]
 
 
@@ -373,6 +328,64 @@ viewSwitchRoute maybeEdge =
 
         Just ( from, to ) ->
             String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to
+
+
+viewTrains : Model -> Html Msg
+viewTrains model =
+    let
+        ths =
+            [ "Name", "Length", "Speed", "Location", "Tracks covered" ]
+
+        tds =
+            model.trains |> List.map (viewTrain model) |> List.Extra.transpose
+
+        rows =
+            List.Extra.zip ths tds
+    in
+    table
+        []
+        (rows
+            |> List.map
+                (\( h, ds ) ->
+                    tr []
+                        (th [ scope "row" ] [ text h ]
+                            :: (ds |> List.map (\d -> td [] [ text d ]))
+                        )
+                )
+        )
+
+
+viewTrain : Model -> Train -> List String
+viewTrain model train =
+    [ train.name
+    , String.fromFloat (Length.inMeters (Train.length train)) ++ " m"
+    , Round.round 1 (Speed.inMetersPerSecond train.speed)
+        ++ " m/s ("
+        ++ Round.round 1 (Speed.inKilometersPerHour train.speed)
+        ++ " km/h)"
+    , case train.location of
+        Nothing ->
+            "Nowhere"
+
+        Just loc ->
+            ("edge ("
+                ++ String.fromInt (Tuple.first loc.edge)
+                ++ ", "
+                ++ String.fromInt (Tuple.second loc.edge)
+                ++ ")"
+            )
+                ++ (", pos "
+                        ++ Round.round 2 (Length.inMeters loc.pos)
+                        ++ " m"
+                   )
+                ++ ", "
+                ++ Orientation.toString loc.orientation
+    , train.location
+        |> Maybe.map (\loc -> Layout.tracksBefore loc (Train.length train) model.layout model.switchState)
+        |> Maybe.withDefault []
+        |> List.map (\( from, to, _ ) -> String.fromInt from ++ Html.Entity.rarr ++ String.fromInt to)
+        |> String.join ", "
+    ]
 
 
 getBlockedSwitches : Layout -> Array Int -> List Train -> Set Int
