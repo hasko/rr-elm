@@ -6,7 +6,7 @@ import Browser.Events exposing (onAnimationFrameDelta)
 import Duration exposing (Duration)
 import File.Download
 import Html exposing (Html, a, button, div, h2, header, li, main_, nav, section, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (class, disabled, href, scope, style)
+import Html.Attributes exposing (attribute, class, disabled, href, scope, style)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy2)
@@ -26,8 +26,8 @@ import Rect
 import Round
 import Set exposing (Set)
 import Speed
-import Svg exposing (g, svg)
-import Svg.Attributes exposing (id, viewBox, width)
+import Svg exposing (g, rect, svg)
+import Svg.Attributes as SA exposing (height, id, viewBox, width)
 import Tuple
 
 
@@ -37,13 +37,19 @@ main =
 
 
 type alias Model =
-    { trains : List Train
+    { mode : Mode
+    , trains : List Train
     , layout : Layout
     , switchState : Array Int
     , running : Bool
     , flash : Maybe String
     , deltas : List Duration
     }
+
+
+type Mode
+    = RunMode
+    | EditMode
 
 
 type Msg
@@ -54,6 +60,8 @@ type Msg
     | ChangeSwitch Int Switch
     | LayoutReceived Value
     | SaveRequested
+    | RunModeRequested
+    | EditModeRequested
 
 
 port sendLayout : Value -> Cmd msg
@@ -68,7 +76,8 @@ init _ =
         l =
             Layout.initialLayout
     in
-    ( { trains =
+    ( { mode = RunMode
+      , trains =
             [ { name = "Happy Train"
               , composition = List.repeat 5 { length = Length.meters 10 }
               , speed = Speed.kilometersPerHour 40.0
@@ -149,6 +158,12 @@ update msg model =
         SaveRequested ->
             ( model, encodeModel model |> Encode.encode 0 |> File.Download.string "rr.json" "application/json" )
 
+        RunModeRequested ->
+            ( { model | mode = RunMode }, Cmd.none )
+
+        EditModeRequested ->
+            ( { model | mode = EditMode }, Cmd.none )
+
 
 updateTick : Duration -> Model -> Model
 updateTick delta model =
@@ -204,50 +219,64 @@ view model =
             [ nav []
                 [ ul []
                     [ li [] [ strong [] [ a [ href "#" ] [ text "Trains" ] ] ]
-                    , li [] [ a [ href "#" ] [ text "Load" ] ]
-                    , li [] [ a [ href "#", onClick SaveRequested ] [ text "Save" ] ]
+                    , li [] [ button [ class "secondary outline" ] [ text "Load" ] ]
+                    , li [] [ button [ class "secondary outline", onClick SaveRequested ] [ text "Save" ] ]
+                    , li []
+                        [ button [ class "secondary outline", onClick RunModeRequested, disabled (model.mode == RunMode) ] [ text "Run" ] ]
+                    , li []
+                        [ button [ class "secondary outline", onClick EditModeRequested, disabled (model.mode == EditMode) ] [ text "Edit" ] ]
                     ]
                 , ul [] [ li [] [ text (String.fromInt (frameRate model.deltas) ++ " fps") ] ]
                 ]
             ]
-        , main_
-            [ class "container" ]
+        , main_ [ class "container" ]
             [ section [ id "layout" ]
-                [ svg
-                    [ width "100%"
-                    , viewBox
-                        (model.layout
-                            |> Layout.boundingBox
-                            |> Rect.expand 5
-                            |> Rect.rectToString
-                        )
-                    ]
-                    [ lazy2 Layout.toSvg model.layout model.switchState
-                    , g [ id "trains" ] (List.map (\train -> Railroad.Train.Svg.toSvg train model.layout model.switchState) model.trains)
-                    ]
-                , div [ class "grid" ]
-                    [ button [ class "primary", onClick Toggle ]
-                        [ text
-                            (if model.running then
-                                "Stop"
+                (case model.mode of
+                    RunMode ->
+                        [ layoutRunSvg model
+                        , div [ class "grid" ]
+                            [ button [ class "primary", onClick Toggle ]
+                                [ text
+                                    (if model.running then
+                                        "Stop"
 
-                             else
-                                "Start"
-                            )
+                                     else
+                                        "Start"
+                                    )
+                                ]
+                            , button [ class "secondary", onClick Step, disabled model.running ] [ text "Step (1s)" ]
+                            , button [ class "secondary", onClick Reset ] [ text "Reset" ]
+                            ]
+                        , section [ id "switches" ]
+                            [ h2 [] [ text "Switches" ]
+                            , viewSwitches model.layout model.switchState (getBlockedSwitches model.layout model.switchState model.trains)
+                            ]
+                        , section [ id "trains" ]
+                            [ h2 [] [ text "Trains" ]
+                            , viewTrains model
+                            ]
                         ]
-                    , button [ class "secondary", onClick Step, disabled model.running ] [ text "Step (1s)" ]
-                    , button [ class "secondary", onClick Reset ] [ text "Reset" ]
-                    ]
-                ]
-            , section [ id "switches" ]
-                [ h2 [] [ text "Switches" ]
-                , viewSwitches model.layout model.switchState (getBlockedSwitches model.layout model.switchState model.trains)
-                ]
-            , section [ id "trains" ]
-                [ h2 [] [ text "Trains" ]
-                , viewTrains model
-                ]
+
+                    EditMode ->
+                        [ Layout.editSvg model.layout ]
+                )
             ]
+        ]
+
+
+layoutRunSvg : Model -> Html Msg
+layoutRunSvg model =
+    svg
+        [ width "100%"
+        , viewBox
+            (model.layout
+                |> Layout.boundingBox
+                |> Rect.expand 5
+                |> Rect.rectToString
+            )
+        ]
+        [ lazy2 Layout.toSvg model.layout model.switchState
+        , g [ id "trains" ] (List.map (\train -> Railroad.Train.Svg.toSvg train model.layout model.switchState) model.trains)
         ]
 
 
@@ -442,7 +471,8 @@ modelDecoder : Decoder Model
 modelDecoder =
     Decode.map3
         (\ts l sws ->
-            { trains = ts
+            { mode = RunMode
+            , trains = ts
             , layout = l
             , switchState = sws
             , running = False

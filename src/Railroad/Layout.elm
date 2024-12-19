@@ -4,6 +4,7 @@ module Railroad.Layout exposing
     , boundingBox
     , coordsFor
     , decoder
+    , editSvg
     , encode
     , encodeLocation
     , initialLayout
@@ -23,11 +24,13 @@ import Array exposing (Array)
 import Direction2d
 import Frame2d
 import Graph exposing (Graph, insertEdgeData)
+import Html exposing (Html)
 import IntDict exposing (IntDict)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
 import Maybe exposing (Maybe(..))
+import Maybe.Extra
 import Point2d
 import Quantity
 import Railroad.Orientation as Orientation exposing (Orientation(..))
@@ -36,8 +39,8 @@ import Railroad.Track as Track exposing (Track(..), getPositionOnTrack, moveFram
 import Railroad.Util exposing (Frame)
 import Rect exposing (Rect(..))
 import Set
-import Svg exposing (Svg, switch)
-import Svg.Attributes exposing (id)
+import Svg exposing (Svg, rect, svg, switch)
+import Svg.Attributes as SA exposing (id)
 
 
 type alias Layout =
@@ -290,7 +293,7 @@ toSvg layout switchStates =
         ( usableEdges, unusableEdges ) =
             partitionGraph layout switchStates
     in
-    Svg.g [ Svg.Attributes.id "layout" ]
+    Svg.g [ SA.id "layout" ]
         (tracksToSvg allFrames False unusableEdges ++ tracksToSvg allFrames True usableEdges)
 
 
@@ -317,7 +320,7 @@ tracksToSvg allFrames enabled tuples =
                         in
                         Svg.g
                             [ id trackId
-                            , Svg.Attributes.transform
+                            , SA.transform
                                 ("translate("
                                     ++ String.fromFloat refP.x
                                     ++ ","
@@ -332,6 +335,37 @@ tracksToSvg allFrames enabled tuples =
                     Nothing ->
                         Svg.g [ id trackId ] []
             )
+
+
+editSvg : Layout -> Html msg
+editSvg layout =
+    svg
+        [ SA.width "100%"
+        , SA.viewBox "0 0 800 450"
+        , SA.preserveAspectRatio "xMidYMid meet"
+        ]
+        [ rect [ SA.x "0", SA.y "0", SA.width "800", SA.height "450", SA.fill "#fffff0" ] []
+        , let
+            allFrames =
+                cursors layout
+          in
+          Svg.g [ SA.id "layout" ]
+            (tracksToSvg allFrames
+                True
+                (Graph.edgesWithData layout.graph
+                    |> List.map
+                        (\( from, to, maybeTrack ) ->
+                            case maybeTrack of
+                                Just track ->
+                                    Just ( from, to, track )
+
+                                Nothing ->
+                                    Nothing
+                        )
+                    |> Maybe.Extra.values
+                )
+            )
+        ]
 
 
 
