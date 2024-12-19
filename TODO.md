@@ -1,3 +1,5 @@
+# General stuff
+
 * Find and fix TODO comments
 * Check layout correctness: 
     * Switches should not have common edges
@@ -9,3 +11,8 @@
 * Don't stop simulation if no trains is visible but at least one is approaching from a map exit.
 * Fix drawing of reverse curves and straights
 * Train location is maybe. Make "off map" a valid location.
+
+# Edit Mode
+
+* Push the drawing board around.
+* Edit something.
