@@ -5,8 +5,8 @@ import Browser
 import Browser.Events exposing (onAnimationFrameDelta)
 import Duration exposing (Duration)
 import File.Download
-import Html exposing (Html, a, br, button, div, h2, header, li, main_, nav, section, span, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (attribute, class, disabled, href, scope, style, type_)
+import Html exposing (Html, a, button, div, h2, header, li, main_, nav, section, strong, table, tbody, td, text, th, thead, tr, ul)
+import Html.Attributes exposing (class, disabled, href, scope, style)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy2)
@@ -423,11 +423,6 @@ getBlockedSwitches layout switchStates trains =
 
 
 --- Utilities ---
-
-
-role : String -> Html.Attribute msg
-role r =
-    Html.Attributes.attribute "role" r
 
 
 frameRate : List Duration -> Int
