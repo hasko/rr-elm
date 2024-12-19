@@ -6,7 +6,7 @@ import Browser.Events exposing (onAnimationFrameDelta)
 import Duration exposing (Duration)
 import File.Download
 import Html exposing (Html, a, button, div, h2, header, li, main_, nav, section, strong, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (attribute, class, disabled, href, scope, style)
+import Html.Attributes exposing (class, disabled, href, scope, style)
 import Html.Entity
 import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy2)
@@ -26,8 +26,9 @@ import Rect
 import Round
 import Set exposing (Set)
 import Speed
-import Svg exposing (g, rect, svg)
-import Svg.Attributes as SA exposing (height, id, viewBox, width)
+import Svg exposing (g, svg)
+import Svg.Attributes exposing (id, viewBox, width)
+import Svg.Events
 import Tuple
 
 
@@ -44,6 +45,7 @@ type alias Model =
     , running : Bool
     , flash : Maybe String
     , deltas : List Duration
+    , zoom : Float
     }
 
 
@@ -62,6 +64,7 @@ type Msg
     | SaveRequested
     | RunModeRequested
     | EditModeRequested
+    | ZoomWheel Float
 
 
 port sendLayout : Value -> Cmd msg
@@ -89,6 +92,7 @@ init _ =
       , running = False
       , flash = Nothing
       , deltas = []
+      , zoom = 1.0
       }
     , Cmd.none
     )
@@ -163,6 +167,9 @@ update msg model =
 
         EditModeRequested ->
             ( { model | mode = EditMode }, Cmd.none )
+
+        ZoomWheel deltaY ->
+            ( { model | zoom = max 0.1 (model.zoom + deltaY * -0.001) }, Cmd.none )
 
 
 updateTick : Duration -> Model -> Model
@@ -258,7 +265,7 @@ view model =
                         ]
 
                     EditMode ->
-                        [ Layout.editSvg model.layout ]
+                        [ Layout.editSvg model.layout model.zoom (onWheel ZoomWheel) ]
                 )
             ]
         ]
@@ -278,6 +285,11 @@ layoutRunSvg model =
         [ lazy2 Layout.toSvg model.layout model.switchState
         , g [ id "trains" ] (List.map (\train -> Railroad.Train.Svg.toSvg train model.layout model.switchState) model.trains)
         ]
+
+
+onWheel : (Float -> msg) -> Svg.Attribute msg
+onWheel toMsg =
+    Svg.Events.on "wheel" (Decode.map toMsg (Decode.field "deltaY" Decode.float))
 
 
 viewSwitches : Layout -> Array Int -> Set Int -> Html Msg
@@ -478,6 +490,7 @@ modelDecoder =
             , running = False
             , flash = Just "Loaded successfully"
             , deltas = []
+            , zoom = 1.0
             }
         )
         (Decode.field "trains" (Decode.list Train.decoder))

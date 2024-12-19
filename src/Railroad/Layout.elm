@@ -337,19 +337,20 @@ tracksToSvg allFrames enabled tuples =
             )
 
 
-editSvg : Layout -> Html msg
-editSvg layout =
+editSvg : Layout -> Float -> Svg.Attribute msg -> Html msg
+editSvg layout zoom zoomHandler =
     svg
         [ SA.width "100%"
         , SA.viewBox "0 0 800 450"
         , SA.preserveAspectRatio "xMidYMid meet"
+        , zoomHandler
         ]
         [ rect [ SA.x "0", SA.y "0", SA.width "800", SA.height "450", SA.fill "#fffff0" ] []
         , let
             allFrames =
                 cursors layout
           in
-          Svg.g [ SA.id "layout" ]
+          Svg.g [ SA.id "layout", SA.transform ("scale(" ++ String.fromFloat zoom ++ ")") ]
             (tracksToSvg allFrames
                 True
                 (Graph.edgesWithData layout.graph
