@@ -1,8 +1,11 @@
-module LayoutView exposing (Model, init, view)
+module LayoutView exposing (Model, Msg(..), init, update, view)
 
 import Html exposing (Html)
+import Json.Decode as Decode
+import Rect exposing (Rect)
 import Svg exposing (Svg, rect, svg)
 import Svg.Attributes as SA
+import Svg.Events
 
 
 type alias Model =
@@ -10,6 +13,10 @@ type alias Model =
     , offset : { x : Float, y : Float }
     , drag : Maybe DragState
     }
+
+
+type Msg
+    = ZoomWheel Float
 
 
 type alias DragState =
@@ -26,14 +33,14 @@ init =
     }
 
 
-view : List (Svg msg) -> Model -> Html msg
-view elements model =
+view : Rect -> String -> List (Svg Msg) -> Model -> Html Msg
+view viewBox bgColor elements model =
     svg
         [ SA.width "100%"
-        , SA.viewBox "0 0 800 450"
-        , SA.preserveAspectRatio "xMidYMid meet"
+        , SA.viewBox (viewBox |> Rect.rectToString)
+        , onWheel ZoomWheel
         ]
-        [ rect [ SA.x "0", SA.y "0", SA.width "800", SA.height "450", SA.fill "#fffff0" ] []
+        [ rect (Rect.rectToAttrib viewBox ++ [ SA.fill bgColor ]) []
         , Svg.g
             [ SA.id "layout"
             , SA.transform
@@ -49,3 +56,15 @@ view elements model =
             ]
             elements
         ]
+
+
+onWheel : (Float -> msg) -> Svg.Attribute msg
+onWheel toMsg =
+    Svg.Events.on "wheel" (Decode.map toMsg (Decode.field "deltaY" Decode.float))
+
+
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        ZoomWheel deltaY ->
+            { model | zoom = max 0.1 (model.zoom + deltaY * -0.001) }

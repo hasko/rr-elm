@@ -1,5 +1,8 @@
 module Rect exposing (..)
 
+import Svg exposing (Svg)
+import Svg.Attributes as SA
+
 
 type Rect
     = Rect Float Float Float Float
@@ -12,6 +15,15 @@ rectToString r =
             origin r
     in
     [ x, y, width r, height r ] |> List.map String.fromFloat |> String.join " "
+
+
+rectToAttrib : Rect -> List (Svg.Attribute msg)
+rectToAttrib (Rect x1 y1 x2 y2) =
+    [ x1 |> String.fromFloat |> SA.x
+    , y1 |> String.fromFloat |> SA.y
+    , x2 - x1 + 1 |> String.fromFloat |> SA.width
+    , y2 - y1 + 1 |> String.fromFloat |> SA.height
+    ]
 
 
 expand : Float -> Rect -> Rect

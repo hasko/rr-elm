@@ -9,7 +9,6 @@ import Html exposing (Html, a, button, div, h2, header, li, main_, nav, section,
 import Html.Attributes exposing (class, disabled, href, scope, style)
 import Html.Entity
 import Html.Events exposing (onClick)
-import Html.Lazy exposing (lazy2)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import LayoutView
@@ -30,6 +29,7 @@ import Speed
 import Svg exposing (g, svg)
 import Svg.Attributes exposing (id, viewBox, width)
 import Svg.Events
+import Svg.Lazy
 import Tuple
 
 
@@ -46,8 +46,7 @@ type alias Model =
     , running : Bool
     , flash : Maybe String
     , deltas : List Duration
-    , zoom : Float
-    , viewPos : ( Float, Float )
+    , layoutViewState : LayoutView.Model
     }
 
 
@@ -66,7 +65,7 @@ type Msg
     | SaveRequested
     | RunModeRequested
     | EditModeRequested
-    | ZoomWheel Float
+    | LayoutViewMsg LayoutView.Msg
 
 
 port sendLayout : Value -> Cmd msg
@@ -94,8 +93,7 @@ init _ =
       , running = False
       , flash = Nothing
       , deltas = []
-      , zoom = 1.0
-      , viewPos = ( 0.0, 0.0 )
+      , layoutViewState = LayoutView.init
       }
     , Cmd.none
     )
@@ -171,8 +169,8 @@ update msg model =
         EditModeRequested ->
             ( { model | mode = EditMode }, Cmd.none )
 
-        ZoomWheel deltaY ->
-            ( { model | zoom = max 0.1 (model.zoom + deltaY * -0.001) }, Cmd.none )
+        LayoutViewMsg layoutViewMsg ->
+            ( { model | layoutViewState = LayoutView.update layoutViewMsg model.layoutViewState }, Cmd.none )
 
 
 updateTick : Duration -> Model -> Model
@@ -268,7 +266,13 @@ view model =
                         ]
 
                     EditMode ->
-                        [ Layout.editSvg model.layout model.zoom (onWheel ZoomWheel) ]
+                        [ Html.map LayoutViewMsg <|
+                            LayoutView.view
+                                (model.layout |> Layout.boundingBox |> Rect.expand 5)
+                                "#fae1ab"
+                                [ Layout.toEditSvg model.layout ]
+                                model.layoutViewState
+                        ]
                 )
             ]
         ]
@@ -276,28 +280,19 @@ view model =
 
 layoutRunSvg : Model -> Html Msg
 layoutRunSvg model =
-    LayoutView.view
-        [ lazy2 Layout.toSvg model.layout model.switchState
-        , g [ id "trains" ] (List.map (\train -> Railroad.Train.Svg.toSvg train model.layout model.switchState) model.trains)
+    section []
+        [ LayoutView.view
+            (model.layout
+                |> Layout.boundingBox
+                |> Rect.expand 5
+            )
+            "#58c98a"
+            [ Layout.toRunSvg model.layout model.switchState
+            , g [ id "trains" ] (List.map (\train -> Railroad.Train.Svg.toSvg train model.layout model.switchState) model.trains)
+            ]
+            model.layoutViewState
+            |> Html.map LayoutViewMsg
         ]
-        LayoutView.init
-
-
-
-{- }
-   svg
-       [ width "100%"
-       , viewBox
-           (model.layout
-               |> Layout.boundingBox
-               |> Rect.expand 5
-               |> Rect.rectToString
-           )
-       ]
-       [ lazy2 Layout.toSvg model.layout model.switchState
-       , g [ id "trains" ] (List.map (\train -> Railroad.Train.Svg.toSvg train model.layout model.switchState) model.trains)
-       ]
--}
 
 
 onWheel : (Float -> msg) -> Svg.Attribute msg
@@ -503,8 +498,7 @@ modelDecoder =
             , running = False
             , flash = Just "Loaded successfully"
             , deltas = []
-            , zoom = 1.0
-            , viewPos = ( 0.0, 0.0 )
+            , layoutViewState = LayoutView.init
             }
         )
         (Decode.field "trains" (Decode.list Train.decoder))

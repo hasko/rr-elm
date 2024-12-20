@@ -4,7 +4,6 @@ module Railroad.Layout exposing
     , boundingBox
     , coordsFor
     , decoder
-    , editSvg
     , encode
     , encodeLocation
     , initialLayout
@@ -12,8 +11,9 @@ module Railroad.Layout exposing
     , nextTrack
     , partitionGraph
     , previousTrack
+    , toEditSvg
     , toGraph
-    , toSvg
+    , toRunSvg
     , trackAt
     , tracksAhead
     , tracksBefore
@@ -281,11 +281,11 @@ nextTrack loc layout switchStates =
 
 
 
--- Views
+-- Rendering to SVG
 
 
-toSvg : Layout -> Array Int -> Svg msg
-toSvg layout switchStates =
+toRunSvg : Layout -> Array Int -> Svg msg
+toRunSvg layout switchStates =
     let
         allFrames =
             cursors layout
@@ -293,8 +293,21 @@ toSvg layout switchStates =
         ( usableEdges, unusableEdges ) =
             partitionGraph layout switchStates
     in
-    Svg.g [ SA.id "layout" ]
-        (tracksToSvg allFrames False unusableEdges ++ tracksToSvg allFrames True usableEdges)
+    Svg.g [] (tracksToSvg allFrames False unusableEdges ++ tracksToSvg allFrames True usableEdges)
+
+
+toEditSvg : Layout -> Svg msg
+toEditSvg layout =
+    let
+        allFrames =
+            cursors layout
+
+        allEdges =
+            Graph.edgesWithData layout.graph
+                |> List.map (\( from, to, maybeData ) -> maybeData |> Maybe.map (\d -> ( from, to, d )))
+                |> Maybe.Extra.values
+    in
+    Svg.g [] (tracksToSvg allFrames True allEdges)
 
 
 tracksToSvg : IntDict Frame -> Bool -> List Edge -> List (Svg msg)
@@ -335,38 +348,6 @@ tracksToSvg allFrames enabled tuples =
                     Nothing ->
                         Svg.g [ id trackId ] []
             )
-
-
-editSvg : Layout -> Float -> Svg.Attribute msg -> Html msg
-editSvg layout zoom zoomHandler =
-    svg
-        [ SA.width "100%"
-        , SA.viewBox "0 0 800 450"
-        , SA.preserveAspectRatio "xMidYMid meet"
-        , zoomHandler
-        ]
-        [ rect [ SA.x "0", SA.y "0", SA.width "800", SA.height "450", SA.fill "#fffff0" ] []
-        , let
-            allFrames =
-                cursors layout
-          in
-          Svg.g [ SA.id "layout", SA.transform ("scale(" ++ String.fromFloat zoom ++ ")") ]
-            (tracksToSvg allFrames
-                True
-                (Graph.edgesWithData layout.graph
-                    |> List.map
-                        (\( from, to, maybeTrack ) ->
-                            case maybeTrack of
-                                Just track ->
-                                    Just ( from, to, track )
-
-                                Nothing ->
-                                    Nothing
-                        )
-                    |> Maybe.Extra.values
-                )
-            )
-        ]
 
 
 
