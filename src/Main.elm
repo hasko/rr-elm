@@ -12,6 +12,7 @@ import Html.Events exposing (onClick)
 import Html.Lazy exposing (lazy2)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
+import LayoutView
 import Length
 import List.Extra
 import Maybe exposing (withDefault)
@@ -46,6 +47,7 @@ type alias Model =
     , flash : Maybe String
     , deltas : List Duration
     , zoom : Float
+    , viewPos : ( Float, Float )
     }
 
 
@@ -93,6 +95,7 @@ init _ =
       , flash = Nothing
       , deltas = []
       , zoom = 1.0
+      , viewPos = ( 0.0, 0.0 )
       }
     , Cmd.none
     )
@@ -273,18 +276,28 @@ view model =
 
 layoutRunSvg : Model -> Html Msg
 layoutRunSvg model =
-    svg
-        [ width "100%"
-        , viewBox
-            (model.layout
-                |> Layout.boundingBox
-                |> Rect.expand 5
-                |> Rect.rectToString
-            )
-        ]
+    LayoutView.view
         [ lazy2 Layout.toSvg model.layout model.switchState
         , g [ id "trains" ] (List.map (\train -> Railroad.Train.Svg.toSvg train model.layout model.switchState) model.trains)
         ]
+        LayoutView.init
+
+
+
+{- }
+   svg
+       [ width "100%"
+       , viewBox
+           (model.layout
+               |> Layout.boundingBox
+               |> Rect.expand 5
+               |> Rect.rectToString
+           )
+       ]
+       [ lazy2 Layout.toSvg model.layout model.switchState
+       , g [ id "trains" ] (List.map (\train -> Railroad.Train.Svg.toSvg train model.layout model.switchState) model.trains)
+       ]
+-}
 
 
 onWheel : (Float -> msg) -> Svg.Attribute msg
@@ -491,6 +504,7 @@ modelDecoder =
             , flash = Just "Loaded successfully"
             , deltas = []
             , zoom = 1.0
+            , viewPos = ( 0.0, 0.0 )
             }
         )
         (Decode.field "trains" (Decode.list Train.decoder))
