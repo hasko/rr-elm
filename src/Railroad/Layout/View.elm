@@ -1,12 +1,12 @@
-module Railroad.Layout.Editor exposing (Model, Msg(..), init, update, view)
+module Railroad.Layout.View exposing (Model, Msg(..), init, subscriptions, update, view)
 
 import Browser.Events
 import Html exposing (Html)
 import Json.Decode as Decode
-import Railroad.Layout as Layout
-import Svg
+import Rect exposing (Rect)
+import Svg exposing (Svg, rect, svg)
 import Svg.Attributes as SA
-import Svg.Events as SE
+import Svg.Events
 
 
 type alias Model =
@@ -16,17 +16,17 @@ type alias Model =
     }
 
 
+type Msg
+    = ZoomWheel Float
+    | DragStart Float Float
+    | DragMove Float Float
+    | DragEnd
+
+
 type alias DragState =
     { start : { x : Float, y : Float }
     , current : { x : Float, y : Float }
     }
-
-
-type Msg
-    = ZoomChanged Float
-    | DragStart Float Float
-    | DragMove Float Float
-    | DragEnd
 
 
 init : Model
@@ -37,11 +37,54 @@ init =
     }
 
 
+view : Rect -> String -> List (Svg Msg) -> Model -> Html Msg
+view viewBox bgColor elements model =
+    svg
+        [ SA.width "100%"
+        , SA.viewBox (viewBox |> Rect.rectToString)
+        , wheelHandler
+        , mouseHandler
+        ]
+        [ rect (Rect.rectToAttrib viewBox ++ [ SA.fill bgColor ]) []
+        , Svg.g
+            [ SA.id "layout"
+            , SA.transform
+                ("translate("
+                    ++ String.fromFloat model.offset.x
+                    ++ ","
+                    ++ String.fromFloat model.offset.y
+                    ++ ") "
+                    ++ "scale("
+                    ++ String.fromFloat model.zoom
+                    ++ ")"
+                )
+            ]
+            elements
+        ]
+
+
+wheelHandler : Svg.Attribute Msg
+wheelHandler =
+    Svg.Events.on "wheel" (Decode.map ZoomWheel (Decode.field "deltaY" Decode.float))
+
+
+mouseHandler : Svg.Attribute Msg
+mouseHandler =
+    Svg.Events.on "mousedown" (mouseDecoder DragStart)
+
+
+mouseDecoder : (Float -> Float -> msg) -> Decode.Decoder msg
+mouseDecoder msg =
+    Decode.map2 msg
+        (Decode.field "clientX" Decode.float)
+        (Decode.field "clientY" Decode.float)
+
+
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        ZoomChanged newZoom ->
-            { model | zoom = newZoom }
+        ZoomWheel deltaY ->
+            { model | zoom = max 0.1 (model.zoom + deltaY * -0.001) }
 
         DragStart x y ->
             { model | drag = Just { start = { x = x, y = y }, current = { x = x, y = y } } }
@@ -73,13 +116,6 @@ update msg model =
             { model | drag = Nothing }
 
 
-mouseDecoder : (Float -> Float -> msg) -> Decode.Decoder msg
-mouseDecoder msg =
-    Decode.map2 msg
-        (Decode.field "clientX" Decode.float)
-        (Decode.field "clientY" Decode.float)
-
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model.drag of
@@ -91,13 +127,3 @@ subscriptions model =
 
         Nothing ->
             Sub.none
-
-
-view : Layout.Layout -> Model -> Html Msg
-view layout model =
-    Layout.editSvg
-        layout
-        model.zoom
-        { mouseHandler = SE.on "mousedown" (mouseDecoder DragStart)
-        , offset = model.offset
-        }

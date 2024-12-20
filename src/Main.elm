@@ -11,12 +11,12 @@ import Html.Entity
 import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
-import LayoutView
 import Length
 import List.Extra
 import Maybe exposing (withDefault)
 import Quantity
 import Railroad.Layout as Layout exposing (..)
+import Railroad.Layout.View as LayoutView
 import Railroad.Orientation as Orientation
 import Railroad.Switch exposing (Switch)
 import Railroad.Track exposing (Track(..))
@@ -26,10 +26,8 @@ import Rect
 import Round
 import Set exposing (Set)
 import Speed
-import Svg exposing (g, svg)
-import Svg.Attributes exposing (id, viewBox, width)
-import Svg.Events
-import Svg.Lazy
+import Svg exposing (g)
+import Svg.Attributes exposing (id)
 import Tuple
 
 
@@ -101,11 +99,14 @@ init _ =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if model.running then
-        onAnimationFrameDelta Tick
+    Sub.batch
+        [ if model.running then
+            onAnimationFrameDelta Tick
 
-    else
-        layoutReceiver LayoutReceived
+          else
+            layoutReceiver LayoutReceived
+        , LayoutView.subscriptions model.layoutViewState |> Sub.map LayoutViewMsg
+        ]
 
 
 
@@ -293,11 +294,6 @@ layoutRunSvg model =
             model.layoutViewState
             |> Html.map LayoutViewMsg
         ]
-
-
-onWheel : (Float -> msg) -> Svg.Attribute msg
-onWheel toMsg =
-    Svg.Events.on "wheel" (Decode.map toMsg (Decode.field "deltaY" Decode.float))
 
 
 viewSwitches : Layout -> Array Int -> Set Int -> Html Msg
