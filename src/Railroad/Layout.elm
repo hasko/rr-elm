@@ -29,6 +29,7 @@ import IntDict exposing (IntDict)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Length exposing (Length)
+import List.Extra
 import Maybe exposing (Maybe(..))
 import Maybe.Extra
 import Point2d
@@ -113,12 +114,22 @@ cursors layout =
     renderLayout 0 (Frame2d.atPoint (Point2d.meters 0 2.5)) layout IntDict.empty
 
 
-boundingBox : Layout -> Rect
+boundingBox : Layout -> Maybe Rect
 boundingBox layout =
-    List.foldl
-        (\c (Rect x1 y1 x2 y2) -> Rect (min x1 c.x) (min y1 c.y) (max x2 c.x) (max y2 c.y))
-        (Rect 0 0 0 0)
-        (cursors layout |> IntDict.values |> List.map (Frame2d.originPoint >> Point2d.toRecord Length.inMeters))
+    let
+        cs =
+            cursors layout |> IntDict.values |> List.map (Frame2d.originPoint >> Point2d.toRecord Length.inMeters)
+    in
+    case cs of
+        [] ->
+            Nothing
+
+        ch :: cr ->
+            Just <|
+                List.foldl
+                    (\c (Rect x1 y1 x2 y2) -> Rect (min x1 c.x) (min y1 c.y) (max x2 c.x) (max y2 c.y))
+                    (Rect ch.x ch.y ch.x ch.y)
+                    cr
 
 
 renderLayout : Int -> Frame -> Layout -> IntDict Frame -> IntDict Frame

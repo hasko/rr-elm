@@ -22,7 +22,7 @@ import Railroad.Switch exposing (Switch)
 import Railroad.Track exposing (Track(..))
 import Railroad.Train as Train exposing (..)
 import Railroad.Train.Svg
-import Rect
+import Rect exposing (Rect(..))
 import Round
 import Set exposing (Set)
 import Speed
@@ -269,7 +269,11 @@ view model =
                     EditMode ->
                         [ Html.map LayoutViewMsg <|
                             LayoutView.view
-                                (model.layout |> Layout.boundingBox |> Rect.expand 5)
+                                (model.layout
+                                    |> Layout.boundingBox
+                                    |> Maybe.withDefault (Rect 0 0 160 20)
+                                    |> Rect.expand 5
+                                )
                                 "#fae1ab"
                                 [ Layout.toEditSvg model.layout ]
                                 model.layoutViewState
@@ -285,6 +289,7 @@ layoutRunSvg model =
         [ LayoutView.view
             (model.layout
                 |> Layout.boundingBox
+                |> Maybe.withDefault (Rect 0 0 160 20)
                 |> Rect.expand 5
             )
             "#58c98a"

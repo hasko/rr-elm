@@ -3,7 +3,7 @@ module Railroad.Layout.View exposing (Model, Msg(..), init, subscriptions, updat
 import Browser.Events
 import Html exposing (Html)
 import Json.Decode as Decode
-import Rect exposing (Rect)
+import Rect exposing (Rect(..))
 import Svg exposing (Svg, rect, svg)
 import Svg.Attributes as SA
 import Svg.Events
@@ -38,7 +38,15 @@ init =
 
 
 view : Rect -> String -> List (Svg Msg) -> Model -> Html Msg
-view viewBox bgColor elements model =
+view (Rect x1 y1 x2 y2) bgColor elements model =
+    let
+        viewBox =
+            Rect
+                ((x1 - model.offset.x) / model.zoom)
+                ((y1 - model.offset.y) / model.zoom)
+                ((x2 - model.offset.x) / model.zoom)
+                ((y2 - model.offset.y) / model.zoom)
+    in
     svg
         [ SA.width "100%"
         , SA.viewBox (viewBox |> Rect.rectToString)
@@ -46,20 +54,7 @@ view viewBox bgColor elements model =
         , mouseHandler
         ]
         [ rect (Rect.rectToAttrib viewBox ++ [ SA.fill bgColor ]) []
-        , Svg.g
-            [ SA.id "layout"
-            , SA.transform
-                ("translate("
-                    ++ String.fromFloat model.offset.x
-                    ++ ","
-                    ++ String.fromFloat model.offset.y
-                    ++ ") "
-                    ++ "scale("
-                    ++ String.fromFloat model.zoom
-                    ++ ")"
-                )
-            ]
-            elements
+        , Svg.g [ SA.id "layout" ] elements
         ]
 
 
